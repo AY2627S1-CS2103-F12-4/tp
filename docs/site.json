@@ -1,6 +1,6 @@
 {
   "baseUrl": "",
-  "titlePrefix": "",
+  "titlePrefix": "AttendPlusPlus",
   "titleSuffix": "AddressBook Level-3",
   "faviconPath": "images/SeEduLogo.png",
   "style": {
@@ -16,10 +16,15 @@
     ".git/*",
     "node_modules/*"
   ],
-  "pagesExclude": ["node_modules/*"],
+  "pagesExclude": [
+    "node_modules/*"
+  ],
   "pages": [
     {
-      "glob": ["**/index.md", "**/*.md"]
+      "glob": [
+        "**/index.md",
+        "**/*.md"
+      ]
     }
   ],
   "deploy": {

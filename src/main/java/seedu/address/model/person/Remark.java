@@ -9,25 +9,21 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
  */
 public class Remark {
 
-    public static final String MESSAGE_CONSTRAINTS = "Remarkes can take any values, and should not be blank";
+    public static final String MESSAGE_CONSTRAINTS = "Remarks can contain any characters";
 
-    /*
-     * The first character of the Remark must not be a whitespace, otherwise " " (a
-     * blank string) becomes a valid input.
-     */
-    public static final String VALIDATION_REGEX = "[^\\s].*";
+    public static final String VALIDATION_REGEX = ".*";
 
     public final String value;
 
     /**
      * Constructs an {@code Remark}.
      *
-     * @param Remark A valid Remark.
+     * @param remark A valid remark.
      */
-    public Remark(String Remark) {
-        requireNonNull(Remark);
-        checkArgument(isValidRemark(Remark), MESSAGE_CONSTRAINTS);
-        value = Remark;
+    public Remark(String remark) {
+        requireNonNull(remark);
+        checkArgument(isValidRemark(remark), MESSAGE_CONSTRAINTS);
+        value = remark;
     }
 
     /**

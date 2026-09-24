@@ -8,9 +8,10 @@ import seedu.address.model.Model;
 public class RemarkCommand extends Command {
 
     public static final String COMMAND_WORD = "remark";
+    public static final String HELLO = "Hello from remark";
 
     @Override
     public CommandResult execute(Model model) {
-        return new CommandResult("Hello from remark");
+        return new CommandResult(HELLO);
     }
 }

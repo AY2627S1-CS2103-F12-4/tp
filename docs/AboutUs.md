@@ -42,13 +42,14 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ### Jean Doe
 
-<img src="images/johndoe.png" width="200px">
+### MathRat190225
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+<img src="images/mathrat190225.png" width="200px">
 
-* Role: Developer
-* Responsibilities: Dev Ops + Threading
+[[github](https://github.com/MathRat190225)]
+
+* Role: Code quality
+* Responsibilities: In charge of Logic
 
 ### James Doe
 

@@ -321,6 +321,31 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
       Use case resumes at step 2.
 
+### Use case: UC01 - Search for a participant within an event
+
+**MSS**
+
+1. User specifies an event and a participant name to search for.
+2. System checks that the specified event exists.
+3. System searches for participants in the event whose names match the search term.
+4. System displays the matching participants.
+
+Use case ends.
+
+**Extensions**
+
+* 1a. The participant name is missing or invalid.
+    * 1a1. System informs the user of the correct command format.
+    * Use case ends.
+
+* 2a. The specified event does not exist.
+    * 2a1. System informs the user that the event cannot be found.
+    * Use case ends.
+
+* 3a. No participant matches the search term.
+    * 3a1. System informs the user that no matching participant was found.
+    * Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements

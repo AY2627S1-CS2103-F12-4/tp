@@ -21,15 +21,15 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Project Advisor
 
-### Jane Doe
+### Tan Yi Xuan
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/tanyxuan.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](https://github.com/tanyxuan)]
 
-* Role: Team Lead
-* Responsibilities: UI
+* Role: Developer
+* Role: Testing and QA
+* Role: Documentation
 
 ### Johnny Doe
 

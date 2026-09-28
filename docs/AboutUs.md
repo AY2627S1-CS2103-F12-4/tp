@@ -11,50 +11,35 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
-### John Doe
+### MathRat190225
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/mathrat190225.png" width="200px">
 
-[[homepage](http://www.comp.nus.edu.sg/~damithch)]
-[[github](https://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](https://github.com/MathRat190225)]
 
-* Role: Project Advisor
+* Role: Code quality
+* Responsibilities: In charge of Logic
 
-### Jane Doe
+### Ong Sheng Hao
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/shenghaozz.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](https://github.com/ShengHaozz)]
 
-* Role: Team Lead
-* Responsibilities: UI
+* Role: Integration
 
-### Johnny Doe
+### Tan Yi Xuan
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/tanyxuan.png" width="200px">
 
-[[github](http://github.com/johndoe)] [[portfolio](team/johndoe.md)]
-
+[[github](https://github.com/tanyxuan)]
 * Role: Developer
-* Responsibilities: Data
-
-### Jean Doe
-
-<img src="images/johndoe.png" width="200px">
-
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
-
-* Role: Developer
-* Responsibilities: Dev Ops + Threading
+* Role: Testing and QA
+* Role: Documentation
 
 ### Chye Xian Zhe
 
 <img src="images/xian-zhe.jpg" width="200px">
 
 [[github](http://github.com/xian-zhe)]
-
 * Role: Developer
-* Responsibilities: UI

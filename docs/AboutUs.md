@@ -52,7 +52,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ### Chye Xian Zhe
 
-<img src="images/xian-zhe.jpg" width="200px">
+<img src="images/xian-zhe.png" width="200px">
 
 [[github](http://github.com/xian-zhe)]
 

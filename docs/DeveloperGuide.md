@@ -266,33 +266,65 @@ _{Explain here how the data archiving feature will be implemented}_
 
 ## **Appendix: Requirements**
 
-### Product scope
+## Product scope
 
-**Target user profile**:
+### Target user profile
 
-* has a need to manage a significant number of contacts
-* prefers desktop apps over other types of applications
-* can type fast
-* prefers typing to mouse interactions
-* is reasonably comfortable using CLI apps
+The target users are event organisers who manage events involving guests, participants, and other event-related personnel.
 
-**Value proposition**: Manage contacts faster than with a typical mouse-driven GUI application.
+They typically need to:
+* manage information for many people across one or more events;
+* keep track of RSVP status, contact information, plus-ones, dietary restrictions, and mobility requirements;
+* keep track of other event-related personnel such as venue liaisons and relevant authorities;
+* retrieve participant information quickly when needed;
+* manage event capacity and attendance;
+* perform repetitive administrative tasks efficiently;
+* use a keyboard-driven interface while still receiving clear guidance when commands are entered incorrectly.
 
+### Value proposition
 
+The application provides event organisers with a CLI-based alternative to using multiple spreadsheets and documents.
+
+It centralises event and participant information in one application, allowing organisers to quickly manage and retrieve information such as contact details, RSVP status, dietary requirements, attendance, roles, and event capacity.
+
+It aims to reduce repetitive administrative work and make common event-management tasks faster through keyboard-driven commands.
 ### User stories
 
-Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`
+Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`
 
-| Priority | As a …                                    | I want to …                 | So that I can…                                                        |
-|----------|--------------------------------------------|------------------------------|------------------------------------------------------------------------|
-| `* * *`  | new user                                   | see usage instructions       | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person             |                                                                        |
-| `* * *`  | user                                       | delete a person              | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name         | locate a person easily                                                 |
-
-*{More to be added}*
+| Priority | As a …                    | I want to …                                      | So that I can… |
+|----------|---------------------------|--------------------------------------------------|----------------|
+| `* * *`  | event organiser           | create an event                                  | manage people related to the event |
+| `* * *`  | event organiser           | view and choose events                           | manage specific events |
+| `* * *`  | event organiser           | check whether an event is fully filled           | know whether more participants can be added |
+| `* * *`  | event organiser           | delete a person's personal information upon request | respect their privacy |
+| `* * *`  | event organiser           | set the capacity of an event                     | plan attendance within the venue limit |
+| `* * *`  | event organiser           | add a participant to an event                    | track people expected to attend |
+| `* * *`  | event organiser           | remove a participant from an event               | fix any errors |
+| `* * *`  | event organiser           | differentiate people with the same name          | manage them without getting them mixed up |
+| `* * *`  | event organiser           | find the contact details of attendees            | contact them in case of emergency |
+| `* * *`  | event organiser           | view the participants of an event                | see who is associated with it |
+| `* * *`  | event organiser           | search for a participant within an event         | find their record quickly |
+| `* * *`  | event organiser           | mark a participant as attending                  | track confirmed attendance |
+| `* * *`  | event organiser           | identify each person's role in an event          | distinguish participants, guests, and other personnel |
+| `* * *`  | event organiser           | filter people by their event role                | focus on the relevant group |
+| `* * *`  | event organiser           | be alerted when an event reaches or exceeds capacity | address overbooking |
+| `* * *`  | event organiser           | search for a person across events                | find their existing details |
+| `* * *`  | non-tech-savvy user       | see shortcuts for common actions                 | speed up repetitive tasks |
+| `* * *`  | non-tech-savvy user       | see why a CLI command is wrong                   | fix it easily |
+| `* *`    | event organiser           | archive completed events                         | prevent old events from cluttering current events |
+| `* *`    | event organiser           | edit event details                               | keep event information accurate |
+| `* *`    | company employee          | generate past event records                      | provide them to auditors |
+| `* *`    | event organiser           | keep event-specific information separate for the same person across events | keep each event record accurate |
+| `* *`    | event organiser           | review information before deleting it            | avoid removing data accidentally |
+| `* *`    | person sending invitations | track invitations and update response status    | avoid spamming guests and see who is attending |
+| `* *`    | event organiser           | add sign-ups to a waiting list                   | manage overbooking and maximise capacity |
+| `* *`    | event organiser           | add an existing person to another event          | avoid entering their details again |
+| `* *`    | event organiser           | choose which information to reuse for another event | avoid carrying over irrelevant information |
+| `* *`    | organiser of recurring events | create a new event based on a previous one    | avoid recreating relevant information |
+| `* *`    | new user                  | see an introduction to the app                   | learn how to use its functions |
+| `* *`    | new user                  | view example events and attendee data            | understand how the app can be used |
+| `* *`    | new user                  | remove example data                              | begin managing their own events |
 
 ### Use cases
 

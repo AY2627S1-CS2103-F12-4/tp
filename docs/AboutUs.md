@@ -19,3 +19,20 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Code quality
 * Responsibilities: In charge of Logic
+### Ong Sheng Hao
+
+<img src="images/shenghaozz.png" width="200px">
+
+[[github](https://github.com/ShengHaozz)]
+
+* Role: Integration
+
+### Tan Yi Xuan
+
+<img src="images/tanyxuan.png" width="200px">
+
+[[github](https://github.com/tanyxuan)]
+
+* Role: Developer
+* Role: Testing and QA
+* Role: Documentation

@@ -296,38 +296,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Use cases
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified otherwise)
-
-**Use case: Delete a person**
-
-**MSS**
-
-1.  User requests to list persons
-2.  AddressBook shows a list of persons
-3.  User requests to delete a specific person in the list
-4.  AddressBook deletes the person
-
-    Use case ends.
-
-**Extensions**
-
-* 2a. The list is empty.
-
-  Use case ends.
-
-* 3a. The given index is invalid.
-
-    * 3a1. AddressBook shows an error message.
-
-      Use case resumes at step 2.
-
 ### Use case: UC01 - Search for a participant within an event
 
 **MSS**
 
 1. User specifies an event and a participant name to search for.
 2. System checks that the specified event exists.
-3. System searches for participants in the event whose names match the search term.
+3. System searches for participants in the event whose names partially match the search term, ignoring letter case.
 4. System displays the matching participants.
 
 Use case ends.
@@ -342,7 +317,7 @@ Use case ends.
     * 2a1. System informs the user that the event cannot be found.
     * Use case ends.
 
-* 3a. No participant matches the search term.
+* 3a. No participant partially matches the search term.
     * 3a1. System informs the user that no matching participant was found.
     * Use case ends.
 

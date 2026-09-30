@@ -4,7 +4,7 @@
   pageNav: 3
 ---
 
-# AB-3 Developer Guide
+# AttendPlusPlus Developer Guide
 
 <!-- * Table of Contents -->
 <page-nav-print />
@@ -351,6 +351,43 @@ Use case ends.
 
 * 3a. No participant partially matches the search term.
     * 3a1. System informs the user that no matching participant was found.
+    * Use case ends.
+
+### Use case: UC02 - Mark attendee attendance
+
+**System:** AttendPlusPlus
+
+**Actor:** Event organiser
+
+**Guarantees:**
+
+* A successful attendance update remains recorded.
+* Only the specified attendee record in the specified event is updated. Records with the same attendee name but a different role or event remain unchanged.
+
+**MSS**
+
+1. Event organiser requests to mark an attendee as present for an event.
+2. AttendPlusPlus marks the attendee as present for the specified event.
+3. AttendPlusPlus informs the event organiser that the attendance was recorded.
+
+Use case ends.
+
+**Extensions**
+
+* 1a. The event organiser provides an invalid command.
+    * 1a1. AttendPlusPlus informs the event organiser that the command is invalid and displays the correct usage.
+    * Use case ends.
+
+* 1b. The specified event does not exist.
+    * 1b1. AttendPlusPlus informs the event organiser that the event ID is invalid.
+    * Use case ends.
+
+* 1c. The specified attendee does not exist or is not registered for the specified event.
+    * 1c1. AttendPlusPlus informs the event organiser that the attendee ID is invalid.
+    * Use case ends.
+
+* 2a. The attendee is already marked as present for the specified event.
+    * 2a1. AttendPlusPlus informs the event organiser that the attendee is already marked as present.
     * Use case ends.
 
 *{More to be added}*

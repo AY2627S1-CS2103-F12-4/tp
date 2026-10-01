@@ -39,7 +39,7 @@
       "src": "DeveloperGuide.md",
       "title": "Developer Guide",
       "headings": {
-        "ab-3-developer-guide": "AB-3 Developer Guide",
+        "attendplusplus-developer-guide": "AttendPlusPlus Developer Guide",
         "acknowledgements": "Acknowledgements",
         "setting-up-getting-started": "Setting up, getting started",
         "design": "Design",
@@ -60,6 +60,7 @@
         "user-stories": "User stories",
         "use-cases": "Use cases",
         "use-case-uc01-search-for-a-participant-within-an-event": "Use case: UC01 - Search for a participant within an event",
+        "use-case-uc02-mark-attendee-attendance": "Use case: UC02 - Mark attendee attendance",
         "non-functional-requirements": "Non-Functional Requirements",
         "glossary": "Glossary",
         "appendix-instructions-for-manual-testing": "Appendix: Instructions for manual testing",

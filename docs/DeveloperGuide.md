@@ -390,6 +390,43 @@ Use case ends.
     * 2a1. AttendPlusPlus informs the event organiser that the attendee is already marked as present.
     * Use case ends.
 
+### Use case: UC03 - Add participant to an event
+
+**System:** AttendPlusPlus  
+
+**Actor:** Event organiser  
+
+**Preconditions:** 
+* At least one event exists, and the event list is displayed.  
+
+**Guarantee on success:** 
+* A new participant with a unique ID is added to the specified event and saved to persistent storage.
+
+**MSS**
+
+1. The organiser requests to add a participant to an event, providing the event index, participant name, and role.
+2. AttendPlusPlus validates the event index and participant details.
+3. AttendPlusPlus assigns a unique participant ID and adds the participant to the event.
+4. AttendPlusPlus saves the changes and refreshes the relevant GUI view.
+5. AttendPlusPlus displays a success message.
+
+Use case ends.
+
+**Extensions**
+
+* 2a. The event index does not refer to an existing event.
+    * 2a1. AttendPlusPlus displays an error explaining that the event cannot be found.
+    * Use case ends.
+
+* 2b. The request has missing arguments, an invalid command format, or invalid participant details.
+    * 2b1. AttendPlusPlus displays an error explaining the problem and, where appropriate, the expected command format.
+    * Use case ends.
+
+**Additional notes**
+
+* Invalid requests leave the current view and stored data unchanged.
+* Participants with identical names and roles are allowed and receive distinct IDs.
+
 *{More to be added}*
 
 ### Non-Functional Requirements

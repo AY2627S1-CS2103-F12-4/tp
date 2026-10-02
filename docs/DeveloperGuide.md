@@ -427,6 +427,35 @@ Use case ends.
 * Invalid requests leave the current view and stored data unchanged.
 * Participants with identical names and roles are allowed and receive distinct IDs.
 
+### Use case: UC04 - Create Event
+
+**System:** AttendPlusPlus
+
+**Actor:** Event organiser
+
+**Guarantees:**
+
+* A successful event creation is recorded with its assigned event ID.
+
+**MSS**
+
+1. Event organiser requests to create a new event, providing event name, capacity and description.
+2. AttendPlusPlus creates the event and assigns it an Event ID.
+3. AttendPlusPlus informs the event organiser that the event is successfully created.
+4. AttendPlusPlus displays the newly created event in the event list.
+
+Use case ends.
+
+**Extensions**
+
+* 1a. The request has missing required details or invalid format.
+    * 1a1. AttendPlusPlus informs the event organiser that the command is invalid and displays the correct usage.
+    * Use case ends.
+
+* 1b. The specified capacity is not a positive integer.
+    * 1b1. AttendPlusPlus informs the event organiser that the event capacity must be a positive integer.
+    * Use case ends.
+
 *{More to be added}*
 
 ### Non-Functional Requirements

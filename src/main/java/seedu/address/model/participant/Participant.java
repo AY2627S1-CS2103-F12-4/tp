@@ -4,25 +4,26 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Objects;
 
-import seedu.address.model.person.Name;
+import seedu.address.model.person.Person;
 
 /**
  * Represents a participant in AttendPlusPlus.
+ * A participant contains a Person together with event-specific participant details.
  * Guarantees: details are present and not null.
  */
 public class Participant {
 
     private final ParticipantId id;
-    private final Name name;
+    private final Person person;
     private final Role role;
 
     /**
-     * Creates a Participant with the given ID, name and role.
+     * Creates a Participant with the given ID, person and role.
      */
-    public Participant(ParticipantId id, Name name, Role role) {
-        requireAllNonNull(id, name, role);
+    public Participant(ParticipantId id, Person person, Role role) {
+        requireAllNonNull(id, person, role);
         this.id = id;
-        this.name = name;
+        this.person = person;
         this.role = role;
     }
 
@@ -30,8 +31,8 @@ public class Participant {
         return id;
     }
 
-    public Name getName() {
-        return name;
+    public Person getPerson() {
+        return person;
     }
 
     public Role getRole() {
@@ -51,17 +52,17 @@ public class Participant {
         Participant otherParticipant = (Participant) other;
 
         return id.equals(otherParticipant.id)
-                && name.equals(otherParticipant.name)
+                && person.equals(otherParticipant.person)
                 && role.equals(otherParticipant.role);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, role);
+        return Objects.hash(id, person, role);
     }
 
     @Override
     public String toString() {
-        return id + " — " + name + " — " + role;
+        return id + " — " + person.getName() + " — " + role;
     }
 }

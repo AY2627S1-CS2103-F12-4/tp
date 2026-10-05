@@ -24,15 +24,20 @@ public class Role {
      */
     public Role(String role) {
         requireNonNull(role);
-        checkArgument(isValidRole(role), MESSAGE_CONSTRAINTS);
-        value = role;
+
+        String normalizedRole = role.trim().replaceAll("\\s+", " ");
+
+        checkArgument(isValidRole(normalizedRole), MESSAGE_CONSTRAINTS);
+        value = normalizedRole;
     }
 
     /**
      * Returns true if a given string is a valid role.
      */
     public static boolean isValidRole(String test) {
-        return test.matches(VALIDATION_REGEX) && !test.isBlank();
+        return test != null
+                && !test.isBlank()
+                && test.matches(VALIDATION_REGEX);
     }
 
     @Override

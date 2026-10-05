@@ -30,7 +30,7 @@ public class ParticipantId {
      * Returns true if a given string is a valid participant ID.
      */
     public static boolean isValidParticipantId(String test) {
-        return test.matches(VALIDATION_REGEX);
+        return test != null && test.matches(VALIDATION_REGEX);
     }
 
     @Override

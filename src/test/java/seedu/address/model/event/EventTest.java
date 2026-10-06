@@ -8,14 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
 public class EventTest {
-    private static final EventId ID = new EventId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
-    private static final EventId OTHER_ID = new EventId(UUID.fromString("00000000-0000-0000-0000-000000000002"));
-    private static final EventName NAME = new EventName("Workshop");
+    private static final EventId ID = new EventId("E1");
+    private static final EventId OTHER_ID = new EventId("E2");
+    private static final String NAME = "Workshop";
 
     @Test
     public void constructor_nullFields_throwsNullPointerException() {
@@ -24,9 +23,25 @@ public class EventTest {
     }
 
     @Test
+    public void constructor_blankName_throwsIllegalArgumentException() {
+        for (String blank : new String[] {"", " ", "\t\n", "\u2003"}) {
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class, () -> new Event(ID, blank, 10, "Description"));
+            assertEquals("Event names should not be blank", exception.getMessage());
+        }
+    }
+
+    @Test
+    public void constructor_validName_preservesSpellingAndSpacing() {
+        for (String name : new String[] {"Workshop", "Open House 2026!", "Arts & Crafts", "活动", " Workshop "}) {
+            assertEquals(name, new Event(ID, name, 10, "Description").getName());
+        }
+    }
+
+    @Test
     public void isSameEvent_usesIdRatherThanName() {
         Event event = new Event(ID, NAME, 10, "Description");
-        Event renamed = new Event(ID, new EventName("Renamed workshop"), 10, "Description");
+        Event renamed = new Event(ID, "Renamed workshop", 10, "Description");
         Event sameName = new Event(OTHER_ID, NAME, 10, "Description");
         assertTrue(event.isSameEvent(event));
         assertTrue(event.isSameEvent(renamed));
@@ -38,12 +53,12 @@ public class EventTest {
     @Test
     public void equals_comparesIdentityAndDetails() {
         Event event = new Event(ID, NAME, 10, "Description");
-        Event copy = new Event(new EventId(UUID.fromString(ID.toString())), NAME, 10, "Description");
+        Event copy = new Event(new EventId(ID.toString()), NAME, 10, "Description");
         assertEquals(event, event);
         assertEquals(event, copy);
         assertEquals(copy, event);
         assertEquals(event.hashCode(), copy.hashCode());
-        assertNotEquals(event, new Event(ID, new EventName("Renamed workshop"), 10, "Description"));
+        assertNotEquals(event, new Event(ID, "Renamed workshop", 10, "Description"));
         assertNotEquals(event, new Event(OTHER_ID, NAME, 10, "Description"));
         assertNotEquals(event, new Event(ID, NAME, 20, "Description"));
         assertNotEquals(event, new Event(ID, NAME, 10, "Other description"));
@@ -56,9 +71,9 @@ public class EventTest {
         Event original = new Event(ID, NAME, 10, "Description");
         Map<String, String> registrations = new HashMap<>();
         registrations.put(original.getId(), "Participant registration");
-        Event renamed = new Event(ID, new EventName("New name"), 10, "Description");
+        Event renamed = new Event(ID, "New name", 10, "Description");
         assertEquals("Participant registration", registrations.get(renamed.getId()));
-        assertEquals(new EventName("New name"), renamed.getName());
+        assertEquals("New name", renamed.getName());
         assertEquals(NAME, original.getName());
     }
 

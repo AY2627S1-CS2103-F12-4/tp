@@ -13,7 +13,7 @@ import seedu.address.commons.util.ToStringBuilder;
  */
 public final class Event {
     private final EventId id;
-    private final EventName name;
+    private final String name;
     private final int capacity;
     private final String description;
 
@@ -21,8 +21,9 @@ public final class Event {
      * Constructs an event with the supplied identity and name.
      * Reuses the identity when reconstructing or updating an existing event.
      */
-    public Event(EventId id, EventName name, int capacity, String description) {
+    public Event(EventId id, String name, int capacity, String description) {
         requireAllNonNull(id, name, description);
+        checkArgument(!name.isBlank(), "Event names should not be blank");
         checkArgument(capacity > 0, "Event capacity must be a positive integer");
         this.id = id;
         this.name = name;
@@ -42,7 +43,7 @@ public final class Event {
         return description;
     }
 
-    public EventName getName() {
+    public String getName() {
         return name;
     }
 

@@ -1,27 +1,35 @@
 package seedu.address.model.event;
 
 import static java.util.Objects.requireNonNull;
-
-import java.util.UUID;
+import static seedu.address.commons.util.AppUtil.checkArgument;
 
 /**
- * Represents an immutable event identifier, independent of its details or list position.
+ * Represents an Event's unique ID.
  */
 public final class EventId {
-    private final UUID value;
+    public static final String MESSAGE_CONSTRAINTS =
+            "Event IDs should start with E followed by one or more digits.";
+
+    private static final String VALIDATION_REGEX = "E\\d+";
+
+    public final String value;
 
     /**
-     * Creates a new event identifier.
+     * Constructs an {@code EventId}.
+     *
+     * @param id A valid event ID.
      */
-    public EventId() {
-        this(UUID.randomUUID());
+    public EventId(String id) {
+        requireNonNull(id);
+        checkArgument(isValidEventId(id), MESSAGE_CONSTRAINTS);
+        value = id;
     }
 
     /**
-     * Constructs an identifier from an existing UUID, allowing identity to be preserved on reload.
+     * Returns true if a given string is a valid event ID.
      */
-    public EventId(UUID value) {
-        this.value = requireNonNull(value);
+    public static boolean isValidEventId(String test) {
+        return test != null && test.matches(VALIDATION_REGEX);
     }
 
     @Override
@@ -36,6 +44,6 @@ public final class EventId {
 
     @Override
     public String toString() {
-        return value.toString();
+        return value;
     }
 }

@@ -1,13 +1,15 @@
 package seedu.address.model.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import seedu.address.model.event.exceptions.DuplicateEventException;
+import seedu.address.model.event.exceptions.EventNotFoundException;
 
 public class EventListTest {
     private static final EventId ID = new EventId("E1");
@@ -57,12 +59,12 @@ public class EventListTest {
     @Test
     public void getEventFromId_matchesStableId() {
         EventList events = new EventList();
-        assertNull(events.getEventFromId(ID.toString()));
+        assertThrows(EventNotFoundException.class, () -> events.getEventFromId(ID.toString()));
         events.addEvent(EVENT);
         assertSame(EVENT, events.getEventFromId(EVENT.getId()));
-        assertNull(events.getEventFromId(OTHER_ID.toString()));
-        assertNull(events.getEventFromId(""));
-        assertNull(events.getEventFromId("Workshop"));
+        assertThrows(EventNotFoundException.class, () -> events.getEventFromId(OTHER_ID.toString()));
+        assertThrows(EventNotFoundException.class, () -> events.getEventFromId(""));
+        assertThrows(EventNotFoundException.class, () -> events.getEventFromId("Workshop"));
         assertThrows(NullPointerException.class, () -> events.getEventFromId(null));
     }
 
@@ -71,8 +73,8 @@ public class EventListTest {
         EventList events = new EventList();
         events.addEvent(EVENT);
         Event renamed = new Event(ID, "Concert", 20, "Updated description");
-        assertThrows(IllegalArgumentException.class, () -> events.addEvent(EVENT));
-        assertThrows(IllegalArgumentException.class, () -> events.addEvent(renamed));
+        assertThrows(DuplicateEventException.class, () -> events.addEvent(EVENT));
+        assertThrows(DuplicateEventException.class, () -> events.addEvent(renamed));
         assertEquals(List.of(EVENT), events.getEvents());
         assertSame(EVENT, events.getEventFromId(EVENT.getId()));
     }
@@ -107,10 +109,45 @@ public class EventListTest {
     }
 
     @Test
+    public void removeEvent_existingId_removesOnlyTargetAndDoesNotReuseId() {
+        EventList events = new EventList();
+        Event first = events.createEvent("Workshop", 10, "");
+        Event second = events.createEvent("Concert", 20, "");
+        List<Event> snapshot = events.getEvents();
+        events.removeEvent(second.getId());
+        assertThrows(EventNotFoundException.class, () -> events.getEventFromId(second.getId()));
+        assertSame(first, events.getEventFromId(first.getId()));
+        assertEquals(List.of(first), events.getEvents());
+        assertEquals(List.of(first, second), snapshot);
+        assertEquals("E3", events.createEvent("New event", 10, "").getId());
+    }
+
+    @Test
+    public void removeEvent_missingOrNullId_leavesCollectionAndNextIdUnchanged() {
+        EventList events = new EventList();
+        events.addEvent(EVENT);
+        assertThrows(EventNotFoundException.class, () -> events.removeEvent("E2"));
+        assertThrows(EventNotFoundException.class, () -> events.removeEvent(""));
+        assertThrows(NullPointerException.class, () -> events.removeEvent(null));
+        assertEquals(List.of(EVENT), events.getEvents());
+        assertEquals("E2", events.createEvent("Next", 10, "").getId());
+    }
+
+    @Test
+    public void removeEvent_lastEvent_keepsNextIdAndRejectsRepeatedRemoval() {
+        EventList events = new EventList();
+        events.addEvent(EVENT);
+        events.removeEvent(EVENT.getId());
+        assertEquals(List.of(), events.getEvents());
+        assertThrows(EventNotFoundException.class, () -> events.removeEvent(EVENT.getId()));
+        assertEquals("E2", events.createEvent("Next", 10, "").getId());
+    }
+
+    @Test
     public void independentLists_doNotShareEvents() {
         EventList first = new EventList();
         EventList second = new EventList();
         first.addEvent(EVENT);
-        assertNull(second.getEventFromId(EVENT.getId()));
+        assertThrows(EventNotFoundException.class, () -> second.getEventFromId(EVENT.getId()));
     }
 }

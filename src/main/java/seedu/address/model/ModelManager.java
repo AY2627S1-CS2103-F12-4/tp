@@ -11,11 +11,13 @@ import javafx.collections.transformation.FilteredList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonId;
 
 /**
  * Represents the in-memory model of the address book data.
  */
 public class ModelManager implements Model {
+
     private static final Logger logger = LogsCenter.getLogger(ModelManager.class);
 
     private final AddressBook addressBook;
@@ -28,7 +30,11 @@ public class ModelManager implements Model {
     public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs) {
         requireAllNonNull(addressBook, userPrefs);
 
-        logger.fine("Initializing with address book: " + addressBook + " and user prefs " + userPrefs);
+        logger.fine(
+                "Initializing with address book: "
+                        + addressBook
+                        + " and user prefs "
+                        + userPrefs);
 
         this.addressBook = new AddressBook(addressBook);
         this.userPrefs = new UserPrefs(userPrefs);
@@ -39,7 +45,7 @@ public class ModelManager implements Model {
         this(new AddressBook(), new UserPrefs());
     }
 
-    //=========== UserPrefs ==================================================================================
+    //=========== UserPrefs ==============================================================================
 
     @Override
     public ReadOnlyUserPrefs getUserPrefs() {
@@ -57,7 +63,7 @@ public class ModelManager implements Model {
         userPrefs.setGuiSettings(guiSettings);
     }
 
-    //=========== AddressBook ================================================================================
+    //=========== AddressBook ============================================================================
 
     @Override
     public void setAddressBook(ReadOnlyAddressBook addressBook) {
@@ -87,17 +93,22 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public PersonId generateNextPersonId() {
+        return addressBook.generateNextPersonId();
+    }
+
+    @Override
     public void setPerson(Person target, Person editedPerson) {
         requireAllNonNull(target, editedPerson);
 
         addressBook.setPerson(target, editedPerson);
     }
 
-    //=========== Filtered Person List Accessors =============================================================
+    //=========== Filtered Person List Accessors =========================================================
 
     /**
-     * Returns an unmodifiable view of the list of {@code Person} backed by the internal list of
-     * {@code addressBook}
+     * Returns an unmodifiable view of the list of {@code Person} backed by
+     * the internal list of {@code addressBook}.
      */
     @Override
     public ObservableList<Person> getFilteredPersonList() {
@@ -116,7 +127,6 @@ public class ModelManager implements Model {
             return true;
         }
 
-        // instanceof handles nulls
         if (!(other instanceof ModelManager otherModelManager)) {
             return false;
         }
@@ -125,5 +135,4 @@ public class ModelManager implements Model {
                 && userPrefs.equals(otherModelManager.userPrefs)
                 && filteredPersons.equals(otherModelManager.filteredPersons);
     }
-
 }

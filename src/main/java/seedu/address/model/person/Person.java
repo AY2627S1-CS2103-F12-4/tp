@@ -17,6 +17,7 @@ import seedu.address.model.tag.Tag;
 public class Person {
 
     // Identity fields
+    private final PersonId id;
     private final Name name;
     private final Phone phone;
     private final Email email;
@@ -28,13 +29,19 @@ public class Person {
     /**
      * Every field must be present and not null.
      */
-    public Person(Name name, Phone phone, Email email, Address address, Set<Tag> tags) {
-        requireAllNonNull(name, phone, email, address, tags);
+    public Person(PersonId id, Name name, Phone phone, Email email,
+                  Address address, Set<Tag> tags) {
+        requireAllNonNull(id, name, phone, email, address, tags);
+        this.id = id;
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.address = address;
         this.tags.addAll(tags);
+    }
+
+    public PersonId getId() {
+        return id;
     }
 
     public Name getName() {
@@ -84,7 +91,6 @@ public class Person {
             return true;
         }
 
-        // instanceof handles nulls
         if (!(other instanceof Person otherPerson)) {
             return false;
         }
@@ -98,13 +104,13 @@ public class Person {
 
     @Override
     public int hashCode() {
-        // use this method for custom fields hashing instead of implementing your own
         return Objects.hash(name, phone, email, address, tags);
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this)
+                .add("id", id)
                 .add("name", name)
                 .add("phone", phone)
                 .add("email", email)
@@ -112,5 +118,4 @@ public class Person {
                 .add("tags", tags)
                 .toString();
     }
-
 }

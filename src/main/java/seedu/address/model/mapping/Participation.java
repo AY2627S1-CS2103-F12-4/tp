@@ -11,7 +11,7 @@ import seedu.address.model.tag.Tag;
 
 /**
  * Represents immutable participation details for one person at one event,
- * including presence and event-specific tags.
+ * including presence, event-specific tags and participation roles.
  */
 public final class Participation {
 
@@ -22,18 +22,21 @@ public final class Participation {
     private final Set<ParticipationRole> roles;
 
     /**
-     * Creates a participation record that is initially not present and has no tags.
+     * Creates a participation record that is initially not present
+     * and has no tags or roles.
      */
     public Participation(Event event, Person person) {
         this(event, person, false, Set.of(), Set.of());
     }
 
     /**
-     * Creates a participation record with the given participation state and
-     * event-specific tags.
+     * Creates a participation record with the given participation state,
+     * event-specific tags and roles.
      */
-    public Participation(Event event, Person person, boolean isPresent, Set<Tag> tags, Set<ParticipationRole> roles) {
-        requireAllNonNull(event, person, tags);
+    public Participation(Event event, Person person, boolean isPresent,
+                         Set<Tag> tags, Set<ParticipationRole> roles) {
+        requireAllNonNull(event, person, tags, roles);
+
         this.event = event;
         this.person = person;
         this.isPresent = isPresent;
@@ -41,22 +44,37 @@ public final class Participation {
         this.roles = Set.copyOf(roles);
     }
 
+    /**
+     * Returns the event associated with this participation.
+     */
     public Event getEvent() {
         return event;
     }
 
+    /**
+     * Returns the person associated with this participation.
+     */
     public Person getPerson() {
         return person;
     }
 
+    /**
+     * Returns true if the person is present for the event.
+     */
     public boolean isPresent() {
         return isPresent;
     }
 
+    /**
+     * Returns the event-specific tags associated with this participation.
+     */
     public Set<Tag> getTags() {
         return tags;
     }
 
+    /**
+     * Returns the roles associated with this participation.
+     */
     public Set<ParticipationRole> getRoles() {
         return roles;
     }
@@ -76,7 +94,7 @@ public final class Participation {
     }
 
     /**
-     * Returns a copy of this record with the specified event-specific tags.
+     * Returns a copy of this record with the specified participation roles.
      */
     public Participation withRoles(Set<ParticipationRole> roles) {
         return new Participation(event, person, isPresent, tags, roles);
@@ -91,8 +109,12 @@ public final class Participation {
         }
 
         return otherParticipation != null
-                && Objects.equals(event.getId(), otherParticipation.event.getId())
-                && Objects.equals(person.getId(), otherParticipation.person.getId());
+                && Objects.equals(
+                event.getId(),
+                otherParticipation.event.getId())
+                && Objects.equals(
+                person.getId(),
+                otherParticipation.person.getId());
     }
 
     @Override
@@ -108,11 +130,16 @@ public final class Participation {
         return isSameMapping(otherParticipation)
                 && isPresent == otherParticipation.isPresent
                 && tags.equals(otherParticipation.tags)
-                && tags.equals(otherParticipation.roles);
+                && roles.equals(otherParticipation.roles);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(event.getId(), person.getId(), isPresent, tags, roles);
+        return Objects.hash(
+                event.getId(),
+                person.getId(),
+                isPresent,
+                tags,
+                roles);
     }
 }

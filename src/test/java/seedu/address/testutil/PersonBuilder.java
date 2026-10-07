@@ -7,6 +7,7 @@ import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonId;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 import seedu.address.model.util.SampleDataUtil;
@@ -16,11 +17,13 @@ import seedu.address.model.util.SampleDataUtil;
  */
 public class PersonBuilder {
 
+    public static final String DEFAULT_ID = "P999";
     public static final String DEFAULT_NAME = "Amy Bee";
     public static final String DEFAULT_PHONE = "85355255";
     public static final String DEFAULT_EMAIL = "amy@gmail.com";
     public static final String DEFAULT_ADDRESS = "123, Jurong West Ave 6, #08-111";
 
+    private PersonId id;
     private Name name;
     private Phone phone;
     private Email email;
@@ -31,6 +34,7 @@ public class PersonBuilder {
      * Creates a {@code PersonBuilder} with the default details.
      */
     public PersonBuilder() {
+        id = new PersonId(DEFAULT_ID);
         name = new Name(DEFAULT_NAME);
         phone = new Phone(DEFAULT_PHONE);
         email = new Email(DEFAULT_EMAIL);
@@ -42,11 +46,20 @@ public class PersonBuilder {
      * Initializes the PersonBuilder with the data of {@code personToCopy}.
      */
     public PersonBuilder(Person personToCopy) {
+        id = personToCopy.getId();
         name = personToCopy.getName();
         phone = personToCopy.getPhone();
         email = personToCopy.getEmail();
         address = personToCopy.getAddress();
         tags = new HashSet<>(personToCopy.getTags());
+    }
+
+    /**
+     * Sets the {@code PersonId} of the {@code Person} that we are building.
+     */
+    public PersonBuilder withId(String id) {
+        this.id = new PersonId(id);
+        return this;
     }
 
     /**
@@ -58,9 +71,10 @@ public class PersonBuilder {
     }
 
     /**
-     * Parses the {@code tags} into a {@code Set<Tag>} and sets it to the {@code Person} that we are building.
+     * Parses the {@code tags} into a {@code Set<Tag>} and sets it to the
+     * {@code Person} that we are building.
      */
-    public PersonBuilder withTags(String ... tags) {
+    public PersonBuilder withTags(String... tags) {
         this.tags = SampleDataUtil.getTagSet(tags);
         return this;
     }
@@ -90,7 +104,6 @@ public class PersonBuilder {
     }
 
     public Person build() {
-        return new Person(name, phone, email, address, tags);
+        return new Person(id, name, phone, email, address, tags);
     }
-
 }

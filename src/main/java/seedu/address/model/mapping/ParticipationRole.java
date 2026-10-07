@@ -1,23 +1,25 @@
-package seedu.address.model.participant;
+package seedu.address.model.mapping;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
 /**
- * Represents a Participant's role in an event.
+ * Represents a participant's role in an event.
  * Guarantees: immutable; is valid as declared in {@link #isValidRole(String)}
  */
 public class ParticipationRole {
 
-    public static final String MESSAGE_CONSTRAINTS = "Roles should be 1 to 50 characters and may contain letters, numbers, spaces, "
-            + "apostrophes, hyphens and parentheses.";
+    public static final String MESSAGE_CONSTRAINTS =
+            "Roles should be 1 to 50 characters and may contain letters, numbers, spaces, "
+                    + "apostrophes, hyphens and parentheses.";
 
-    private static final String VALIDATION_REGEX = "[A-Za-z0-9'()\\- ]{1,50}";
+    private static final String VALIDATION_REGEX =
+            "[A-Za-z0-9'()\\- ]{1,50}";
 
     public final String value;
 
     /**
-     * Constructs a {@code Role}.
+     * Constructs a {@code ParticipationRole}.
      *
      * @param role A valid role.
      */
@@ -47,8 +49,8 @@ public class ParticipationRole {
     @Override
     public boolean equals(Object other) {
         return other == this
-                || (other instanceof Role
-                        && value.equals(((Role) other).value));
+                || (other instanceof ParticipationRole
+                && value.equals(((ParticipationRole) other).value));
     }
 
     @Override

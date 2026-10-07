@@ -7,6 +7,7 @@ import java.util.List;
 import javafx.collections.ObservableList;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonId;
 import seedu.address.model.person.UniquePersonList;
 
 /**
@@ -27,7 +28,7 @@ public class AddressBook implements ReadOnlyAddressBook {
         resetData(toBeCopied);
     }
 
-    //// list overwrite operations
+    // list overwrite operations
 
     /**
      * Replaces the contents of the person list with {@code persons}.
@@ -46,10 +47,11 @@ public class AddressBook implements ReadOnlyAddressBook {
         setPersons(newData.getPersonList());
     }
 
-    //// person-level operations
+    // person-level operations
 
     /**
-     * Returns true if a person with the same identity as {@code person} exists in the address book.
+     * Returns true if a person with the same identity as {@code person}
+     * exists in the address book.
      */
     public boolean hasPerson(Person person) {
         requireNonNull(person);
@@ -65,9 +67,40 @@ public class AddressBook implements ReadOnlyAddressBook {
     }
 
     /**
-     * Replaces the given person {@code target} in the list with {@code editedPerson}.
+     * Returns the person with the given ID.
+     * Returns null if no matching person exists.
+     */
+    public Person getPersonFromId(PersonId personId) {
+        requireNonNull(personId);
+
+        return persons.asUnmodifiableObservableList().stream()
+                .filter(person -> person.getId().equals(personId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Generates the next available PersonId.
+     *
+     * Example:
+     * P1, P2, P3, ...
+     */
+    public PersonId generateNextPersonId() {
+        int nextId = 1;
+
+        while (getPersonFromId(new PersonId("P" + nextId)) != null) {
+            nextId++;
+        }
+
+        return new PersonId("P" + nextId);
+    }
+
+    /**
+     * Replaces the given person {@code target} in the list with
+     * {@code editedPerson}.
      * {@code target} must exist in the address book.
-     * The person identity of {@code editedPerson} must not be the same as another existing person in the address book.
+     * The person identity of {@code editedPerson} must not be the same as
+     * another existing person in the address book.
      */
     public void setPerson(Person target, Person editedPerson) {
         requireNonNull(editedPerson);
@@ -83,7 +116,7 @@ public class AddressBook implements ReadOnlyAddressBook {
         persons.remove(key);
     }
 
-    //// util methods
+    // util methods
 
     @Override
     public String toString() {
@@ -103,7 +136,6 @@ public class AddressBook implements ReadOnlyAddressBook {
             return true;
         }
 
-        // instanceof handles nulls
         if (!(other instanceof AddressBook otherAddressBook)) {
             return false;
         }

@@ -392,14 +392,14 @@ Use case ends.
 
 ### Use case: UC03 - Add participant to an event
 
-**System:** AttendPlusPlus  
+**System:** AttendPlusPlus
 
-**Actor:** Event organiser  
+**Actor:** Event organiser
 
-**Preconditions:** 
-* At least one event exists, and the event list is displayed.  
+**Preconditions:**
+* At least one event exists, and the event list is displayed.
 
-**Guarantee on success:** 
+**Guarantee on success:**
 * A new participant with a unique ID is added to the specified event and saved to persistent storage.
 
 **MSS**

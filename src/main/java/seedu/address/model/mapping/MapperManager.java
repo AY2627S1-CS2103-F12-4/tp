@@ -20,13 +20,13 @@ import seedu.address.model.person.exceptions.PersonNotFoundException;
 import seedu.address.model.tag.Tag;
 
 /**
- * Manages attendance mappings using event and person IDs as stable identifiers.
+ * Manages participation mappings using event and person IDs as stable identifiers.
  */
 public class MapperManager implements Mapper {
 
     private final EventList eventList;
     private final AddressBook addressBook;
-    private final Map<MappingKey, AttendanceState> mappings = new HashMap<>();
+    private final Map<MappingKey, ParticipationState> mappings = new HashMap<>();
 
     /**
      * Creates a mapper that resolves current events and people from the given
@@ -38,22 +38,22 @@ public class MapperManager implements Mapper {
     }
 
     /**
-     * Creates a mapper initialized with the given attendance records.
-     * Arguments and attendance records must not be null.
+     * Creates a mapper initialized with the given participation records.
+     * Arguments and participation records must not be null.
      *
-     * @throws DuplicateMappingException if {@code attendances} contains duplicate
+     * @throws DuplicateMappingException if {@code participations} contains duplicate
      *                                   mappings.
      */
-    public MapperManager(EventList eventList, AddressBook addressBook, Collection<Attendance> attendances)
+    public MapperManager(EventList eventList, AddressBook addressBook, Collection<Participation> participations)
             throws DuplicateMappingException {
         this.eventList = requireNonNull(eventList);
         this.addressBook = requireNonNull(addressBook);
-        requireNonNull(attendances);
+        requireNonNull(participations);
 
-        for (Attendance attendance : attendances) {
-            requireNonNull(attendance);
-            MappingKey key = createKey(attendance.getEvent(), attendance.getPerson());
-            AttendanceState state = new AttendanceState(attendance.isPresent(), attendance.getTags());
+        for (Participation participation : participations) {
+            requireNonNull(participation);
+            MappingKey key = createKey(participation.getEvent(), participation.getPerson());
+            ParticipationState state = new ParticipationState(participation.isPresent(), participation.getTags());
             if (mappings.putIfAbsent(key, state) != null) {
                 throw new DuplicateMappingException(key.eventId(), key.personId());
             }
@@ -67,7 +67,7 @@ public class MapperManager implements Mapper {
             throw new DuplicateMappingException(key.eventId(), key.personId());
         }
 
-        mappings.put(key, new AttendanceState(false, Set.of()));
+        mappings.put(key, new ParticipationState(false, Set.of()));
     }
 
     @Override
@@ -79,7 +79,7 @@ public class MapperManager implements Mapper {
     }
 
     @Override
-    public Set<Attendance> getMappingsForEvent(Event event) throws EventNotFoundException {
+    public Set<Participation> getMappingsForEvent(Event event) throws EventNotFoundException {
         requireNonNull(event);
         String eventId = requireNonNull(event.getId());
         Event currentEvent = eventList.getEventFromId(eventId);
@@ -89,13 +89,13 @@ public class MapperManager implements Mapper {
 
         return mappings.entrySet().stream()
                 .filter(entry -> entry.getKey().eventId().equals(eventId))
-                .flatMap(entry -> toAttendanceForEvent(
+                .flatMap(entry -> toParticipationForEvent(
                         currentEvent, entry.getKey(), entry.getValue()).stream())
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
-    public Set<Attendance> getMappingsForPerson(Person person) throws PersonNotFoundException {
+    public Set<Participation> getMappingsForPerson(Person person) throws PersonNotFoundException {
         requireNonNull(person);
         String personId = requireNonNull(person.getId());
         Person currentPerson = addressBook.getPersonFromId(personId);
@@ -105,29 +105,29 @@ public class MapperManager implements Mapper {
 
         return mappings.entrySet().stream()
                 .filter(entry -> entry.getKey().personId().equals(personId))
-                .flatMap(entry -> toAttendanceForPerson(
+                .flatMap(entry -> toParticipationForPerson(
                         currentPerson, entry.getKey(), entry.getValue()).stream())
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
-    public Attendance setPresent(Event event, Person person, boolean isPresent)
+    public Participation setPresent(Event event, Person person, boolean isPresent)
             throws MappingNotFoundException, EventNotFoundException, PersonNotFoundException {
         MappingKey key = createKey(event, person);
-        AttendanceState currentState = getState(key);
-        AttendanceState updatedState = new AttendanceState(isPresent, currentState.tags());
+        ParticipationState currentState = getState(key);
+        ParticipationState updatedState = new ParticipationState(isPresent, currentState.tags());
         mappings.put(key, updatedState);
-        return toAttendance(key, updatedState);
+        return toParticipation(key, updatedState);
     }
 
     @Override
-    public Attendance setTags(Event event, Person person, Set<Tag> tags)
+    public Participation setTags(Event event, Person person, Set<Tag> tags)
             throws MappingNotFoundException, EventNotFoundException, PersonNotFoundException {
         MappingKey key = createKey(event, person);
-        AttendanceState currentState = getState(key);
-        AttendanceState updatedState = new AttendanceState(currentState.isPresent(), tags);
+        ParticipationState currentState = getState(key);
+        ParticipationState updatedState = new ParticipationState(currentState.isPresent(), tags);
         mappings.put(key, updatedState);
-        return toAttendance(key, updatedState);
+        return toParticipation(key, updatedState);
     }
 
     @Override
@@ -158,8 +158,8 @@ public class MapperManager implements Mapper {
      *
      * @throws MappingNotFoundException if the mapping does not exist.
      */
-    private AttendanceState getState(MappingKey key) throws MappingNotFoundException {
-        AttendanceState state = mappings.get(key);
+    private ParticipationState getState(MappingKey key) throws MappingNotFoundException {
+        ParticipationState state = mappings.get(key);
         if (state == null) {
             throw new MappingNotFoundException(key.eventId(), key.personId());
         }
@@ -167,39 +167,39 @@ public class MapperManager implements Mapper {
     }
 
     /**
-     * Returns an attendance record for {@code event}, or an empty result if its
+     * Returns a participation record for {@code event}, or an empty result if its
      * person cannot be found.
      */
-    private Optional<Attendance> toAttendanceForEvent(Event event, MappingKey key, AttendanceState state) {
+    private Optional<Participation> toParticipationForEvent(Event event, MappingKey key, ParticipationState state) {
         Person person = addressBook.getPersonFromId(key.personId());
         if (person == null) {
             return Optional.empty();
         }
 
-        return Optional.of(new Attendance(event, person, state.isPresent(), state.tags()));
+        return Optional.of(new Participation(event, person, state.isPresent(), state.tags()));
     }
 
     /**
-     * Returns an attendance record for {@code person}, or an empty result if its
+     * Returns a participation record for {@code person}, or an empty result if its
      * event cannot be found.
      */
-    private Optional<Attendance> toAttendanceForPerson(Person person, MappingKey key, AttendanceState state) {
+    private Optional<Participation> toParticipationForPerson(Person person, MappingKey key, ParticipationState state) {
         Event event = eventList.getEventFromId(key.eventId());
         if (event == null) {
             return Optional.empty();
         }
 
-        return Optional.of(new Attendance(event, person, state.isPresent(), state.tags()));
+        return Optional.of(new Participation(event, person, state.isPresent(), state.tags()));
     }
 
     /**
-     * Resolves the current event and person objects and creates an attendance
+     * Resolves the current event and person objects and creates a participation
      * record.
      *
      * @throws EventNotFoundException if the referenced event cannot be found.
      * @throws PersonNotFoundException if the referenced person cannot be found.
      */
-    private Attendance toAttendance(MappingKey key, AttendanceState state)
+    private Participation toParticipation(MappingKey key, ParticipationState state)
             throws EventNotFoundException, PersonNotFoundException {
         Event event = eventList.getEventFromId(key.eventId());
         Person person = addressBook.getPersonFromId(key.personId());
@@ -209,7 +209,7 @@ public class MapperManager implements Mapper {
         if (person == null) {
             throw new PersonNotFoundException();
         }
-        return new Attendance(event, person, state.isPresent(), state.tags());
+        return new Participation(event, person, state.isPresent(), state.tags());
     }
 
     /**
@@ -223,10 +223,10 @@ public class MapperManager implements Mapper {
     }
 
     /**
-     * Stores the immutable attendance state associated with a mapping.
+     * Stores the immutable participation state associated with a mapping.
      */
-    private record AttendanceState(boolean isPresent, Set<Tag> tags) {
-        private AttendanceState {
+    private record ParticipationState(boolean isPresent, Set<Tag> tags) {
+        private ParticipationState {
             tags = Set.copyOf(tags);
         }
     }

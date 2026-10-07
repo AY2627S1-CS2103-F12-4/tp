@@ -11,8 +11,8 @@ import seedu.address.model.person.exceptions.PersonNotFoundException;
 import seedu.address.model.tag.Tag;
 
 /**
- * Defines operations for managing attendance mappings between events and people.
- * Each event-person pair has at most one attendance record.
+ * Defines operations for managing participation mappings between events and people.
+ * Each event-person pair has at most one participation record.
  */
 public interface Mapper {
 
@@ -33,48 +33,48 @@ public interface Mapper {
     void removeMapping(Event event, Person person) throws MappingNotFoundException;
 
     /**
-     * Returns an unmodifiable snapshot of the attendance records for {@code event}.
+     * Returns an unmodifiable snapshot of the participation records for {@code event}.
      * {@code event} must not be null.
      * Mappings whose person cannot be found are omitted.
      *
      * @throws EventNotFoundException if a referenced event cannot be found.
      */
-    Set<Attendance> getMappingsForEvent(Event event)
+    Set<Participation> getMappingsForEvent(Event event)
             throws EventNotFoundException;
 
     /**
-     * Returns an unmodifiable snapshot of the attendance records for
+     * Returns an unmodifiable snapshot of the participation records for
      * {@code person}.
      * {@code person} must not be null.
      * Mappings whose event cannot be found are omitted.
      *
      * @throws PersonNotFoundException if a referenced person cannot be found.
      */
-    Set<Attendance> getMappingsForPerson(Person person)
+    Set<Participation> getMappingsForPerson(Person person)
             throws PersonNotFoundException;
 
     /**
      * Sets whether {@code person} is present at {@code event}.
-     * Returns the resulting attendance record.
+     * Returns the resulting participation record.
      * Both {@code event} and {@code person} must not be null.
      *
      * @throws MappingNotFoundException if the mapping does not exist.
      * @throws EventNotFoundException if the referenced event cannot be found.
      * @throws PersonNotFoundException if the referenced person cannot be found.
      */
-    Attendance setPresent(Event event, Person person, boolean isPresent)
+    Participation setPresent(Event event, Person person, boolean isPresent)
             throws MappingNotFoundException, EventNotFoundException, PersonNotFoundException;
 
     /**
      * Replaces the event-specific tags for {@code person} at {@code event}.
-     * Returns the resulting attendance record.
+     * Returns the resulting participation record.
      * Arguments must not be null.
      *
      * @throws MappingNotFoundException if the mapping does not exist.
      * @throws EventNotFoundException if the referenced event cannot be found.
      * @throws PersonNotFoundException if the referenced person cannot be found.
      */
-    Attendance setTags(Event event, Person person, Set<Tag> tags)
+    Participation setTags(Event event, Person person, Set<Tag> tags)
             throws MappingNotFoundException, EventNotFoundException, PersonNotFoundException;
 
     /**

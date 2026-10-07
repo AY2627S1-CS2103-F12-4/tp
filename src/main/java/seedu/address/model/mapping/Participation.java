@@ -19,24 +19,26 @@ public final class Participation {
     private final Person person;
     private final boolean isPresent;
     private final Set<Tag> tags;
+    private final Set<ParticipationRole> roles;
 
     /**
      * Creates a participation record that is initially not present and has no tags.
      */
     public Participation(Event event, Person person) {
-        this(event, person, false, Set.of());
+        this(event, person, false, Set.of(), Set.of());
     }
 
     /**
      * Creates a participation record with the given participation state and
      * event-specific tags.
      */
-    public Participation(Event event, Person person, boolean isPresent, Set<Tag> tags) {
+    public Participation(Event event, Person person, boolean isPresent, Set<Tag> tags, Set<ParticipationRole> roles) {
         requireAllNonNull(event, person, tags);
         this.event = event;
         this.person = person;
         this.isPresent = isPresent;
         this.tags = Set.copyOf(tags);
+        this.roles = Set.copyOf(roles);
     }
 
     public Event getEvent() {
@@ -55,18 +57,29 @@ public final class Participation {
         return tags;
     }
 
+    public Set<ParticipationRole> getRoles() {
+        return roles;
+    }
+
     /**
      * Returns a copy of this record with the specified participation state.
      */
     public Participation withPresent(boolean isPresent) {
-        return new Participation(event, person, isPresent, tags);
+        return new Participation(event, person, isPresent, tags, roles);
     }
 
     /**
      * Returns a copy of this record with the specified event-specific tags.
      */
     public Participation withTags(Set<Tag> tags) {
-        return new Participation(event, person, isPresent, tags);
+        return new Participation(event, person, isPresent, tags, roles);
+    }
+
+    /**
+     * Returns a copy of this record with the specified event-specific tags.
+     */
+    public Participation withRoles(Set<ParticipationRole> roles) {
+        return new Participation(event, person, isPresent, tags, roles);
     }
 
     /**
@@ -94,11 +107,12 @@ public final class Participation {
 
         return isSameMapping(otherParticipation)
                 && isPresent == otherParticipation.isPresent
-                && tags.equals(otherParticipation.tags);
+                && tags.equals(otherParticipation.tags)
+                && tags.equals(otherParticipation.roles);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(event.getId(), person.getId(), isPresent, tags);
+        return Objects.hash(event.getId(), person.getId(), isPresent, tags, roles);
     }
 }

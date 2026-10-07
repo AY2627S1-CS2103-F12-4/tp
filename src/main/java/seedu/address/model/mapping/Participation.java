@@ -10,10 +10,10 @@ import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 
 /**
- * Represents immutable attendance details for one person at one event,
+ * Represents immutable participation details for one person at one event,
  * including presence and event-specific tags.
  */
-public final class Attendance {
+public final class Participation {
 
     private final Event event;
     private final Person person;
@@ -21,17 +21,17 @@ public final class Attendance {
     private final Set<Tag> tags;
 
     /**
-     * Creates an attendance record that is initially not present and has no tags.
+     * Creates a participation record that is initially not present and has no tags.
      */
-    public Attendance(Event event, Person person) {
+    public Participation(Event event, Person person) {
         this(event, person, false, Set.of());
     }
 
     /**
-     * Creates an attendance record with the given attendance state and
+     * Creates a participation record with the given participation state and
      * event-specific tags.
      */
-    public Attendance(Event event, Person person, boolean isPresent, Set<Tag> tags) {
+    public Participation(Event event, Person person, boolean isPresent, Set<Tag> tags) {
         requireAllNonNull(event, person, tags);
         this.event = event;
         this.person = person;
@@ -56,30 +56,30 @@ public final class Attendance {
     }
 
     /**
-     * Returns a copy of this record with the specified attendance state.
+     * Returns a copy of this record with the specified participation state.
      */
-    public Attendance withPresent(boolean isPresent) {
-        return new Attendance(event, person, isPresent, tags);
+    public Participation withPresent(boolean isPresent) {
+        return new Participation(event, person, isPresent, tags);
     }
 
     /**
      * Returns a copy of this record with the specified event-specific tags.
      */
-    public Attendance withTags(Set<Tag> tags) {
-        return new Attendance(event, person, isPresent, tags);
+    public Participation withTags(Set<Tag> tags) {
+        return new Participation(event, person, isPresent, tags);
     }
 
     /**
      * Returns true if both records refer to the same event-person mapping.
      */
-    public boolean isSameMapping(Attendance otherAttendance) {
-        if (otherAttendance == this) {
+    public boolean isSameMapping(Participation otherParticipation) {
+        if (otherParticipation == this) {
             return true;
         }
 
-        return otherAttendance != null
-                && Objects.equals(event.getId(), otherAttendance.event.getId())
-                && Objects.equals(person.getId(), otherAttendance.person.getId());
+        return otherParticipation != null
+                && Objects.equals(event.getId(), otherParticipation.event.getId())
+                && Objects.equals(person.getId(), otherParticipation.person.getId());
     }
 
     @Override
@@ -88,13 +88,13 @@ public final class Attendance {
             return true;
         }
 
-        if (!(other instanceof Attendance otherAttendance)) {
+        if (!(other instanceof Participation otherParticipation)) {
             return false;
         }
 
-        return isSameMapping(otherAttendance)
-                && isPresent == otherAttendance.isPresent
-                && tags.equals(otherAttendance.tags);
+        return isSameMapping(otherParticipation)
+                && isPresent == otherParticipation.isPresent
+                && tags.equals(otherParticipation.tags);
     }
 
     @Override

@@ -13,8 +13,7 @@ public class ParticipationRole {
             "Roles should be 1 to 50 characters and may contain letters, numbers, spaces, "
                     + "apostrophes, hyphens and parentheses.";
 
-    private static final String VALIDATION_REGEX =
-            "[A-Za-z0-9'()\\- ]{1,50}";
+    private static final String VALIDATION_REGEX = "[A-Za-z0-9'()\\- ]{1,50}";
 
     public final String value;
 
@@ -50,7 +49,7 @@ public class ParticipationRole {
     public boolean equals(Object other) {
         return other == this
                 || (other instanceof ParticipationRole
-                && value.equals(((ParticipationRole) other).value));
+                        && value.equals(((ParticipationRole) other).value));
     }
 
     @Override

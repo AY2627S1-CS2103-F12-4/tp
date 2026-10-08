@@ -32,7 +32,7 @@ public class FindEventCommandTest {
         CommandResult result = new FindEventCommand(new EventNameContainsKeywordPredicate("Java")).execute(model);
 
         assertEquals(List.of(WORKSHOP, MEETUP), model.getFilteredEventList());
-        assertEquals(new CommandResult("2 event(s) listed!"), result);
+        assertEquals(new CommandResult("2 event(s) listed!", false, false, true), result);
     }
 
     @Test
@@ -44,7 +44,7 @@ public class FindEventCommandTest {
         CommandResult result = new FindEventCommand(new EventNameContainsKeywordPredicate("Football")).execute(model);
 
         assertEquals(List.of(), model.getFilteredEventList());
-        assertEquals(new CommandResult("No matching events found."), result);
+        assertEquals(new CommandResult("No matching events found.", false, false, true), result);
     }
 
     @Test
@@ -54,7 +54,7 @@ public class FindEventCommandTest {
         CommandResult result = new FindEventCommand(new EventNameContainsKeywordPredicate("Java")).execute(model);
 
         assertEquals(List.of(), model.getFilteredEventList());
-        assertEquals(new CommandResult("No matching events found."), result);
+        assertEquals(new CommandResult("No matching events found.", false, false, true), result);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class FindEventCommandTest {
         CommandResult result = new FindEventCommand(new EventNameContainsKeywordPredicate("Concert")).execute(model);
 
         assertEquals(List.of(CONCERT), model.getFilteredEventList());
-        assertEquals(new CommandResult("1 event(s) listed!"), result);
+        assertEquals(new CommandResult("1 event(s) listed!", false, false, true), result);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class FindEventCommandTest {
 
         // The meetup has no participants and must still be found.
         assertEquals(List.of(WORKSHOP, MEETUP), model.getFilteredEventList());
-        assertEquals(new CommandResult("2 event(s) listed!"), result);
+        assertEquals(new CommandResult("2 event(s) listed!", false, false, true), result);
         assertEquals(originalMappings, model.getParticipationsForEvent(WORKSHOP));
         assertEquals(Set.of(), model.getParticipationsForEvent(MEETUP));
     }

@@ -30,10 +30,10 @@ public class FindEventCommand extends Command {
         requireNonNull(model);
         model.updateFilteredEventList(predicate);
         if (model.getFilteredEventList().isEmpty()) {
-            return new CommandResult(MESSAGE_NO_MATCHES);
+            return new CommandResult(MESSAGE_NO_MATCHES, false, false, true);
         }
         return new CommandResult(String.format(
-                Messages.MESSAGE_EVENTS_LISTED_OVERVIEW, model.getFilteredEventList().size()));
+                Messages.MESSAGE_EVENTS_LISTED_OVERVIEW, model.getFilteredEventList().size()), false, false, true);
     }
 
     @Override

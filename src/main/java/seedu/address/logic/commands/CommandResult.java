@@ -19,13 +19,24 @@ public class CommandResult {
     /** The application should exit. */
     private final boolean exit;
 
+    /** The event list should be shown to the user. */
+    private final boolean showEvents;
+
     /**
      * Constructs a {@code CommandResult} with the specified fields.
      */
     public CommandResult(String feedbackToUser, boolean showHelp, boolean exit) {
+        this(feedbackToUser, showHelp, exit, false);
+    }
+
+    /**
+     * Constructs a result with feedback, help, exit, and event-display instructions.
+     */
+    public CommandResult(String feedbackToUser, boolean showHelp, boolean exit, boolean showEvents) {
         this.feedbackToUser = requireNonNull(feedbackToUser);
         this.showHelp = showHelp;
         this.exit = exit;
+        this.showEvents = showEvents;
     }
 
     /**
@@ -48,6 +59,10 @@ public class CommandResult {
         return exit;
     }
 
+    public boolean isShowEvents() {
+        return showEvents;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -61,12 +76,13 @@ public class CommandResult {
 
         return feedbackToUser.equals(otherCommandResult.feedbackToUser)
                 && showHelp == otherCommandResult.showHelp
-                && exit == otherCommandResult.exit;
+                && exit == otherCommandResult.exit
+                && showEvents == otherCommandResult.showEvents;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feedbackToUser, showHelp, exit);
+        return Objects.hash(feedbackToUser, showHelp, exit, showEvents);
     }
 
     @Override
@@ -75,6 +91,7 @@ public class CommandResult {
                 .add("feedbackToUser", feedbackToUser)
                 .add("showHelp", showHelp)
                 .add("exit", exit)
+                .add("showEvents", showEvents)
                 .toString();
     }
 

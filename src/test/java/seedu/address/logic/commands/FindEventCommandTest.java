@@ -36,7 +36,7 @@ public class FindEventCommandTest {
     }
 
     @Test
-    public void execute_noMatches_clearsPreviousResultsAndReportsZero() {
+    public void execute_noMatches_clearsPreviousResultsAndReportsNoMatches() {
         Model model = createModelWithEvents();
         new FindEventCommand(new EventNameContainsKeywordPredicate("Java")).execute(model);
         assertEquals(List.of(WORKSHOP, MEETUP), model.getFilteredEventList());
@@ -44,17 +44,17 @@ public class FindEventCommandTest {
         CommandResult result = new FindEventCommand(new EventNameContainsKeywordPredicate("Football")).execute(model);
 
         assertEquals(List.of(), model.getFilteredEventList());
-        assertEquals(new CommandResult("0 event(s) listed!"), result);
+        assertEquals(new CommandResult("No matching events found."), result);
     }
 
     @Test
-    public void execute_emptyEventList_reportsZero() {
+    public void execute_emptyEventList_reportsNoMatches() {
         Model model = new ModelManager();
 
         CommandResult result = new FindEventCommand(new EventNameContainsKeywordPredicate("Java")).execute(model);
 
         assertEquals(List.of(), model.getFilteredEventList());
-        assertEquals(new CommandResult("0 event(s) listed!"), result);
+        assertEquals(new CommandResult("No matching events found."), result);
     }
 
     @Test

@@ -11,6 +11,7 @@ import seedu.address.model.event.EventNameContainsKeywordPredicate;
  */
 public class FindEventCommand extends Command {
     public static final String COMMAND_WORD = "find-event";
+    public static final String MESSAGE_NO_MATCHES = "No matching events found.";
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds events by name.\n"
             + "Parameters: KEYWORD\n"
             + "Example: " + COMMAND_WORD + " Workshop";
@@ -28,6 +29,9 @@ public class FindEventCommand extends Command {
     public CommandResult execute(Model model) {
         requireNonNull(model);
         model.updateFilteredEventList(predicate);
+        if (model.getFilteredEventList().isEmpty()) {
+            return new CommandResult(MESSAGE_NO_MATCHES);
+        }
         return new CommandResult(String.format(
                 Messages.MESSAGE_EVENTS_LISTED_OVERVIEW, model.getFilteredEventList().size()));
     }

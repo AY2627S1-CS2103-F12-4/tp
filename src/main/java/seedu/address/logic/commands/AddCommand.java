@@ -21,6 +21,7 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.Phone;
+import seedu.address.model.person.Remark;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -96,6 +97,7 @@ public class AddCommand extends Command {
                 phone,
                 email,
                 address,
+                new Remark(""),
                 tags);
 
         if (model.hasPerson(toAdd)) {

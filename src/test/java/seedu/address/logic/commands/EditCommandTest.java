@@ -36,6 +36,22 @@ public class EditCommandTest {
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
     @Test
+    public void execute_personWithRemark_preservesRemark() throws Exception {
+        Person originalPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        Person personWithRemark = new PersonBuilder(originalPerson).withRemark("Likes swimming.").build();
+        model.setPerson(originalPerson, personWithRemark);
+
+        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withPhone(VALID_PHONE_BOB).build());
+        editCommand.execute(model);
+
+        Person editedPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        assertEquals(personWithRemark.getRemark(), editedPerson.getRemark());
+        assertEquals(VALID_PHONE_BOB, editedPerson.getPhone().value);
+        assertEquals(personWithRemark.getRemark(), new PersonBuilder(personWithRemark).build().getRemark());
+    }
+
+    @Test
     public void execute_allFieldsSpecifiedUnfilteredList_success() {
         Person editedPerson = new PersonBuilder().build();
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder(editedPerson).build();

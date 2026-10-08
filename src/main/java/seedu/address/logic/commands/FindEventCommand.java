@@ -1,5 +1,8 @@
 package seedu.address.logic.commands;
 
+import static java.util.Objects.requireNonNull;
+
+import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.event.EventNameContainsKeywordPredicate;
 
@@ -18,12 +21,25 @@ public class FindEventCommand extends Command {
      * Creates a command with the supplied event-name predicate.
      */
     public FindEventCommand(EventNameContainsKeywordPredicate predicate) {
-        this.predicate = predicate;
+        this.predicate = requireNonNull(predicate);
     }
 
     @Override
     public CommandResult execute(Model model) {
-        // TODO: Drive filtered event-list support in Model with command tests.
-        throw new UnsupportedOperationException("Find-event execution is not implemented yet");
+        requireNonNull(model);
+        model.updateFilteredEventList(predicate);
+        return new CommandResult(String.format(
+                Messages.MESSAGE_EVENTS_LISTED_OVERVIEW, model.getFilteredEventList().size()));
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return other == this
+                || other instanceof FindEventCommand otherCommand && predicate.equals(otherCommand.predicate);
+    }
+
+    @Override
+    public int hashCode() {
+        return predicate.hashCode();
     }
 }

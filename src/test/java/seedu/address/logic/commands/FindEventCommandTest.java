@@ -12,7 +12,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventNameContainsKeywordPredicate;
-import seedu.address.model.mapping.Participation;
+import seedu.address.model.mapper.Participation;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
@@ -82,7 +82,7 @@ public class FindEventCommandTest {
     }
 
     @Test
-    public void execute_multipleParticipants_listsEachEventOnceAndPreservesMappings() {
+    public void execute_multipleParticipants_listsEachEventOnceAndPreservesParticipations() {
         Model model = createModelWithEvents();
         Person alice = new PersonBuilder().withId("P1").withName("Alice Tan").build();
         Person bob = new PersonBuilder().withId("P2").withName("Bob Lim").build();
@@ -90,15 +90,17 @@ public class FindEventCommandTest {
         model.addPerson(bob);
         model.addParticipation(WORKSHOP, alice);
         model.addParticipation(WORKSHOP, bob);
-        Set<Participation> originalMappings = model.getParticipationsForEvent(WORKSHOP);
-        assertEquals(Set.of(new Participation(WORKSHOP, alice), new Participation(WORKSHOP, bob)), originalMappings);
+        Set<Participation> originalParticipations = model.getParticipationsForEvent(WORKSHOP);
+        assertEquals(Set.of(
+                new Participation(WORKSHOP, alice),
+                new Participation(WORKSHOP, bob)), originalParticipations);
 
         CommandResult result = new FindEventCommand(new EventNameContainsKeywordPredicate("Java")).execute(model);
 
         // The meetup has no participants and must still be found.
         assertEquals(List.of(WORKSHOP, MEETUP), model.getFilteredEventList());
         assertEquals(new CommandResult("2 event(s) listed!", false, false, true), result);
-        assertEquals(originalMappings, model.getParticipationsForEvent(WORKSHOP));
+        assertEquals(originalParticipations, model.getParticipationsForEvent(WORKSHOP));
         assertEquals(Set.of(), model.getParticipationsForEvent(MEETUP));
     }
 

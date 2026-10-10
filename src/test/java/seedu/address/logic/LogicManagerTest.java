@@ -33,6 +33,7 @@ import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.storage.JsonParticipationStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PersonBuilder;
@@ -52,7 +53,9 @@ public class LogicManagerTest {
         JsonAddressBookStorage addressBookStorage =
                 new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
-        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
+        JsonParticipationStorage participationStorage =
+                new JsonParticipationStorage(temporaryFolder.resolve("participations.json"));
+        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage, participationStorage);
         logic = new LogicManager(model, storage);
     }
 
@@ -179,7 +182,9 @@ public class LogicManagerTest {
 
         JsonUserPrefsStorage userPrefsStorage =
                 new JsonUserPrefsStorage(temporaryFolder.resolve("ExceptionUserPrefs.json"));
-        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
+        JsonParticipationStorage participationStorage =
+                new JsonParticipationStorage(temporaryFolder.resolve("ExceptionParticipations.json"));
+        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage, participationStorage);
 
         logic = new LogicManager(model, storage);
 

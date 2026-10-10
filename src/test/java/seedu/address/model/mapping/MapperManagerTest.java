@@ -65,4 +65,52 @@ public class MapperManagerTest {
 
         assertEquals(Set.of(), mapper.getMappings());
     }
+
+    @Test
+    public void getMappings_missingEvent_omitsMapping() {
+        Person person = new PersonBuilder().withId("P1").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(person);
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        MapperManager mapper = new MapperManager(eventList, addressBook);
+        mapper.addMapping(event, person);
+
+        eventList.removeEvent(event.getId());
+
+        assertEquals(Set.of(), mapper.getMappings());
+    }
+
+    @Test
+    public void getMappingsForEvent_missingPerson_omitsMapping() {
+        Person person = new PersonBuilder().withId("P1").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(person);
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        MapperManager mapper = new MapperManager(eventList, addressBook);
+        mapper.addMapping(event, person);
+
+        addressBook.removePerson(person);
+
+        assertEquals(Set.of(), mapper.getMappingsForEvent(event));
+    }
+
+    @Test
+    public void getMappingsForPerson_missingEvent_omitsMapping() {
+        Person person = new PersonBuilder().withId("P1").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(person);
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        MapperManager mapper = new MapperManager(eventList, addressBook);
+        mapper.addMapping(event, person);
+
+        eventList.removeEvent(event.getId());
+
+        assertEquals(Set.of(), mapper.getMappingsForPerson(person));
+    }
 }

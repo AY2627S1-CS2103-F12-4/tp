@@ -14,7 +14,7 @@ import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventNameContainsKeywordPredicate;
 import seedu.address.model.event.exceptions.EventNotFoundException;
-import seedu.address.model.mapping.Participation;
+import seedu.address.model.mapper.Participation;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
 import seedu.address.testutil.PersonBuilder;
@@ -52,7 +52,7 @@ public class ModelManagerEventTest {
     }
 
     @Test
-    public void addParticipation_missingRecords_rejectsMapping() {
+    public void addParticipation_missingRecords_rejectsParticipation() {
         assertThrows(EventNotFoundException.class, () -> model.addParticipation(WORKSHOP, alice));
         model.addEvent(WORKSHOP);
         assertThrows(PersonNotFoundException.class, () -> model.addParticipation(WORKSHOP, alice));
@@ -60,7 +60,7 @@ public class ModelManagerEventTest {
     }
 
     @Test
-    public void deletePerson_participant_removesMappingBeforeIdIsReused() {
+    public void deletePerson_participant_removesParticipationBeforeIdIsReused() {
         model.addEvent(WORKSHOP);
         model.addPerson(alice);
         model.addParticipation(WORKSHOP, alice);
@@ -72,7 +72,7 @@ public class ModelManagerEventTest {
     }
 
     @Test
-    public void setAddressBook_removedParticipant_doesNotRestoreOldMapping() {
+    public void setAddressBook_removedParticipant_doesNotRestoreOldParticipation() {
         model.addEvent(WORKSHOP);
         model.addPerson(alice);
         model.addParticipation(WORKSHOP, alice);
@@ -85,7 +85,7 @@ public class ModelManagerEventTest {
     }
 
     @Test
-    public void equals_differentEventsOrMappings_returnsFalse() {
+    public void equals_differentEventsOrParticipations_returnsFalse() {
         ModelManager other = new ModelManager();
         model.addPerson(alice);
         other.addPerson(alice);

@@ -15,8 +15,8 @@ import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
 import seedu.address.model.event.exceptions.EventNotFoundException;
-import seedu.address.model.mapping.Participation;
-import seedu.address.model.mapping.ParticipationRole;
+import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.tag.Tag;
@@ -24,7 +24,7 @@ import seedu.address.model.tag.Tag;
 /**
  * Jackson-friendly version of {@link Participation} that stores entity IDs.
  */
-class JsonAdaptedMapping {
+class JsonAdaptedParticipation {
 
     private final String eventId;
     private final String personId;
@@ -33,10 +33,10 @@ class JsonAdaptedMapping {
     private final List<String> roles = new ArrayList<>();
 
     /**
-     * Constructs a {@code JsonAdaptedMapping} from its stored fields.
+     * Constructs a {@code JsonAdaptedParticipation} from its stored fields.
      */
     @JsonCreator
-    public JsonAdaptedMapping(@JsonProperty("eventId") String eventId,
+    public JsonAdaptedParticipation(@JsonProperty("eventId") String eventId,
                               @JsonProperty("personId") String personId,
                               @JsonProperty("isPresent") boolean isPresent,
                               @JsonProperty("tags") List<JsonAdaptedTag> tags,
@@ -55,7 +55,7 @@ class JsonAdaptedMapping {
     /**
      * Converts a {@code Participation} into this class for Jackson use.
      */
-    public JsonAdaptedMapping(Participation source) {
+    public JsonAdaptedParticipation(Participation source) {
         eventId = source.getEvent().getId();
         personId = source.getPerson().getId().toString();
         isPresent = source.isPresent();

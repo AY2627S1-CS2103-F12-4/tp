@@ -12,7 +12,7 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.event.EventList;
-import seedu.address.model.mapping.ReadOnlyMappings;
+import seedu.address.model.mapper.ReadOnlyParticipations;
 
 /**
  * Manages application data in local storage.
@@ -22,17 +22,17 @@ public class StorageManager implements Storage {
     private static final Logger logger = LogsCenter.getLogger(StorageManager.class);
     private JsonAddressBookStorage addressBookStorage;
     private JsonUserPrefsStorage userPrefsStorage;
-    private JsonMappingStorage mappingStorage;
+    private JsonParticipationStorage participationStorage;
 
     /**
      * Creates a {@code StorageManager} with the given address book, user prefs and
-     * mapping storage.
+     * participation storage.
      */
     public StorageManager(JsonAddressBookStorage addressBookStorage, JsonUserPrefsStorage userPrefsStorage,
-            JsonMappingStorage mappingStorage) {
+            JsonParticipationStorage participationStorage) {
         this.addressBookStorage = addressBookStorage;
         this.userPrefsStorage = userPrefsStorage;
-        this.mappingStorage = mappingStorage;
+        this.participationStorage = participationStorage;
     }
 
     // ================ UserPrefs methods ==============================
@@ -71,24 +71,24 @@ public class StorageManager implements Storage {
         addressBookStorage.saveAddressBook(addressBook);
     }
 
-    // ================ Mapping methods ==============================
+    // ================ Participation methods ==============================
 
     @Override
-    public Path getMappingFilePath() {
-        return mappingStorage.getMappingFilePath();
+    public Path getParticipationFilePath() {
+        return participationStorage.getParticipationFilePath();
     }
 
     @Override
-    public Optional<ReadOnlyMappings> readMappings(EventList eventList, AddressBook addressBook)
+    public Optional<ReadOnlyParticipations> readParticipations(EventList eventList, AddressBook addressBook)
             throws DataLoadingException {
-        logger.fine("Attempting to read data from file: " + mappingStorage.getMappingFilePath());
-        return mappingStorage.readMappings(eventList, addressBook);
+        logger.fine("Attempting to read data from file: " + participationStorage.getParticipationFilePath());
+        return participationStorage.readParticipations(eventList, addressBook);
     }
 
     @Override
-    public void saveMappings(ReadOnlyMappings mappings) throws IOException {
-        logger.fine("Attempting to write to data file: " + mappingStorage.getMappingFilePath());
-        mappingStorage.saveMappings(mappings);
+    public void saveParticipations(ReadOnlyParticipations participations) throws IOException {
+        logger.fine("Attempting to write to data file: " + participationStorage.getParticipationFilePath());
+        participationStorage.saveParticipations(participations);
     }
 
 }

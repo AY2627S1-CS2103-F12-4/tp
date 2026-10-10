@@ -17,8 +17,8 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
-import seedu.address.model.mapping.MapperManager;
-import seedu.address.model.mapping.Participation;
+import seedu.address.model.mapper.MapperManager;
+import seedu.address.model.mapper.Participation;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.testutil.AddressBookBuilder;
 
@@ -31,7 +31,7 @@ public class ModelManagerTest {
         assertEquals(new UserPrefs(), modelManager.getUserPrefs());
         assertEquals(new GuiSettings(), modelManager.getGuiSettings());
         assertEquals(new AddressBook(), new AddressBook(modelManager.getAddressBook()));
-        assertTrue(modelManager.getMappings().getMappings().isEmpty());
+        assertTrue(modelManager.getParticipations().getParticipations().isEmpty());
     }
 
     @Test
@@ -48,22 +48,22 @@ public class ModelManagerTest {
     }
 
     @Test
-    public void constructor_withMappings_initializesMappings() {
+    public void constructor_withParticipations_initializesParticipations() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
         Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
         EventList eventList = new EventList();
         eventList.addEvent(event);
         Participation participation = new Participation(event, ALICE);
 
-        MapperManager mappings = new MapperManager(eventList, addressBook, List.of(participation));
+        MapperManager participations = new MapperManager(eventList, addressBook, List.of(participation));
 
-        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList, mappings);
+        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList, participations);
 
-        assertEquals(Set.of(participation), modelManager.getMappings().getMappings());
+        assertEquals(Set.of(participation), modelManager.getParticipations().getParticipations());
     }
 
     @Test
-    public void addMapping_validEventAndPerson_addsMapping() {
+    public void addParticipation_validEventAndPerson_addsParticipation() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
         Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
         EventList eventList = new EventList();
@@ -71,62 +71,62 @@ public class ModelManagerTest {
         modelManager = new ModelManager(addressBook, new UserPrefs(), eventList,
                 new MapperManager(eventList, addressBook));
 
-        modelManager.addMapping(event, ALICE);
+        modelManager.addParticipation(event, ALICE);
 
-        assertEquals(Set.of(new Participation(event, ALICE)), modelManager.getMappings().getMappings());
+        assertEquals(Set.of(new Participation(event, ALICE)), modelManager.getParticipations().getParticipations());
     }
 
     @Test
-    public void deletePerson_personWithMapping_removesMapping() {
+    public void deletePerson_personWithParticipation_removesParticipation() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
         Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
         EventList eventList = new EventList();
         eventList.addEvent(event);
-        MapperManager mappings = new MapperManager(eventList, addressBook,
+        MapperManager participations = new MapperManager(eventList, addressBook,
                 List.of(new Participation(event, ALICE)));
-        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList, mappings);
+        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList, participations);
 
         modelManager.deletePerson(ALICE);
 
-        assertTrue(modelManager.getMappings().getMappings().isEmpty());
+        assertTrue(modelManager.getParticipations().getParticipations().isEmpty());
     }
 
     @Test
-    public void mappingOperations_existingMapping_updatesAndRemovesMapping() {
+    public void participationOperations_existingParticipation_updatesAndRemovesParticipation() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
         Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
         EventList eventList = new EventList();
         eventList.addEvent(event);
-        MapperManager mappings = new MapperManager(eventList, addressBook,
+        MapperManager participations = new MapperManager(eventList, addressBook,
                 List.of(new Participation(event, ALICE)));
-        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList, mappings);
+        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList, participations);
 
         modelManager.setPresent(event, ALICE, true);
         modelManager.setTags(event, ALICE, Set.of());
 
         Participation updated = new Participation(event, ALICE, true, Set.of(), Set.of());
-        assertEquals(Set.of(updated), modelManager.getMappingsForEvent(event));
-        assertEquals(Set.of(updated), modelManager.getMappingsForPerson(ALICE));
+        assertEquals(Set.of(updated), modelManager.getParticipationsForEvent(event));
+        assertEquals(Set.of(updated), modelManager.getParticipationsForPerson(ALICE));
 
-        modelManager.removeMapping(event, ALICE);
-        assertTrue(modelManager.getMappings().getMappings().isEmpty());
+        modelManager.removeParticipation(event, ALICE);
+        assertTrue(modelManager.getParticipations().getParticipations().isEmpty());
     }
 
     @Test
-    public void setAddressBook_personRemoved_allowsMappingToBeAddedAgain() {
+    public void setAddressBook_personRemoved_allowsParticipationToBeAddedAgain() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
         Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
         EventList eventList = new EventList();
         eventList.addEvent(event);
-        MapperManager mappings = new MapperManager(eventList, addressBook,
+        MapperManager participations = new MapperManager(eventList, addressBook,
                 List.of(new Participation(event, ALICE)));
-        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList, mappings);
+        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList, participations);
 
         modelManager.setAddressBook(new AddressBook());
         modelManager.addPerson(ALICE);
-        modelManager.addMapping(event, ALICE);
+        modelManager.addParticipation(event, ALICE);
 
-        assertEquals(Set.of(new Participation(event, ALICE)), modelManager.getMappings().getMappings());
+        assertEquals(Set.of(new Participation(event, ALICE)), modelManager.getParticipations().getParticipations());
     }
 
     @Test
@@ -200,17 +200,17 @@ public class ModelManagerTest {
     }
 
     @Test
-    public void equals_differentMappings_returnsFalse() {
+    public void equals_differentParticipations_returnsFalse() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
         Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
         EventList eventList = new EventList();
         eventList.addEvent(event);
-        MapperManager mappings = new MapperManager(eventList, addressBook,
+        MapperManager participations = new MapperManager(eventList, addressBook,
                 List.of(new Participation(event, ALICE)));
-        ModelManager modelWithMapping = new ModelManager(addressBook, new UserPrefs(), eventList, mappings);
-        ModelManager modelWithoutMapping = new ModelManager(addressBook, new UserPrefs(), eventList,
+        ModelManager modelWithParticipation = new ModelManager(addressBook, new UserPrefs(), eventList, participations);
+        ModelManager modelWithoutParticipation = new ModelManager(addressBook, new UserPrefs(), eventList,
                 new MapperManager(eventList, addressBook));
 
-        assertFalse(modelWithMapping.equals(modelWithoutMapping));
+        assertFalse(modelWithParticipation.equals(modelWithoutParticipation));
     }
 }

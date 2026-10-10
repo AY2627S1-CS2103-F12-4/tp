@@ -7,10 +7,10 @@ import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.exceptions.EventNotFoundException;
-import seedu.address.model.mapping.Participation;
-import seedu.address.model.mapping.ReadOnlyMappings;
-import seedu.address.model.mapping.exceptions.DuplicateMappingException;
-import seedu.address.model.mapping.exceptions.MappingNotFoundException;
+import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ReadOnlyParticipations;
+import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
@@ -80,43 +80,37 @@ public interface Model {
      */
     void setPerson(Person target, Person editedPerson);
 
-    /**
-     * Returns the participation mappings.
-     */
-    ReadOnlyMappings getMappings();
+    /** Returns all participations. */
+    ReadOnlyParticipations getParticipations();
 
     /**
-     * Adds a mapping between {@code event} and {@code person}.
+     * Adds a participation between {@code event} and {@code person}.
      */
-    void addMapping(Event event, Person person)
-            throws DuplicateMappingException, EventNotFoundException, PersonNotFoundException;
+    void addParticipation(Event event, Person person)
+            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException;
 
     /**
-     * Removes the mapping between {@code event} and {@code person}.
+     * Removes the participation between {@code event} and {@code person}.
      */
-    void removeMapping(Event event, Person person) throws MappingNotFoundException;
+    void removeParticipation(Event event, Person person) throws ParticipationNotFoundException;
 
-    /**
-     * Returns the participation mappings for {@code event}.
-     */
-    Set<Participation> getMappingsForEvent(Event event) throws EventNotFoundException;
+    /** Returns the participations for {@code event}. */
+    Set<Participation> getParticipationsForEvent(Event event) throws EventNotFoundException;
 
-    /**
-     * Returns the participation mappings for {@code person}.
-     */
-    Set<Participation> getMappingsForPerson(Person person) throws PersonNotFoundException;
+    /** Returns the participations for {@code person}. */
+    Set<Participation> getParticipationsForPerson(Person person) throws PersonNotFoundException;
 
     /**
      * Sets whether {@code person} is present at {@code event}.
      */
     Participation setPresent(Event event, Person person, boolean isPresent)
-            throws MappingNotFoundException, EventNotFoundException, PersonNotFoundException;
+            throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException;
 
     /**
      * Replaces the event-specific tags for {@code person} at {@code event}.
      */
     Participation setTags(Event event, Person person, Set<Tag> tags)
-            throws MappingNotFoundException, EventNotFoundException, PersonNotFoundException;
+            throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException;
 
     /**
      * Returns an unmodifiable view of the filtered person list.
@@ -147,20 +141,4 @@ public interface Model {
      */
     void updateFilteredEventList(Predicate<Event> predicate);
 
-    /**
-     * Adds a participation mapping for an existing event and person.
-     * Each event-person pair can be added only once.
-     *
-     * @throws EventNotFoundException if the event ID is unknown.
-     * @throws PersonNotFoundException if the person ID is unknown.
-     * @throws DuplicateMappingException if the mapping exists.
-     */
-    void addParticipation(Event event, Person person);
-
-    /**
-     * Returns an unmodifiable snapshot of participation records for an existing
-     * event.
-     * Resolves each record using the stored event and person details.
-     */
-    Set<Participation> getParticipationsForEvent(Event event);
 }

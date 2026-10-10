@@ -1,4 +1,4 @@
-package seedu.address.model.mapping;
+package seedu.address.model.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

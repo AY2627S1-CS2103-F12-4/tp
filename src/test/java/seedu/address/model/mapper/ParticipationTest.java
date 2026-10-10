@@ -1,4 +1,4 @@
-package seedu.address.model.mapping;
+package seedu.address.model.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -25,7 +25,7 @@ public class ParticipationTest {
     private static final ParticipationRole ROLE = new ParticipationRole("Speaker");
 
     @Test
-    public void constructor_defaultState_storesMappingWithEmptyState() {
+    public void constructor_defaultState_storesParticipationWithEmptyState() {
         Participation participation = new Participation(EVENT, PERSON);
 
         assertEquals(EVENT, participation.getEvent());
@@ -78,30 +78,30 @@ public class ParticipationTest {
     }
 
     @Test
-    public void isSameMapping_sameIds_returnsTrue() {
+    public void isSameParticipation_sameIds_returnsTrue() {
         Event renamedEvent = new Event(new EventId("E1"), "Renamed", 30, "New description");
         Person renamedPerson = new PersonBuilder(PERSON).withName("Renamed Person").build();
-        Participation sameMapping = new Participation(renamedEvent, renamedPerson, true,
+        Participation sameParticipation = new Participation(renamedEvent, renamedPerson, true,
                 Set.of(TAG), Set.of(ROLE));
 
         Participation participation = new Participation(EVENT, PERSON);
-        assertTrue(participation.isSameMapping(participation));
-        assertTrue(participation.isSameMapping(sameMapping));
-        assertFalse(participation.isSameMapping(null));
+        assertTrue(participation.isSameParticipation(participation));
+        assertTrue(participation.isSameParticipation(sameParticipation));
+        assertFalse(participation.isSameParticipation(null));
     }
 
     @Test
-    public void isSameMapping_differentId_returnsFalse() {
+    public void isSameParticipation_differentId_returnsFalse() {
         Event otherEvent = new Event(new EventId("E2"), "Workshop", 20, "Description");
         Person otherPerson = new PersonBuilder().withId("P2").build();
 
         Participation participation = new Participation(EVENT, PERSON);
-        assertFalse(participation.isSameMapping(new Participation(otherEvent, PERSON)));
-        assertFalse(participation.isSameMapping(new Participation(EVENT, otherPerson)));
+        assertFalse(participation.isSameParticipation(new Participation(otherEvent, PERSON)));
+        assertFalse(participation.isSameParticipation(new Participation(EVENT, otherPerson)));
     }
 
     @Test
-    public void equals_sameMappingAndState_returnsTrue() {
+    public void equals_sameParticipationAndState_returnsTrue() {
         Participation participation = new Participation(EVENT, PERSON, true, Set.of(TAG), Set.of(ROLE));
         Participation copy = new Participation(EVENT, PERSON, true, Set.of(TAG), Set.of(ROLE));
 

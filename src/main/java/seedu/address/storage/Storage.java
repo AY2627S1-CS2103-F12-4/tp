@@ -10,7 +10,7 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.event.EventList;
-import seedu.address.model.mapping.ReadOnlyMappings;
+import seedu.address.model.mapper.ReadOnlyParticipations;
 
 /**
  * API of the Storage component
@@ -61,25 +61,25 @@ public interface Storage {
     void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException;
 
     /**
-     * Returns the file path of the mapping data file.
+     * Returns the file path of the participation data file.
      */
-    Path getMappingFilePath();
+    Path getParticipationFilePath();
 
     /**
-     * Returns mappings resolved against the supplied event list and address book.
+     * Returns participations resolved against the supplied event list and address book.
      * Returns {@code Optional.empty()} if the storage file is not found.
      *
-     * @throws DataLoadingException if loading the mapping data failed.
+     * @throws DataLoadingException if loading the participation data failed.
      */
-    Optional<ReadOnlyMappings> readMappings(EventList eventList, AddressBook addressBook)
+    Optional<ReadOnlyParticipations> readParticipations(EventList eventList, AddressBook addressBook)
             throws DataLoadingException;
 
     /**
-     * Saves the given participation mappings to storage.
+     * Saves the given participations to storage.
      *
-     * @param mappings cannot be null.
+     * @param participations cannot be null.
      * @throws IOException if there was any problem writing to the file.
      */
-    void saveMappings(ReadOnlyMappings mappings) throws IOException;
+    void saveParticipations(ReadOnlyParticipations participations) throws IOException;
 
 }

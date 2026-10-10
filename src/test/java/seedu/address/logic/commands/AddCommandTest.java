@@ -23,8 +23,8 @@ import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.event.Event;
-import seedu.address.model.mapping.Participation;
-import seedu.address.model.mapping.ReadOnlyMappings;
+import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.tag.Tag;
@@ -133,16 +133,6 @@ public class AddCommandTest {
         }
 
         @Override
-        public void addParticipation(Event event, Person person) {
-            throw new AssertionError("This method should not be called.");
-        }
-
-        @Override
-        public Set<Participation> getParticipationsForEvent(Event event) {
-            throw new AssertionError("This method should not be called.");
-        }
-
-        @Override
         public ReadOnlyUserPrefs getUserPrefs() {
             throw new AssertionError("This method should not be called.");
         }
@@ -193,27 +183,27 @@ public class AddCommandTest {
         }
 
         @Override
-        public ReadOnlyMappings getMappings() {
+        public ReadOnlyParticipations getParticipations() {
             throw new AssertionError("This method should not be called.");
         }
 
         @Override
-        public void addMapping(Event event, Person person) {
+        public void addParticipation(Event event, Person person) {
             throw new AssertionError("This method should not be called.");
         }
 
         @Override
-        public void removeMapping(Event event, Person person) {
+        public void removeParticipation(Event event, Person person) {
             throw new AssertionError("This method should not be called.");
         }
 
         @Override
-        public Set<Participation> getMappingsForEvent(Event event) {
+        public Set<Participation> getParticipationsForEvent(Event event) {
             throw new AssertionError("This method should not be called.");
         }
 
         @Override
-        public Set<Participation> getMappingsForPerson(Person person) {
+        public Set<Participation> getParticipationsForPerson(Person person) {
             throw new AssertionError("This method should not be called.");
         }
 

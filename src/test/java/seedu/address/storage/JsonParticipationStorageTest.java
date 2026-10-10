@@ -19,15 +19,15 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
-import seedu.address.model.mapping.MapperManager;
-import seedu.address.model.mapping.Participation;
-import seedu.address.model.mapping.ParticipationRole;
-import seedu.address.model.mapping.ReadOnlyMappings;
+import seedu.address.model.mapper.MapperManager;
+import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ParticipationRole;
+import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
-public class JsonMappingStorageTest {
+public class JsonParticipationStorageTest {
 
     @TempDir
     public Path testFolder;
@@ -49,27 +49,27 @@ public class JsonMappingStorageTest {
     }
 
     @Test
-    public void readMappings_missingFile_emptyResult() throws Exception {
-        JsonMappingStorage storage = new JsonMappingStorage(testFolder.resolve("missing.json"));
+    public void readParticipations_missingFile_emptyResult() throws Exception {
+        JsonParticipationStorage storage = new JsonParticipationStorage(testFolder.resolve("missing.json"));
 
-        assertFalse(storage.readMappings(eventList, addressBook).isPresent());
+        assertFalse(storage.readParticipations(eventList, addressBook).isPresent());
     }
 
     @Test
-    public void readMappings_invalidJson_throwsDataLoadingException() throws Exception {
+    public void readParticipations_invalidJson_throwsDataLoadingException() throws Exception {
         Path filePath = testFolder.resolve("invalid.json");
         Files.writeString(filePath, "not json");
-        JsonMappingStorage storage = new JsonMappingStorage(filePath);
+        JsonParticipationStorage storage = new JsonParticipationStorage(filePath);
 
-        assertThrows(DataLoadingException.class, () -> storage.readMappings(eventList, addressBook));
+        assertThrows(DataLoadingException.class, () -> storage.readParticipations(eventList, addressBook));
     }
 
     @Test
-    public void readMappings_unknownOrInvalidIds_dropsMappings() throws Exception {
-        Path filePath = testFolder.resolve("mappings.json");
+    public void readParticipations_unknownOrInvalidIds_dropsParticipations() throws Exception {
+        Path filePath = testFolder.resolve("participations.json");
         Files.writeString(filePath, """
                 {
-                  "mappings" : [ {
+                  "participations" : [ {
                     "eventId" : "E1",
                     "personId" : "P1",
                     "isPresent" : true,
@@ -102,27 +102,27 @@ public class JsonMappingStorageTest {
                   } ]
                 }
                 """);
-        JsonMappingStorage storage = new JsonMappingStorage(filePath);
+        JsonParticipationStorage storage = new JsonParticipationStorage(filePath);
 
-        ReadOnlyMappings mappings = storage.readMappings(eventList, addressBook).orElseThrow();
+        ReadOnlyParticipations participations = storage.readParticipations(eventList, addressBook).orElseThrow();
 
         assertEquals(Set.of(new Participation(event, person, true,
-                Set.of(new Tag("vip")), Set.of(new ParticipationRole("Speaker")))), mappings.getMappings());
+                Set.of(new Tag("vip")), Set.of(new ParticipationRole("Speaker")))), participations.getParticipations());
     }
 
     @Test
-    public void saveAndReadMappings_allDataPreservedAndReferencesStoredAsIds() throws Exception {
-        Path filePath = testFolder.resolve("mappings.json");
-        JsonMappingStorage storage = new JsonMappingStorage(filePath);
+    public void saveAndReadParticipations_allDataPreservedAndReferencesStoredAsIds() throws Exception {
+        Path filePath = testFolder.resolve("participations.json");
+        JsonParticipationStorage storage = new JsonParticipationStorage(filePath);
         Participation original = new Participation(event, person, true,
                 Set.of(new Tag("vip")), Set.of(new ParticipationRole("Speaker")));
         MapperManager mapper = new MapperManager(eventList, addressBook, List.of(original));
 
-        storage.saveMappings(mapper);
-        ReadOnlyMappings readBack = storage.readMappings(eventList, addressBook).orElseThrow();
+        storage.saveParticipations(mapper);
+        ReadOnlyParticipations readBack = storage.readParticipations(eventList, addressBook).orElseThrow();
         String json = Files.readString(filePath);
 
-        assertEquals(Set.of(original), readBack.getMappings());
+        assertEquals(Set.of(original), readBack.getParticipations());
         assertTrue(json.contains("\"eventId\" : \"E1\""));
         assertTrue(json.contains("\"personId\" : \"P1\""));
         assertFalse(json.contains("Orientation"));
@@ -130,11 +130,11 @@ public class JsonMappingStorageTest {
     }
 
     @Test
-    public void readMappings_duplicateMapping_throwsDataLoadingException() throws Exception {
+    public void readParticipations_duplicateParticipation_throwsDataLoadingException() throws Exception {
         Path filePath = testFolder.resolve("duplicate.json");
         Files.writeString(filePath, """
                 {
-                  "mappings" : [ {
+                  "participations" : [ {
                     "eventId" : "E1",
                     "personId" : "P1"
                   }, {
@@ -143,15 +143,15 @@ public class JsonMappingStorageTest {
                   } ]
                 }
                 """);
-        JsonMappingStorage storage = new JsonMappingStorage(filePath);
+        JsonParticipationStorage storage = new JsonParticipationStorage(filePath);
 
-        assertThrows(DataLoadingException.class, () -> storage.readMappings(eventList, addressBook));
+        assertThrows(DataLoadingException.class, () -> storage.readParticipations(eventList, addressBook));
     }
 
     @Test
-    public void saveMappings_nullMappings_throwsNullPointerException() {
-        JsonMappingStorage storage = new JsonMappingStorage(testFolder.resolve("mappings.json"));
+    public void saveParticipations_nullParticipations_throwsNullPointerException() {
+        JsonParticipationStorage storage = new JsonParticipationStorage(testFolder.resolve("participations.json"));
 
-        assertThrows(NullPointerException.class, () -> storage.saveMappings(null));
+        assertThrows(NullPointerException.class, () -> storage.saveParticipations(null));
     }
 }

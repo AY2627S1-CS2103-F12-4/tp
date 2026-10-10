@@ -6,6 +6,7 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import seedu.address.model.UserPrefs;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
+import seedu.address.model.mapping.MapperManager;
 import seedu.address.model.mapping.Participation;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
@@ -81,12 +83,13 @@ public class StorageManagerTest {
         Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
         EventList eventList = new EventList();
         eventList.addEvent(event);
-        List<Participation> original = List.of(new Participation(event, person));
+        MapperManager mapper = new MapperManager(eventList, addressBook);
+        mapper.addMapping(event, person);
 
-        storageManager.saveMappings(original);
+        storageManager.saveMappings(mapper);
         List<Participation> retrieved = storageManager.readMappings(eventList, addressBook).orElseThrow();
 
-        assertEquals(original, retrieved);
+        assertEquals(mapper.getMappings(), Set.copyOf(retrieved));
     }
 
     @Test

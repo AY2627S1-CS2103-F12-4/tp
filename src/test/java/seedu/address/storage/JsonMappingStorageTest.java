@@ -19,6 +19,7 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
+import seedu.address.model.mapping.MapperManager;
 import seedu.address.model.mapping.Participation;
 import seedu.address.model.mapping.ParticipationRole;
 import seedu.address.model.person.Person;
@@ -114,8 +115,9 @@ public class JsonMappingStorageTest {
         JsonMappingStorage storage = new JsonMappingStorage(filePath);
         Participation original = new Participation(event, person, true,
                 Set.of(new Tag("vip")), Set.of(new ParticipationRole("Speaker")));
+        MapperManager mapper = new MapperManager(eventList, addressBook, List.of(original));
 
-        storage.saveMappings(List.of(original));
+        storage.saveMappings(mapper);
         List<Participation> readBack = storage.readMappings(eventList, addressBook).orElseThrow();
         String json = Files.readString(filePath);
 

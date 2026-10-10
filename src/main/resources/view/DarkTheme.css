@@ -39,6 +39,30 @@
     -fx-max-height: 0;
 }
 
+#listTabs .tab-header-area {
+    -fx-min-height: 36;
+    -fx-pref-height: 36;
+    -fx-max-height: 36;
+}
+
+#listTabs .tab-header-background {
+    -fx-background-color: #383838;
+}
+
+#listTabs .tab {
+    -fx-background-color: #383838;
+    -fx-padding: 6 14;
+}
+
+#listTabs .tab:selected {
+    -fx-background-color: #515658;
+}
+
+#listTabs .tab-label {
+    -fx-text-fill: white;
+    -fx-font-size: 11pt;
+}
+
 .table-view {
     -fx-base: #1d1d1d;
     -fx-control-inner-background: #1d1d1d;

@@ -12,9 +12,11 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.event.EventId;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.PersonId;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 
@@ -52,6 +54,26 @@ public class ParserUtilTest {
 
         // Leading and trailing whitespaces
         assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex("  1  "));
+    }
+
+    @Test
+    public void parseEventId_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, () -> ParserUtil.parseEventId("1"));
+    }
+
+    @Test
+    public void parseEventId_validValue_returnsTrimmedEventId() throws Exception {
+        assertEquals(new EventId("E1"), ParserUtil.parseEventId(WHITESPACE + "E1" + WHITESPACE));
+    }
+
+    @Test
+    public void parsePersonId_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, () -> ParserUtil.parsePersonId("1"));
+    }
+
+    @Test
+    public void parsePersonId_validValue_returnsTrimmedPersonId() throws Exception {
+        assertEquals(new PersonId("P1"), ParserUtil.parsePersonId(WHITESPACE + "P1" + WHITESPACE));
     }
 
     @Test

@@ -1,4 +1,4 @@
-package seedu.address.model.mapping;
+package seedu.address.model.mapper;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
@@ -101,9 +101,9 @@ public final class Participation {
     }
 
     /**
-     * Returns true if both records refer to the same event-person mapping.
+     * Returns true if both records refer to the same event-person participation.
      */
-    public boolean isSameMapping(Participation otherParticipation) {
+    public boolean isSameParticipation(Participation otherParticipation) {
         if (otherParticipation == this) {
             return true;
         }
@@ -127,7 +127,7 @@ public final class Participation {
             return false;
         }
 
-        return isSameMapping(otherParticipation)
+        return isSameParticipation(otherParticipation)
                 && isPresent == otherParticipation.isPresent
                 && tags.equals(otherParticipation.tags)
                 && roles.equals(otherParticipation.roles);

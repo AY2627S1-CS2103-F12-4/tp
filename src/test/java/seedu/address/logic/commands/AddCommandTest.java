@@ -23,9 +23,12 @@ import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.event.Event;
-import seedu.address.model.mapping.Participation;
+import seedu.address.model.event.EventId;
+import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class AddCommandTest {
@@ -45,8 +48,7 @@ public class AddCommandTest {
                 .withId("P999")
                 .build();
 
-        CommandResult commandResult =
-                new AddCommand(validPerson).execute(modelStub);
+        CommandResult commandResult = new AddCommand(validPerson).execute(modelStub);
 
         assertEquals(
                 String.format(
@@ -132,16 +134,6 @@ public class AddCommandTest {
         }
 
         @Override
-        public void addParticipation(Event event, Person person) {
-            throw new AssertionError("This method should not be called.");
-        }
-
-        @Override
-        public Set<Participation> getParticipationsForEvent(Event event) {
-            throw new AssertionError("This method should not be called.");
-        }
-
-        @Override
         public ReadOnlyUserPrefs getUserPrefs() {
             throw new AssertionError("This method should not be called.");
         }
@@ -188,6 +180,56 @@ public class AddCommandTest {
 
         @Override
         public void setPerson(Person target, Person editedPerson) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public ReadOnlyParticipations getParticipations() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void addParticipation(Event event, Person person) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void addParticipation(EventId eventId, PersonId personId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void removeParticipation(Event event, Person person) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void removeParticipation(EventId eventId, PersonId personId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void markPresent(EventId eventId, PersonId personId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Set<Participation> getParticipationsForEvent(Event event) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Set<Participation> getParticipationsForPerson(Person person) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Participation setPresent(Event event, Person person, boolean isPresent) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Participation setTags(Event event, Person person, Set<Tag> tags) {
             throw new AssertionError("This method should not be called.");
         }
 

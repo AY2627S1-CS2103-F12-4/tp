@@ -14,37 +14,54 @@ import javafx.collections.transformation.FilteredList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.event.Event;
+import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
-import seedu.address.model.mapping.Mapper;
-import seedu.address.model.mapping.MapperManager;
-import seedu.address.model.mapping.Participation;
+import seedu.address.model.event.exceptions.EventNotFoundException;
+import seedu.address.model.mapper.Mapper;
+import seedu.address.model.mapper.MapperManager;
+import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ReadOnlyParticipations;
+import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.ParticipationAlreadyPresentException;
+import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
+import seedu.address.model.tag.Tag;
 
 /**
- * Coordinates in-memory people, events, participation mappings, and filtered views.
+ * Coordinates in-memory people, events, participations, and filtered views.
  * The mapper resolves records from the same collections that this model owns.
  */
 public class ModelManager implements Model {
 
     private static final Logger logger = LogsCenter.getLogger(ModelManager.class);
+    private static final ReadOnlyParticipations EMPTY_PARTICIPATIONS = Set::of;
 
     private final AddressBook addressBook;
+    private final Mapper mapper;
     private final UserPrefs userPrefs;
     private final FilteredList<Person> filteredPersons;
     private final EventList eventList;
-    private final Mapper mapper;
     private final ObservableList<Event> observableEvents;
     private final FilteredList<Event> filteredEvents;
     private final ObservableList<Event> unmodifiableFilteredEvents;
 
     /**
      * Initializes a ModelManager with the given addressBook and userPrefs,
-     * an empty event collection, and no participation mappings.
+     * an empty event collection, and no participations.
      */
     public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs) {
-        requireAllNonNull(addressBook, userPrefs);
+        this(addressBook, userPrefs, new EventList(), EMPTY_PARTICIPATIONS);
+    }
+
+    /**
+     * Initializes a ModelManager with the given address book, user preferences,
+     * events and participations.
+     */
+    public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs,
+            EventList eventList, ReadOnlyParticipations participations) {
+        requireAllNonNull(addressBook, userPrefs, eventList, participations);
 
         logger.fine(
                 "Initializing with address book: "
@@ -53,11 +70,11 @@ public class ModelManager implements Model {
                         + userPrefs);
 
         this.addressBook = new AddressBook(addressBook);
+        this.eventList = eventList;
+        mapper = new MapperManager(this.eventList, this.addressBook, participations.getParticipations());
         this.userPrefs = new UserPrefs(userPrefs);
         filteredPersons = new FilteredList<>(this.addressBook.getPersonList());
-        eventList = new EventList();
-        mapper = new MapperManager(eventList, this.addressBook);
-        observableEvents = FXCollections.observableArrayList();
+        observableEvents = FXCollections.observableArrayList(this.eventList.getEvents());
         filteredEvents = new FilteredList<>(observableEvents);
         unmodifiableFilteredEvents = FXCollections.unmodifiableObservableList(filteredEvents);
     }
@@ -66,7 +83,8 @@ public class ModelManager implements Model {
         this(new AddressBook(), new UserPrefs());
     }
 
-    //=========== UserPrefs ==============================================================================
+    // =========== UserPrefs
+    // ==============================================================================
 
     @Override
     public ReadOnlyUserPrefs getUserPrefs() {
@@ -84,7 +102,8 @@ public class ModelManager implements Model {
         userPrefs.setGuiSettings(guiSettings);
     }
 
-    //=========== AddressBook ============================================================================
+    // =========== AddressBook
+    // ============================================================================
 
     @Override
     public void setAddressBook(ReadOnlyAddressBook addressBook) {
@@ -92,7 +111,7 @@ public class ModelManager implements Model {
         this.addressBook.resetData(addressBook);
         previousPersons.stream()
                 .filter(person -> this.addressBook.getPersonFromId(person.getId()) == null)
-                .forEach(mapper::removeMappingsForPerson);
+                .forEach(mapper::removeParticipationsForPerson);
     }
 
     @Override
@@ -109,7 +128,7 @@ public class ModelManager implements Model {
     @Override
     public void deletePerson(Person target) {
         addressBook.removePerson(target);
-        mapper.removeMappingsForPerson(target);
+        mapper.removeParticipationsForPerson(target);
     }
 
     @Override
@@ -130,7 +149,94 @@ public class ModelManager implements Model {
         addressBook.setPerson(target, editedPerson);
     }
 
-    //=========== Filtered Person List Accessors =========================================================
+    // =========== Participations
+    // ====================================================================
+
+    @Override
+    public ReadOnlyParticipations getParticipations() {
+        return mapper;
+    }
+
+    @Override
+    public void addParticipation(Event event, Person person)
+            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException {
+        mapper.addParticipation(event, person);
+    }
+
+    @Override
+    public void addParticipation(EventId eventId, PersonId personId)
+            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException {
+        requireAllNonNull(eventId, personId);
+        Event event = eventList.getEventFromId(eventId.toString());
+        Person person = addressBook.getPersonFromId(personId);
+        if (person == null) {
+            throw new PersonNotFoundException();
+        }
+        mapper.addParticipation(event, person);
+    }
+
+    @Override
+    public void removeParticipation(Event event, Person person) throws ParticipationNotFoundException {
+        mapper.removeParticipation(event, person);
+    }
+
+    @Override
+    public void removeParticipation(EventId eventId, PersonId personId)
+            throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException {
+        requireAllNonNull(eventId, personId);
+        Event event = eventList.getEventFromId(eventId.toString());
+        Person person = addressBook.getPersonFromId(personId);
+        if (person == null) {
+            throw new PersonNotFoundException();
+        }
+        mapper.removeParticipation(event, person);
+    }
+
+    @Override
+    public void markPresent(EventId eventId, PersonId personId)
+            throws ParticipationNotFoundException, ParticipationAlreadyPresentException,
+            EventNotFoundException, PersonNotFoundException {
+        requireAllNonNull(eventId, personId);
+        Event event = eventList.getEventFromId(eventId.toString());
+        Person person = addressBook.getPersonFromId(personId);
+        if (person == null) {
+            throw new PersonNotFoundException();
+        }
+
+        Participation participation = mapper.getParticipationsForEvent(event).stream()
+                .filter(candidate -> candidate.getPerson().getId().equals(personId))
+                .findFirst()
+                .orElseThrow(() -> new ParticipationNotFoundException(eventId.toString(), personId.toString()));
+        if (participation.isPresent()) {
+            throw new ParticipationAlreadyPresentException(eventId.toString(), personId.toString());
+        }
+        mapper.setPresent(event, person, true);
+    }
+
+    @Override
+    public Set<Participation> getParticipationsForEvent(Event event) throws EventNotFoundException {
+        return mapper.getParticipationsForEvent(event);
+    }
+
+    @Override
+    public Set<Participation> getParticipationsForPerson(Person person) throws PersonNotFoundException {
+        return mapper.getParticipationsForPerson(person);
+    }
+
+    @Override
+    public Participation setPresent(Event event, Person person, boolean isPresent)
+            throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException {
+        return mapper.setPresent(event, person, isPresent);
+    }
+
+    @Override
+    public Participation setTags(Event event, Person person, Set<Tag> tags)
+            throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException {
+        return mapper.setTags(event, person, tags);
+    }
+
+    // =========== Filtered Person List Accessors
+    // =========================================================
 
     /**
      * Returns an unmodifiable view of the list of {@code Person} backed by
@@ -147,12 +253,14 @@ public class ModelManager implements Model {
         filteredPersons.setPredicate(predicate);
     }
 
-    //=========== Events and Participation ==============================================================
+    // =========== Events and Participation
+    // ==============================================================
 
     @Override
     public void addEvent(Event event) {
         eventList.addEvent(event);
-        // EventList is the source of truth; refresh the observable view after a successful addition.
+        // EventList is the source of truth; refresh the observable view after a
+        // successful addition.
         observableEvents.setAll(eventList.getEvents());
     }
 
@@ -167,22 +275,6 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public void addParticipation(Event event, Person person) {
-        requireAllNonNull(event, person);
-        Event storedEvent = eventList.getEventFromId(event.getId());
-        Person storedPerson = addressBook.getPersonFromId(person.getId());
-        if (storedPerson == null) {
-            throw new PersonNotFoundException();
-        }
-        mapper.addMapping(storedEvent, storedPerson);
-    }
-
-    @Override
-    public Set<Participation> getParticipationsForEvent(Event event) {
-        return mapper.getMappingsForEvent(event);
-    }
-
-    @Override
     public boolean equals(Object other) {
         if (other == this) {
             return true;
@@ -193,11 +285,12 @@ public class ModelManager implements Model {
         }
 
         return addressBook.equals(otherModelManager.addressBook)
+                && mapper.getParticipations().equals(otherModelManager.mapper.getParticipations())
                 && userPrefs.equals(otherModelManager.userPrefs)
                 && filteredPersons.equals(otherModelManager.filteredPersons)
                 && eventList.getEvents().equals(otherModelManager.eventList.getEvents())
                 && filteredEvents.equals(otherModelManager.filteredEvents)
-                && eventList.getEvents().stream().allMatch(event -> mapper.getMappingsForEvent(event)
-                        .equals(otherModelManager.mapper.getMappingsForEvent(event)));
+                && eventList.getEvents().stream().allMatch(event -> mapper.getParticipationsForEvent(event)
+                        .equals(otherModelManager.mapper.getParticipationsForEvent(event)));
     }
 }

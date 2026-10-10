@@ -3,7 +3,6 @@ package seedu.address.model;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -33,6 +32,7 @@ import seedu.address.model.tag.Tag;
 public class ModelManager implements Model {
 
     private static final Logger logger = LogsCenter.getLogger(ModelManager.class);
+    private static final ReadOnlyMappings EMPTY_MAPPINGS = Set::of;
 
     private final AddressBook addressBook;
     private final Mapper mapper;
@@ -43,7 +43,7 @@ public class ModelManager implements Model {
      * Initializes a ModelManager with the given addressBook and userPrefs.
      */
     public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs) {
-        this(addressBook, userPrefs, new EventList(), Set.of());
+        this(addressBook, userPrefs, new EventList(), EMPTY_MAPPINGS);
     }
 
     /**
@@ -51,8 +51,8 @@ public class ModelManager implements Model {
      * events and participation mappings.
      */
     public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs,
-            EventList eventList, Collection<Participation> participations) {
-        requireAllNonNull(addressBook, userPrefs, eventList, participations);
+            EventList eventList, ReadOnlyMappings mappings) {
+        requireAllNonNull(addressBook, userPrefs, eventList, mappings);
 
         logger.fine(
                 "Initializing with address book: "
@@ -61,7 +61,7 @@ public class ModelManager implements Model {
                         + userPrefs);
 
         this.addressBook = new AddressBook(addressBook);
-        mapper = new MapperManager(eventList, this.addressBook, participations);
+        mapper = new MapperManager(eventList, this.addressBook, mappings.getMappings());
         this.userPrefs = new UserPrefs(userPrefs);
         filteredPersons = new FilteredList<>(this.addressBook.getPersonList());
     }
@@ -142,7 +142,8 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public void addMapping(Event event, Person person) throws DuplicateMappingException {
+    public void addMapping(Event event, Person person)
+            throws DuplicateMappingException, EventNotFoundException, PersonNotFoundException {
         mapper.addMapping(event, person);
     }
 

@@ -4,7 +4,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -15,7 +14,6 @@ import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
 import seedu.address.model.event.EventList;
-import seedu.address.model.mapping.Participation;
 import seedu.address.model.mapping.ReadOnlyMappings;
 
 /**
@@ -45,7 +43,7 @@ public class JsonMappingStorage {
      *
      * @throws DataLoadingException if loading the mapping data failed.
      */
-    public Optional<List<Participation>> readMappings(EventList eventList, AddressBook addressBook)
+    public Optional<ReadOnlyMappings> readMappings(EventList eventList, AddressBook addressBook)
             throws DataLoadingException {
         return readMappings(filePath, eventList, addressBook);
     }
@@ -53,7 +51,7 @@ public class JsonMappingStorage {
     /**
      * Similar to {@link #readMappings(EventList, AddressBook)}.
      */
-    public Optional<List<Participation>> readMappings(Path filePath, EventList eventList, AddressBook addressBook)
+    public Optional<ReadOnlyMappings> readMappings(Path filePath, EventList eventList, AddressBook addressBook)
             throws DataLoadingException {
         requireNonNull(filePath);
         requireNonNull(eventList);

@@ -2,7 +2,6 @@ package seedu.address.storage;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 
 import seedu.address.commons.exceptions.DataLoadingException;
@@ -11,7 +10,6 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.event.EventList;
-import seedu.address.model.mapping.Participation;
 import seedu.address.model.mapping.ReadOnlyMappings;
 
 /**
@@ -73,7 +71,7 @@ public interface Storage {
      *
      * @throws DataLoadingException if loading the mapping data failed.
      */
-    Optional<List<Participation>> readMappings(EventList eventList, AddressBook addressBook)
+    Optional<ReadOnlyMappings> readMappings(EventList eventList, AddressBook addressBook)
             throws DataLoadingException;
 
     /**

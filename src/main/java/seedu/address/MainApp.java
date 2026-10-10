@@ -19,6 +19,9 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.event.EventList;
+import seedu.address.model.mapping.MapperManager;
+import seedu.address.model.mapping.ReadOnlyMappings;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonMappingStorage;
@@ -64,9 +67,7 @@ public class MainApp extends Application {
     }
 
     /**
-     * Returns a {@code ModelManager} with the data from {@code storage}'s address book and {@code userPrefs}. <br>
-     * The data from the sample address book will be used instead if {@code storage}'s address book is not found,
-     * or an empty address book will be used instead if errors occur when reading {@code storage}'s address book.
+     * Returns a model initialized with the stored address book and mappings.
      */
     private Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
         logger.info("Using data file : " + storage.getAddressBookFilePath());
@@ -86,7 +87,24 @@ public class MainApp extends Application {
             initialData = new AddressBook();
         }
 
-        return new ModelManager(initialData, userPrefs);
+        AddressBook initialAddressBook = new AddressBook(initialData);
+        // TODO: Replace this with persisted event data when event storage is implemented.
+        EventList eventList = new EventList();
+        ReadOnlyMappings initialMappings;
+        logger.info("Using mapping data file : " + storage.getMappingFilePath());
+        try {
+            Optional<ReadOnlyMappings> mappingsOptional = storage.readMappings(eventList, initialAddressBook);
+            if (mappingsOptional.isEmpty()) {
+                logger.info("Creating a new mapping data file " + storage.getMappingFilePath());
+            }
+            initialMappings = mappingsOptional.orElseGet(() -> new MapperManager(eventList, initialAddressBook));
+        } catch (DataLoadingException e) {
+            logger.warning("Mapping data file at " + storage.getMappingFilePath() + " could not be loaded."
+                    + " Will be starting with empty mappings.");
+            initialMappings = new MapperManager(eventList, initialAddressBook);
+        }
+
+        return new ModelManager(initialAddressBook, userPrefs, eventList, initialMappings);
     }
 
     /**

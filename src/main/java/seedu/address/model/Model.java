@@ -88,7 +88,8 @@ public interface Model {
     /**
      * Adds a mapping between {@code event} and {@code person}.
      */
-    void addMapping(Event event, Person person) throws DuplicateMappingException;
+    void addMapping(Event event, Person person)
+            throws DuplicateMappingException, EventNotFoundException, PersonNotFoundException;
 
     /**
      * Removes the mapping between {@code event} and {@code person}.

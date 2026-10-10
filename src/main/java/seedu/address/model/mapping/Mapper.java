@@ -21,8 +21,11 @@ public interface Mapper extends ReadOnlyMappings {
      * Both arguments must not be null.
      *
      * @throws DuplicateMappingException if the mapping already exists.
+     * @throws EventNotFoundException if the event cannot be found.
+     * @throws PersonNotFoundException if the person cannot be found.
      */
-    void addMapping(Event event, Person person) throws DuplicateMappingException;
+    void addMapping(Event event, Person person)
+            throws DuplicateMappingException, EventNotFoundException, PersonNotFoundException;
 
     /**
      * Removes the mapping between {@code event} and {@code person}.

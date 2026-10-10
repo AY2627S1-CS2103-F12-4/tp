@@ -75,6 +75,10 @@ public class MapperManager implements Mapper {
             throws DuplicateMappingException {
 
         MappingKey key = createKey(event, person);
+        eventList.getEventFromId(key.eventId());
+        if (addressBook.getPersonFromId(key.personId()) == null) {
+            throw new PersonNotFoundException();
+        }
 
         if (mappings.containsKey(key)) {
             throw new DuplicateMappingException(

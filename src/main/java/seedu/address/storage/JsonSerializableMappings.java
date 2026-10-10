@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.event.EventList;
+import seedu.address.model.mapping.MapperManager;
 import seedu.address.model.mapping.Participation;
 import seedu.address.model.mapping.ReadOnlyMappings;
 
@@ -44,7 +45,7 @@ class JsonSerializableMappings {
      * Resolves all valid stored mappings against the current events and people.
      * Mappings with invalid or unknown IDs are omitted.
      */
-    public List<Participation> toModelType(EventList eventList, AddressBook addressBook)
+    public ReadOnlyMappings toModelType(EventList eventList, AddressBook addressBook)
             throws IllegalValueException {
         List<Participation> modelMappings = new ArrayList<>();
         for (JsonAdaptedMapping mapping : mappings) {
@@ -57,6 +58,6 @@ class JsonSerializableMappings {
             }
             modelMappings.add(participation);
         }
-        return List.copyOf(modelMappings);
+        return new MapperManager(eventList, addressBook, modelMappings);
     }
 }

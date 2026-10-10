@@ -2,7 +2,6 @@ package seedu.address.storage;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -13,7 +12,6 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.event.EventList;
-import seedu.address.model.mapping.Participation;
 import seedu.address.model.mapping.ReadOnlyMappings;
 
 /**
@@ -81,7 +79,7 @@ public class StorageManager implements Storage {
     }
 
     @Override
-    public Optional<List<Participation>> readMappings(EventList eventList, AddressBook addressBook)
+    public Optional<ReadOnlyMappings> readMappings(EventList eventList, AddressBook addressBook)
             throws DataLoadingException {
         logger.fine("Attempting to read data from file: " + mappingStorage.getMappingFilePath());
         return mappingStorage.readMappings(eventList, addressBook);

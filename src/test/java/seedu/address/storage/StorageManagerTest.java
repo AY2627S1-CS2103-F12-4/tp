@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,12 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.event.Event;
+import seedu.address.model.event.EventId;
+import seedu.address.model.event.EventList;
+import seedu.address.model.mapping.Participation;
+import seedu.address.model.person.Person;
+import seedu.address.testutil.PersonBuilder;
 
 public class StorageManagerTest {
 
@@ -26,7 +33,8 @@ public class StorageManagerTest {
     public void setUp() {
         JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(getTempFilePath("ab"));
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(getTempFilePath("prefs"));
-        storageManager = new StorageManager(addressBookStorage, userPrefsStorage);
+        JsonMappingStorage mappingStorage = new JsonMappingStorage(getTempFilePath("mappings"));
+        storageManager = new StorageManager(addressBookStorage, userPrefsStorage, mappingStorage);
     }
 
     private Path getTempFilePath(String fileName) {
@@ -63,6 +71,27 @@ public class StorageManagerTest {
     @Test
     public void getAddressBookFilePath() {
         assertNotNull(storageManager.getAddressBookFilePath());
+    }
+
+    @Test
+    public void mappingsReadSave() throws Exception {
+        Person person = new PersonBuilder().withId("P1").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(person);
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        List<Participation> original = List.of(new Participation(event, person));
+
+        storageManager.saveMappings(original);
+        List<Participation> retrieved = storageManager.readMappings(eventList, addressBook).orElseThrow();
+
+        assertEquals(original, retrieved);
+    }
+
+    @Test
+    public void getMappingFilePath() {
+        assertNotNull(storageManager.getMappingFilePath());
     }
 
 }

@@ -1,7 +1,6 @@
 package seedu.address.storage;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -12,6 +11,7 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.event.EventList;
 import seedu.address.model.mapping.Participation;
+import seedu.address.model.mapping.ReadOnlyMappings;
 
 /**
  * An immutable collection of participation mappings serializable to JSON.
@@ -36,8 +36,8 @@ class JsonSerializableMappings {
     /**
      * Converts the given mappings into this class for Jackson use.
      */
-    public JsonSerializableMappings(Collection<Participation> source) {
-        mappings.addAll(source.stream().map(JsonAdaptedMapping::new).toList());
+    public JsonSerializableMappings(ReadOnlyMappings source) {
+        mappings.addAll(source.getMappings().stream().map(JsonAdaptedMapping::new).toList());
     }
 
     /**

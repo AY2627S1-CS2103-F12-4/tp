@@ -4,7 +4,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -17,6 +16,7 @@ import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
 import seedu.address.model.event.EventList;
 import seedu.address.model.mapping.Participation;
+import seedu.address.model.mapping.ReadOnlyMappings;
 
 /**
  * Accesses participation mappings stored as a JSON file on disk.
@@ -78,14 +78,14 @@ public class JsonMappingStorage {
      *
      * @throws IOException if there was any problem writing to the file.
      */
-    public void saveMappings(Collection<Participation> mappings) throws IOException {
+    public void saveMappings(ReadOnlyMappings mappings) throws IOException {
         saveMappings(mappings, filePath);
     }
 
     /**
-     * Similar to {@link #saveMappings(Collection)}.
+     * Similar to {@link #saveMappings(ReadOnlyMappings)}.
      */
-    public void saveMappings(Collection<Participation> mappings, Path filePath) throws IOException {
+    public void saveMappings(ReadOnlyMappings mappings, Path filePath) throws IOException {
         requireNonNull(mappings);
         requireNonNull(filePath);
 

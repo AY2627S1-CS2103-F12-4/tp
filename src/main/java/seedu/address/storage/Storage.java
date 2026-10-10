@@ -2,7 +2,6 @@ package seedu.address.storage;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +12,7 @@ import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.event.EventList;
 import seedu.address.model.mapping.Participation;
+import seedu.address.model.mapping.ReadOnlyMappings;
 
 /**
  * API of the Storage component
@@ -28,12 +28,14 @@ public interface Storage {
      * Returns UserPrefs data from storage.
      * Returns {@code Optional.empty()} if storage file is not found.
      *
-     * @throws DataLoadingException if the loading of data from preference file failed.
+     * @throws DataLoadingException if the loading of data from preference file
+     *                              failed.
      */
     Optional<UserPrefs> readUserPrefs() throws DataLoadingException;
 
     /**
      * Saves the given {@link seedu.address.model.ReadOnlyUserPrefs} to the storage.
+     *
      * @param userPrefs cannot be null.
      * @throws IOException if there was any problem writing to the file.
      */
@@ -54,6 +56,7 @@ public interface Storage {
 
     /**
      * Saves the given {@link ReadOnlyAddressBook} to the storage.
+     *
      * @param addressBook cannot be null.
      * @throws IOException if there was any problem writing to the file.
      */
@@ -79,6 +82,6 @@ public interface Storage {
      * @param mappings cannot be null.
      * @throws IOException if there was any problem writing to the file.
      */
-    void saveMappings(Collection<Participation> mappings) throws IOException;
+    void saveMappings(ReadOnlyMappings mappings) throws IOException;
 
 }

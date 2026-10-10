@@ -2,7 +2,6 @@ package seedu.address.storage;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -15,6 +14,7 @@ import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.event.EventList;
 import seedu.address.model.mapping.Participation;
+import seedu.address.model.mapping.ReadOnlyMappings;
 
 /**
  * Manages application data in local storage.
@@ -27,10 +27,11 @@ public class StorageManager implements Storage {
     private JsonMappingStorage mappingStorage;
 
     /**
-     * Creates a {@code StorageManager} with the given address book, user prefs and mapping storage.
+     * Creates a {@code StorageManager} with the given address book, user prefs and
+     * mapping storage.
      */
     public StorageManager(JsonAddressBookStorage addressBookStorage, JsonUserPrefsStorage userPrefsStorage,
-                          JsonMappingStorage mappingStorage) {
+            JsonMappingStorage mappingStorage) {
         this.addressBookStorage = addressBookStorage;
         this.userPrefsStorage = userPrefsStorage;
         this.mappingStorage = mappingStorage;
@@ -52,7 +53,6 @@ public class StorageManager implements Storage {
     public void saveUserPrefs(ReadOnlyUserPrefs userPrefs) throws IOException {
         userPrefsStorage.saveUserPrefs(userPrefs);
     }
-
 
     // ================ AddressBook methods ==============================
 
@@ -88,7 +88,7 @@ public class StorageManager implements Storage {
     }
 
     @Override
-    public void saveMappings(Collection<Participation> mappings) throws IOException {
+    public void saveMappings(ReadOnlyMappings mappings) throws IOException {
         logger.fine("Attempting to write to data file: " + mappingStorage.getMappingFilePath());
         mappingStorage.saveMappings(mappings);
     }

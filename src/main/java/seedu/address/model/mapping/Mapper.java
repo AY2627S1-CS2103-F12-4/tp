@@ -14,7 +14,7 @@ import seedu.address.model.tag.Tag;
  * Defines operations for managing participation mappings between events and people.
  * Each event-person pair has at most one participation record.
  */
-public interface Mapper {
+public interface Mapper extends ReadOnlyMappings {
 
     /**
      * Adds a mapping between {@code event} and {@code person}.

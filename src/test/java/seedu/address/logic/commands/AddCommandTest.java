@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
@@ -21,8 +22,12 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
+import seedu.address.model.event.Event;
+import seedu.address.model.mapping.Participation;
+import seedu.address.model.mapping.ReadOnlyMappings;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class AddCommandTest {
@@ -160,6 +165,41 @@ public class AddCommandTest {
 
         @Override
         public void setPerson(Person target, Person editedPerson) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public ReadOnlyMappings getMappings() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void addMapping(Event event, Person person) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void removeMapping(Event event, Person person) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Set<Participation> getMappingsForEvent(Event event) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Set<Participation> getMappingsForPerson(Person person) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Participation setPresent(Event event, Person person, boolean isPresent) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Participation setTags(Event event, Person person, Set<Tag> tags) {
             throw new AssertionError("This method should not be called.");
         }
 

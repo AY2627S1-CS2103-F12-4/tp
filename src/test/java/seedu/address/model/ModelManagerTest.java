@@ -9,10 +9,15 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
+import seedu.address.model.event.Event;
+import seedu.address.model.event.EventId;
+import seedu.address.model.event.EventList;
+import seedu.address.model.mapping.Participation;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.testutil.AddressBookBuilder;
 
@@ -25,6 +30,7 @@ public class ModelManagerTest {
         assertEquals(new UserPrefs(), modelManager.getUserPrefs());
         assertEquals(new GuiSettings(), modelManager.getGuiSettings());
         assertEquals(new AddressBook(), new AddressBook(modelManager.getAddressBook()));
+        assertTrue(modelManager.getMappings().getMappings().isEmpty());
     }
 
     @Test
@@ -38,6 +44,82 @@ public class ModelManagerTest {
         UserPrefs oldUserPrefs = new UserPrefs(userPrefs);
         userPrefs.setGuiSettings(new GuiSettings(5, 6, 7, 8));
         assertEquals(oldUserPrefs, modelManager.getUserPrefs());
+    }
+
+    @Test
+    public void constructor_withMappings_initializesMappings() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        Participation participation = new Participation(event, ALICE);
+
+        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList, List.of(participation));
+
+        assertEquals(Set.of(participation), modelManager.getMappings().getMappings());
+    }
+
+    @Test
+    public void addMapping_validEventAndPerson_addsMapping() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList, List.of());
+
+        modelManager.addMapping(event, ALICE);
+
+        assertEquals(Set.of(new Participation(event, ALICE)), modelManager.getMappings().getMappings());
+    }
+
+    @Test
+    public void deletePerson_personWithMapping_removesMapping() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList,
+                List.of(new Participation(event, ALICE)));
+
+        modelManager.deletePerson(ALICE);
+
+        assertTrue(modelManager.getMappings().getMappings().isEmpty());
+    }
+
+    @Test
+    public void mappingOperations_existingMapping_updatesAndRemovesMapping() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList,
+                List.of(new Participation(event, ALICE)));
+
+        modelManager.setPresent(event, ALICE, true);
+        modelManager.setTags(event, ALICE, Set.of());
+
+        Participation updated = new Participation(event, ALICE, true, Set.of(), Set.of());
+        assertEquals(Set.of(updated), modelManager.getMappingsForEvent(event));
+        assertEquals(Set.of(updated), modelManager.getMappingsForPerson(ALICE));
+
+        modelManager.removeMapping(event, ALICE);
+        assertTrue(modelManager.getMappings().getMappings().isEmpty());
+    }
+
+    @Test
+    public void setAddressBook_personRemoved_allowsMappingToBeAddedAgain() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        modelManager = new ModelManager(addressBook, new UserPrefs(), eventList,
+                List.of(new Participation(event, ALICE)));
+
+        modelManager.setAddressBook(new AddressBook());
+        modelManager.addPerson(ALICE);
+        modelManager.addMapping(event, ALICE);
+
+        assertEquals(Set.of(new Participation(event, ALICE)), modelManager.getMappings().getMappings());
     }
 
     @Test
@@ -108,5 +190,18 @@ public class ModelManagerTest {
         UserPrefs differentUserPrefs = new UserPrefs();
         differentUserPrefs.setGuiSettings(new GuiSettings(1, 2, 3, 4));
         assertFalse(modelManager.equals(new ModelManager(addressBook, differentUserPrefs)));
+    }
+
+    @Test
+    public void equals_differentMappings_returnsFalse() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).build();
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        ModelManager modelWithMapping = new ModelManager(addressBook, new UserPrefs(), eventList,
+                List.of(new Participation(event, ALICE)));
+        ModelManager modelWithoutMapping = new ModelManager(addressBook, new UserPrefs(), eventList, List.of());
+
+        assertFalse(modelWithMapping.equals(modelWithoutMapping));
     }
 }

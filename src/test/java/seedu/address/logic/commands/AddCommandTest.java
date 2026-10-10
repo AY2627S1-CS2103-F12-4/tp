@@ -209,6 +209,11 @@ public class AddCommandTest {
         }
 
         @Override
+        public void markPresent(EventId eventId, PersonId personId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public Set<Participation> getParticipationsForEvent(Event event) {
             throw new AssertionError("This method should not be called.");
         }

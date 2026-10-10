@@ -116,7 +116,7 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_addParticipant_savesParticipations() throws Exception {
+    public void execute_participationCommands_saveParticipations() throws Exception {
         Person person = new PersonBuilder().withId("P1").build();
         AddressBook addressBook = new AddressBook();
         addressBook.addPerson(person);
@@ -135,10 +135,12 @@ public class LogicManagerTest {
                 new StorageManager(addressBookStorage, userPrefsStorage, participationStorage));
 
         logic.execute("add-participant E1 P1");
+        logic.execute("mark-participant E1 P1");
 
         ReadOnlyParticipations storedParticipations =
                 participationStorage.readParticipations(eventList, addressBook).orElseThrow();
-        assertEquals(Set.of(new Participation(event, person)), storedParticipations.getParticipations());
+        Participation expectedParticipation = new Participation(event, person, true, Set.of(), Set.of());
+        assertEquals(Set.of(expectedParticipation), storedParticipations.getParticipations());
     }
 
     /**

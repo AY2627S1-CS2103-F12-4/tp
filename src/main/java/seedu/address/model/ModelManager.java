@@ -22,6 +22,7 @@ import seedu.address.model.mapper.MapperManager;
 import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.ParticipationAlreadyPresentException;
 import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
@@ -189,6 +190,27 @@ public class ModelManager implements Model {
             throw new PersonNotFoundException();
         }
         mapper.removeParticipation(event, person);
+    }
+
+    @Override
+    public void markPresent(EventId eventId, PersonId personId)
+            throws ParticipationNotFoundException, ParticipationAlreadyPresentException,
+            EventNotFoundException, PersonNotFoundException {
+        requireAllNonNull(eventId, personId);
+        Event event = eventList.getEventFromId(eventId.toString());
+        Person person = addressBook.getPersonFromId(personId);
+        if (person == null) {
+            throw new PersonNotFoundException();
+        }
+
+        Participation participation = mapper.getParticipationsForEvent(event).stream()
+                .filter(candidate -> candidate.getPerson().getId().equals(personId))
+                .findFirst()
+                .orElseThrow(() -> new ParticipationNotFoundException(eventId.toString(), personId.toString()));
+        if (participation.isPresent()) {
+            throw new ParticipationAlreadyPresentException(eventId.toString(), personId.toString());
+        }
+        mapper.setPresent(event, person, true);
     }
 
     @Override

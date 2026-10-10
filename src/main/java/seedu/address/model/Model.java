@@ -11,6 +11,7 @@ import seedu.address.model.event.exceptions.EventNotFoundException;
 import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.ParticipationAlreadyPresentException;
 import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
@@ -106,6 +107,13 @@ public interface Model {
      */
     void removeParticipation(EventId eventId, PersonId personId)
             throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException;
+
+    /**
+     * Marks the participation identified by {@code eventId} and {@code personId} as present.
+     */
+    void markPresent(EventId eventId, PersonId personId)
+            throws ParticipationNotFoundException, ParticipationAlreadyPresentException,
+            EventNotFoundException, PersonNotFoundException;
 
     /** Returns the participations for {@code event}. */
     Set<Participation> getParticipationsForEvent(Event event) throws EventNotFoundException;

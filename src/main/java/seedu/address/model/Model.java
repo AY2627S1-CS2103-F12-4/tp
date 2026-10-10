@@ -1,11 +1,20 @@
 package seedu.address.model;
 
+import java.util.Set;
 import java.util.function.Predicate;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
+import seedu.address.model.event.Event;
+import seedu.address.model.event.exceptions.EventNotFoundException;
+import seedu.address.model.mapping.Participation;
+import seedu.address.model.mapping.ReadOnlyMappings;
+import seedu.address.model.mapping.exceptions.DuplicateMappingException;
+import seedu.address.model.mapping.exceptions.MappingNotFoundException;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
+import seedu.address.model.person.exceptions.PersonNotFoundException;
+import seedu.address.model.tag.Tag;
 
 /**
  * The API of the Model component.
@@ -70,6 +79,43 @@ public interface Model {
      * another existing person in the address book.
      */
     void setPerson(Person target, Person editedPerson);
+
+    /**
+     * Returns the participation mappings.
+     */
+    ReadOnlyMappings getMappings();
+
+    /**
+     * Adds a mapping between {@code event} and {@code person}.
+     */
+    void addMapping(Event event, Person person) throws DuplicateMappingException;
+
+    /**
+     * Removes the mapping between {@code event} and {@code person}.
+     */
+    void removeMapping(Event event, Person person) throws MappingNotFoundException;
+
+    /**
+     * Returns the participation mappings for {@code event}.
+     */
+    Set<Participation> getMappingsForEvent(Event event) throws EventNotFoundException;
+
+    /**
+     * Returns the participation mappings for {@code person}.
+     */
+    Set<Participation> getMappingsForPerson(Person person) throws PersonNotFoundException;
+
+    /**
+     * Sets whether {@code person} is present at {@code event}.
+     */
+    Participation setPresent(Event event, Person person, boolean isPresent)
+            throws MappingNotFoundException, EventNotFoundException, PersonNotFoundException;
+
+    /**
+     * Replaces the event-specific tags for {@code person} at {@code event}.
+     */
+    Participation setTags(Event event, Person person, Set<Tag> tags)
+            throws MappingNotFoundException, EventNotFoundException, PersonNotFoundException;
 
     /**
      * Returns an unmodifiable view of the filtered person list.

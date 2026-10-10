@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.event.Event;
+import seedu.address.model.event.EventId;
 import seedu.address.model.event.exceptions.EventNotFoundException;
 import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ReadOnlyParticipations;
@@ -90,9 +91,21 @@ public interface Model {
             throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException;
 
     /**
+     * Adds a participation identified by {@code eventId} and {@code personId}.
+     */
+    void addParticipation(EventId eventId, PersonId personId)
+            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException;
+
+    /**
      * Removes the participation between {@code event} and {@code person}.
      */
     void removeParticipation(Event event, Person person) throws ParticipationNotFoundException;
+
+    /**
+     * Removes a participation identified by {@code eventId} and {@code personId}.
+     */
+    void removeParticipation(EventId eventId, PersonId personId)
+            throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException;
 
     /** Returns the participations for {@code event}. */
     Set<Participation> getParticipationsForEvent(Event event) throws EventNotFoundException;

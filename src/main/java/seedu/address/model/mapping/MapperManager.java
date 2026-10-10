@@ -4,10 +4,9 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import seedu.address.model.AddressBook;
 import seedu.address.model.event.Event;
@@ -106,10 +105,15 @@ public class MapperManager implements Mapper {
 
     @Override
     public Set<Participation> getMappings() {
-        return mappings.entrySet().stream()
-                .flatMap(entry -> toParticipationIfPresent(
-                        entry.getKey(), entry.getValue()).stream())
-                .collect(Collectors.toUnmodifiableSet());
+        Set<Participation> validMappings = new HashSet<>();
+        for (Map.Entry<MappingKey, ParticipationState> entry : mappings.entrySet()) {
+            try {
+                validMappings.add(toParticipation(entry.getKey(), entry.getValue()));
+            } catch (EventNotFoundException | PersonNotFoundException e) {
+                continue;
+            }
+        }
+        return Set.copyOf(validMappings);
     }
 
     @Override
@@ -121,12 +125,18 @@ public class MapperManager implements Mapper {
         String eventId = requireNonNull(event.getId());
         eventList.getEventFromId(eventId);
 
-        return mappings.entrySet().stream()
-                .filter(entry ->
-                        entry.getKey().eventId().equals(eventId))
-                .flatMap(entry -> toParticipationIfPresent(
-                        entry.getKey(), entry.getValue()).stream())
-                .collect(Collectors.toUnmodifiableSet());
+        Set<Participation> eventMappings = new HashSet<>();
+        for (Map.Entry<MappingKey, ParticipationState> entry : mappings.entrySet()) {
+            if (!entry.getKey().eventId().equals(eventId)) {
+                continue;
+            }
+            try {
+                eventMappings.add(toParticipation(entry.getKey(), entry.getValue()));
+            } catch (PersonNotFoundException e) {
+                continue;
+            }
+        }
+        return Set.copyOf(eventMappings);
     }
 
     @Override
@@ -140,11 +150,18 @@ public class MapperManager implements Mapper {
             throw new PersonNotFoundException();
         }
 
-        return mappings.entrySet().stream()
-                .filter(entry ->
-                        entry.getKey().personId().equals(personId))
-                .map(entry -> toParticipation(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toUnmodifiableSet());
+        Set<Participation> personMappings = new HashSet<>();
+        for (Map.Entry<MappingKey, ParticipationState> entry : mappings.entrySet()) {
+            if (!entry.getKey().personId().equals(personId)) {
+                continue;
+            }
+            try {
+                personMappings.add(toParticipation(entry.getKey(), entry.getValue()));
+            } catch (EventNotFoundException e) {
+                continue;
+            }
+        }
+        return Set.copyOf(personMappings);
     }
 
     @Override
@@ -242,32 +259,6 @@ public class MapperManager implements Mapper {
         }
 
         return state;
-    }
-
-    /**
-     * Resolves a mapping against the current event and person collections.
-     */
-    private Optional<Participation> toParticipationIfPresent(
-            MappingKey key,
-            ParticipationState state) {
-        Event event;
-        try {
-            event = eventList.getEventFromId(key.eventId());
-        } catch (EventNotFoundException e) {
-            return Optional.empty();
-        }
-
-        Person person = addressBook.getPersonFromId(key.personId());
-        if (person == null) {
-            return Optional.empty();
-        }
-
-        return Optional.of(new Participation(
-                event,
-                person,
-                state.isPresent(),
-                state.tags(),
-                state.roles()));
     }
 
     /**

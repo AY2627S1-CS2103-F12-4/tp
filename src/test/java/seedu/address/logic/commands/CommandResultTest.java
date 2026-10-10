@@ -57,7 +57,16 @@ public class CommandResultTest {
         CommandResult commandResult = new CommandResult("feedback");
         String expected = CommandResult.class.getCanonicalName() + "{feedbackToUser="
                 + commandResult.getFeedbackToUser() + ", showHelp=" + commandResult.isShowHelp()
-                + ", exit=" + commandResult.isExit() + "}";
+                + ", exit=" + commandResult.isExit() + ", showEvents=" + commandResult.isShowEvents() + "}";
         assertEquals(expected, commandResult.toString());
+    }
+
+    @Test
+    public void constructor_eventResults_requestsEventView() {
+        CommandResult eventResult = new CommandResult("feedback", false, false, true);
+        assertTrue(eventResult.isShowEvents());
+        assertFalse(new CommandResult("feedback").isShowEvents());
+        assertNotEquals(new CommandResult("feedback"), eventResult);
+        assertEquals(new CommandResult("feedback", false, false, true), eventResult);
     }
 }

@@ -130,4 +130,37 @@ public interface Model {
      * @throws NullPointerException if {@code predicate} is null.
      */
     void updateFilteredPersonList(Predicate<Person> predicate);
+
+    /**
+     * Adds an event with a unique ID to the event collection.
+     * Preserves the active event filter.
+     */
+    void addEvent(Event event);
+
+    /**
+     * Returns a live, unmodifiable view of the filtered events in insertion order.
+     */
+    ObservableList<Event> getFilteredEventList();
+
+    /**
+     * Replaces the event filter with the given non-null predicate.
+     */
+    void updateFilteredEventList(Predicate<Event> predicate);
+
+    /**
+     * Adds a participation mapping for an existing event and person.
+     * Each event-person pair can be added only once.
+     *
+     * @throws EventNotFoundException if the event ID is unknown.
+     * @throws PersonNotFoundException if the person ID is unknown.
+     * @throws DuplicateMappingException if the mapping exists.
+     */
+    void addParticipation(Event event, Person person);
+
+    /**
+     * Returns an unmodifiable snapshot of participation records for an existing
+     * event.
+     * Resolves each record using the stored event and person details.
+     */
+    Set<Participation> getParticipationsForEvent(Event event);
 }

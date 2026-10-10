@@ -13,11 +13,13 @@ import static seedu.address.testutil.TypicalPersons.AMY;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.collections.ObservableList;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
@@ -27,6 +29,8 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.event.Event;
+import seedu.address.model.event.EventId;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonMappingStorage;
@@ -87,6 +91,22 @@ public class LogicManagerTest {
     @Test
     public void getFilteredPersonList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPersonList().remove(0));
+    }
+
+    @Test
+    public void execute_findEvent_updatesExistingEventView() throws Exception {
+        Event workshop = new Event(new EventId("E1"), "Workshop", 10, "Learn Java");
+        Event concert = new Event(new EventId("E2"), "Concert", 20, "Live music");
+        model.addEvent(workshop);
+        model.addEvent(concert);
+        ObservableList<Event> displayedEvents = logic.getFilteredEventList();
+
+        logic.execute("find-event work");
+        assertEquals(List.of(workshop), displayedEvents);
+
+        logic.execute("find-event concert");
+        assertEquals(List.of(concert), displayedEvents);
+        assertThrows(UnsupportedOperationException.class, () -> displayedEvents.add(workshop));
     }
 
     /**

@@ -47,8 +47,7 @@ public class AddCommandTest {
                 .withId("P999")
                 .build();
 
-        CommandResult commandResult =
-                new AddCommand(validPerson).execute(modelStub);
+        CommandResult commandResult = new AddCommand(validPerson).execute(modelStub);
 
         assertEquals(
                 String.format(
@@ -117,6 +116,31 @@ public class AddCommandTest {
      * A default model stub that has all of the methods failing.
      */
     private class ModelStub implements Model {
+
+        @Override
+        public void addEvent(Event event) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public ObservableList<Event> getFilteredEventList() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void updateFilteredEventList(Predicate<Event> predicate) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void addParticipation(Event event, Person person) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Set<Participation> getParticipationsForEvent(Event event) {
+            throw new AssertionError("This method should not be called.");
+        }
 
         @Override
         public ReadOnlyUserPrefs getUserPrefs() {

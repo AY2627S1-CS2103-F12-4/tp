@@ -11,11 +11,36 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
+import seedu.address.model.event.exceptions.EventNotFoundException;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.exceptions.PersonNotFoundException;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class MapperManagerTest {
+
+    @Test
+    public void addMapping_unknownEvent_throwsEventNotFoundException() {
+        Person person = new PersonBuilder().withId("P1").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(person);
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        MapperManager mapper = new MapperManager(new EventList(), addressBook);
+
+        assertThrows(EventNotFoundException.class, () -> mapper.addMapping(event, person));
+    }
+
+    @Test
+    public void addMapping_unknownPerson_throwsPersonNotFoundException() {
+        Person person = new PersonBuilder().withId("P1").build();
+        AddressBook addressBook = new AddressBook();
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        MapperManager mapper = new MapperManager(eventList, addressBook);
+
+        assertThrows(PersonNotFoundException.class, () -> mapper.addMapping(event, person));
+    }
 
     @Test
     public void getMappings_multipleMappings_returnsUnmodifiableSnapshot() {

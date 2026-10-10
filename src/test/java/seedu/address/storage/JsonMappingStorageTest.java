@@ -22,6 +22,7 @@ import seedu.address.model.event.EventList;
 import seedu.address.model.mapping.MapperManager;
 import seedu.address.model.mapping.Participation;
 import seedu.address.model.mapping.ParticipationRole;
+import seedu.address.model.mapping.ReadOnlyMappings;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
@@ -103,10 +104,10 @@ public class JsonMappingStorageTest {
                 """);
         JsonMappingStorage storage = new JsonMappingStorage(filePath);
 
-        List<Participation> mappings = storage.readMappings(eventList, addressBook).orElseThrow();
+        ReadOnlyMappings mappings = storage.readMappings(eventList, addressBook).orElseThrow();
 
-        assertEquals(List.of(new Participation(event, person, true,
-                Set.of(new Tag("vip")), Set.of(new ParticipationRole("Speaker")))), mappings);
+        assertEquals(Set.of(new Participation(event, person, true,
+                Set.of(new Tag("vip")), Set.of(new ParticipationRole("Speaker")))), mappings.getMappings());
     }
 
     @Test
@@ -118,10 +119,10 @@ public class JsonMappingStorageTest {
         MapperManager mapper = new MapperManager(eventList, addressBook, List.of(original));
 
         storage.saveMappings(mapper);
-        List<Participation> readBack = storage.readMappings(eventList, addressBook).orElseThrow();
+        ReadOnlyMappings readBack = storage.readMappings(eventList, addressBook).orElseThrow();
         String json = Files.readString(filePath);
 
-        assertEquals(List.of(original), readBack);
+        assertEquals(Set.of(original), readBack.getMappings());
         assertTrue(json.contains("\"eventId\" : \"E1\""));
         assertTrue(json.contains("\"personId\" : \"P1\""));
         assertFalse(json.contains("Orientation"));

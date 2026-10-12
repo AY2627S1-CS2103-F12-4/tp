@@ -13,17 +13,22 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.AddParticipantCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteParticipantCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.MarkParticipantCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.event.EventId;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonId;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
 import seedu.address.testutil.PersonUtil;
@@ -40,6 +45,12 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_addParticipant() throws Exception {
+        AddParticipantCommand command = (AddParticipantCommand) parser.parseCommand("add-participant E1 P1");
+        assertEquals(new AddParticipantCommand(new EventId("E1"), new PersonId("P1")), command);
+    }
+
+    @Test
     public void parseCommand_clear() throws Exception {
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD) instanceof ClearCommand);
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD + " 3") instanceof ClearCommand);
@@ -50,6 +61,20 @@ public class AddressBookParserTest {
         DeleteCommand command = (DeleteCommand) parser.parseCommand(
                 DeleteCommand.COMMAND_WORD + " " + INDEX_FIRST_PERSON.getOneBased());
         assertEquals(new DeleteCommand(INDEX_FIRST_PERSON), command);
+    }
+
+    @Test
+    public void parseCommand_deleteParticipant() throws Exception {
+        DeleteParticipantCommand command =
+                (DeleteParticipantCommand) parser.parseCommand("del-participant E1 P1");
+        assertEquals(new DeleteParticipantCommand(new EventId("E1"), new PersonId("P1")), command);
+    }
+
+    @Test
+    public void parseCommand_markParticipant() throws Exception {
+        MarkParticipantCommand command =
+                (MarkParticipantCommand) parser.parseCommand("mark-participant E1 P1");
+        assertEquals(new MarkParticipantCommand(new EventId("E1"), new PersonId("P1")), command);
     }
 
     @Test

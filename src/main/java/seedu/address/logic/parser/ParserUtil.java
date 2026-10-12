@@ -9,9 +9,11 @@ import java.util.Set;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.event.EventId;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.PersonId;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 
@@ -33,6 +35,36 @@ public class ParserUtil {
             throw new ParseException(MESSAGE_INVALID_INDEX);
         }
         return Index.fromOneBased(Integer.parseInt(trimmedIndex));
+    }
+
+    /**
+     * Parses {@code eventId} into an {@code EventId}.
+     * Leading and trailing whitespaces are trimmed.
+     *
+     * @throws ParseException if {@code eventId} is invalid.
+     */
+    public static EventId parseEventId(String eventId) throws ParseException {
+        requireNonNull(eventId);
+        String trimmedEventId = eventId.trim();
+        if (!EventId.isValidEventId(trimmedEventId)) {
+            throw new ParseException(EventId.MESSAGE_CONSTRAINTS);
+        }
+        return new EventId(trimmedEventId);
+    }
+
+    /**
+     * Parses {@code personId} into a {@code PersonId}.
+     * Leading and trailing whitespaces are trimmed.
+     *
+     * @throws ParseException if {@code personId} is invalid.
+     */
+    public static PersonId parsePersonId(String personId) throws ParseException {
+        requireNonNull(personId);
+        String trimmedPersonId = personId.trim();
+        if (!PersonId.isValidPersonId(trimmedPersonId)) {
+            throw new ParseException(PersonId.MESSAGE_CONSTRAINTS);
+        }
+        return new PersonId(trimmedPersonId);
     }
 
     /**

@@ -152,6 +152,12 @@ public interface Model {
      */
     void addEvent(Event event);
 
+    /** Creates an event with an automatically assigned ID. */
+    Event createEvent(String name, int capacity, String description);
+
+    /** Returns a snapshot of all events, including those hidden by the active filter. */
+    java.util.List<Event> getEvents();
+
     /**
      * Returns a live, unmodifiable view of the filtered events in insertion order.
      */

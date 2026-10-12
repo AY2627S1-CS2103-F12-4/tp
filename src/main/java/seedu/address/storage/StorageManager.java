@@ -2,6 +2,7 @@ package seedu.address.storage;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -11,6 +12,7 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.event.Event;
 import seedu.address.model.event.EventList;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 
@@ -22,17 +24,56 @@ public class StorageManager implements Storage {
     private static final Logger logger = LogsCenter.getLogger(StorageManager.class);
     private JsonAddressBookStorage addressBookStorage;
     private JsonUserPrefsStorage userPrefsStorage;
+    private final JsonEventStorage eventStorage;
     private JsonParticipationStorage participationStorage;
 
     /**
      * Creates a {@code StorageManager} with the given address book, user prefs and
      * participation storage.
      */
+    public StorageManager(JsonAddressBookStorage addressBookStorage, JsonUserPrefsStorage userPrefsStorage) {
+        this(addressBookStorage, userPrefsStorage,
+                new JsonEventStorage(addressBookStorage.getAddressBookFilePath().resolveSibling("events.json")));
+    }
+
+    /** Creates storage with an explicitly configured independent event file. */
+    public StorageManager(JsonAddressBookStorage addressBookStorage, JsonUserPrefsStorage userPrefsStorage,
+            JsonEventStorage eventStorage) {
+        this(addressBookStorage, userPrefsStorage, eventStorage,
+                new JsonParticipationStorage(addressBookStorage.getAddressBookFilePath()
+                        .resolveSibling("participations.json")));
+    }
+
+    /** Creates storage with a configured participation file and sibling event file. */
     public StorageManager(JsonAddressBookStorage addressBookStorage, JsonUserPrefsStorage userPrefsStorage,
             JsonParticipationStorage participationStorage) {
+        this(addressBookStorage, userPrefsStorage,
+                new JsonEventStorage(addressBookStorage.getAddressBookFilePath().resolveSibling("events.json")),
+                participationStorage);
+    }
+
+    /** Creates storage for people, preferences, events and participations. */
+    public StorageManager(JsonAddressBookStorage addressBookStorage, JsonUserPrefsStorage userPrefsStorage,
+            JsonEventStorage eventStorage, JsonParticipationStorage participationStorage) {
         this.addressBookStorage = addressBookStorage;
         this.userPrefsStorage = userPrefsStorage;
+        this.eventStorage = eventStorage;
         this.participationStorage = participationStorage;
+    }
+
+    @Override
+    public Path getEventFilePath() {
+        return eventStorage.getEventFilePath();
+    }
+
+    @Override
+    public Optional<EventList> readEvents() throws DataLoadingException {
+        return eventStorage.readEvents();
+    }
+
+    @Override
+    public void saveEvents(List<Event> events) throws IOException {
+        eventStorage.saveEvents(events);
     }
 
     // ================ UserPrefs methods ==============================

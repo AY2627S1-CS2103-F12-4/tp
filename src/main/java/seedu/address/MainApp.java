@@ -24,6 +24,7 @@ import seedu.address.model.mapper.MapperManager;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.storage.JsonEventStorage;
 import seedu.address.storage.JsonParticipationStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
@@ -41,6 +42,7 @@ public class MainApp extends Application {
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = Paths.get("preferences.json");
     private static final Path ADDRESS_BOOK_FILE_PATH = Paths.get("data", "addressbook.json");
+    private static final Path EVENT_FILE_PATH = Paths.get("data", "events.json");
     private static final Path PARTICIPATION_FILE_PATH = Paths.get("data", "participations.json");
 
     protected Ui ui;
@@ -57,7 +59,8 @@ public class MainApp extends Application {
         UserPrefs userPrefs = initPrefs(userPrefsStorage);
         JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(ADDRESS_BOOK_FILE_PATH);
         JsonParticipationStorage participationStorage = new JsonParticipationStorage(PARTICIPATION_FILE_PATH);
-        storage = new StorageManager(addressBookStorage, userPrefsStorage, participationStorage);
+        storage = new StorageManager(addressBookStorage, userPrefsStorage,
+                new JsonEventStorage(EVENT_FILE_PATH), participationStorage);
 
         model = initModelManager(storage, userPrefs);
 
@@ -69,7 +72,7 @@ public class MainApp extends Application {
     /**
      * Returns a model initialized with the stored address book and participations.
      */
-    private Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
+    protected Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
         logger.info("Using data file : " + storage.getAddressBookFilePath());
 
         Optional<ReadOnlyAddressBook> addressBookOptional;
@@ -88,8 +91,7 @@ public class MainApp extends Application {
         }
 
         AddressBook initialAddressBook = new AddressBook(initialData);
-        // TODO: Replace this with persisted event data when event storage is implemented.
-        EventList eventList = new EventList();
+        EventList eventList = loadEvents(storage);
         ReadOnlyParticipations initialParticipations;
         logger.info("Using participation data file : " + storage.getParticipationFilePath());
         try {
@@ -107,6 +109,17 @@ public class MainApp extends Application {
         }
 
         return new ModelManager(initialAddressBook, userPrefs, eventList, initialParticipations);
+    }
+
+    /** Loads events before participation IDs are resolved. */
+    private EventList loadEvents(Storage storage) {
+        try {
+            return storage.readEvents().orElseGet(EventList::new);
+        } catch (DataLoadingException e) {
+            logger.warning("Event data file at " + storage.getEventFilePath() + " could not be loaded."
+                    + " Will be starting with empty events.");
+            return new EventList();
+        }
     }
 
     /**

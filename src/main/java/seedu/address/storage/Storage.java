@@ -2,6 +2,7 @@ package seedu.address.storage;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
 import seedu.address.commons.exceptions.DataLoadingException;
@@ -9,6 +10,7 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.event.Event;
 import seedu.address.model.event.EventList;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 
@@ -16,6 +18,15 @@ import seedu.address.model.mapper.ReadOnlyParticipations;
  * API of the Storage component
  */
 public interface Storage {
+
+    /** Returns the event data file path. */
+    Path getEventFilePath();
+
+    /** Loads events, or returns empty if the event file does not exist. */
+    Optional<EventList> readEvents() throws DataLoadingException;
+
+    /** Saves all events, independently of the UI filter. */
+    void saveEvents(List<Event> events) throws IOException;
 
     /**
      * Returns the file path of the UserPrefs data file.

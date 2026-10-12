@@ -38,6 +38,7 @@ import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.storage.JsonEventStorage;
 import seedu.address.storage.JsonParticipationStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -80,6 +81,39 @@ public class LogicManagerTest {
     public void execute_validCommand_success() throws Exception {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand, ListCommand.MESSAGE_SUCCESS, model);
+    }
+
+    @Test
+    public void execute_addEvent_savesEventsAndPeopleIndependently() throws Exception {
+        logic.execute("add-event Party /cap 10 /desc Welcome");
+        JsonEventStorage eventStorage = new JsonEventStorage(temporaryFolder.resolve("events.json"));
+        assertEquals(model.getEvents(), eventStorage.readEvents().orElseThrow().getEvents());
+
+        model.updateFilteredEventList(unused -> false);
+        logic.execute("list");
+        assertEquals(model.getEvents(), eventStorage.readEvents().orElseThrow().getEvents());
+        JsonAddressBookStorage personStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        assertEquals(model.getAddressBook(), personStorage.readAddressBook().orElseThrow());
+    }
+
+    @Test
+    public void execute_eventSaveFailure_throwsCommandException() {
+        JsonAddressBookStorage personStorage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        JsonEventStorage failingStorage = new JsonEventStorage(temporaryFolder.resolve("events.json")) {
+            @Override
+            public void saveEvents(List<Event> events) throws IOException {
+                throw DUMMY_IO_EXCEPTION;
+            }
+        };
+        logic = new LogicManager(model, new StorageManager(personStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json")), failingStorage));
+        assertThrows(CommandException.class,
+                String.format(LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()), () ->
+                logic.execute("add-event Party /cap 10 /desc Welcome"));
+        // As with person commands, a storage failure is reported after the in-memory change.
+        assertEquals(List.of(new Event(new EventId("E1"), "Party", 10, "Welcome")), model.getEvents());
     }
 
     @Test

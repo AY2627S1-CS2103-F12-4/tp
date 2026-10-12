@@ -1,56 +1,59 @@
-package seedu.address.model.mapping;
+package seedu.address.model.mapper;
 
 import java.util.Set;
 
 import seedu.address.model.event.Event;
 import seedu.address.model.event.exceptions.EventNotFoundException;
-import seedu.address.model.mapping.exceptions.DuplicateMappingException;
-import seedu.address.model.mapping.exceptions.MappingNotFoundException;
+import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
 import seedu.address.model.tag.Tag;
 
 /**
- * Defines operations for managing participation mappings between events and people.
+ * Defines operations for managing participations between events and people.
  * Each event-person pair has at most one participation record.
  */
-public interface Mapper {
+public interface Mapper extends ReadOnlyParticipations {
 
     /**
-     * Adds a mapping between {@code event} and {@code person}.
+     * Adds a participation between {@code event} and {@code person}.
      * Both arguments must not be null.
      *
-     * @throws DuplicateMappingException if the mapping already exists.
+     * @throws DuplicateParticipationException if the participation already exists.
+     * @throws EventNotFoundException if the event cannot be found.
+     * @throws PersonNotFoundException if the person cannot be found.
      */
-    void addMapping(Event event, Person person) throws DuplicateMappingException;
+    void addParticipation(Event event, Person person)
+            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException;
 
     /**
-     * Removes the mapping between {@code event} and {@code person}.
+     * Removes the participation between {@code event} and {@code person}.
      * Both arguments must not be null.
      *
-     * @throws MappingNotFoundException if the mapping does not exist.
+     * @throws ParticipationNotFoundException if the participation does not exist.
      */
-    void removeMapping(Event event, Person person) throws MappingNotFoundException;
+    void removeParticipation(Event event, Person person) throws ParticipationNotFoundException;
 
     /**
      * Returns an unmodifiable snapshot of the participation records for {@code event}.
      * {@code event} must not be null.
-     * Mappings whose person cannot be found are omitted.
+     * Participations whose person cannot be found are omitted.
      *
      * @throws EventNotFoundException if a referenced event cannot be found.
      */
-    Set<Participation> getMappingsForEvent(Event event)
+    Set<Participation> getParticipationsForEvent(Event event)
             throws EventNotFoundException;
 
     /**
      * Returns an unmodifiable snapshot of the participation records for
      * {@code person}.
      * {@code person} must not be null.
-     * Mappings whose event cannot be found are omitted.
+     * Participations whose event cannot be found are omitted.
      *
      * @throws PersonNotFoundException if a referenced person cannot be found.
      */
-    Set<Participation> getMappingsForPerson(Person person)
+    Set<Participation> getParticipationsForPerson(Person person)
             throws PersonNotFoundException;
 
     /**
@@ -58,34 +61,34 @@ public interface Mapper {
      * Returns the resulting participation record.
      * Both {@code event} and {@code person} must not be null.
      *
-     * @throws MappingNotFoundException if the mapping does not exist.
+     * @throws ParticipationNotFoundException if the participation does not exist.
      * @throws EventNotFoundException if the referenced event cannot be found.
      * @throws PersonNotFoundException if the referenced person cannot be found.
      */
     Participation setPresent(Event event, Person person, boolean isPresent)
-            throws MappingNotFoundException, EventNotFoundException, PersonNotFoundException;
+            throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException;
 
     /**
      * Replaces the event-specific tags for {@code person} at {@code event}.
      * Returns the resulting participation record.
      * Arguments must not be null.
      *
-     * @throws MappingNotFoundException if the mapping does not exist.
+     * @throws ParticipationNotFoundException if the participation does not exist.
      * @throws EventNotFoundException if the referenced event cannot be found.
      * @throws PersonNotFoundException if the referenced person cannot be found.
      */
     Participation setTags(Event event, Person person, Set<Tag> tags)
-            throws MappingNotFoundException, EventNotFoundException, PersonNotFoundException;
+            throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException;
 
     /**
-     * Removes every mapping for {@code event}, doing nothing if there are none.
+     * Removes every participation for {@code event}, doing nothing if there are none.
      * {@code event} must not be null.
      */
-    void removeMappingsForEvent(Event event);
+    void removeParticipationsForEvent(Event event);
 
     /**
-     * Removes every mapping for {@code person}, doing nothing if there are none.
+     * Removes every participation for {@code person}, doing nothing if there are none.
      * {@code person} must not be null.
      */
-    void removeMappingsForPerson(Person person);
+    void removeParticipationsForPerson(Person person);
 }

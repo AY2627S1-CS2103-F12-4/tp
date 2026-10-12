@@ -8,14 +8,16 @@ import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventList;
+import seedu.address.model.mapper.ReadOnlyParticipations;
 
 /**
- * Manages storage of AddressBook data in local storage.
+ * Manages application data in local storage.
  */
 public class StorageManager implements Storage {
 
@@ -23,9 +25,11 @@ public class StorageManager implements Storage {
     private JsonAddressBookStorage addressBookStorage;
     private JsonUserPrefsStorage userPrefsStorage;
     private final JsonEventStorage eventStorage;
+    private JsonParticipationStorage participationStorage;
 
     /**
-     * Creates a {@code StorageManager} with the given address book and user prefs storage.
+     * Creates a {@code StorageManager} with the given address book, user prefs and
+     * participation storage.
      */
     public StorageManager(JsonAddressBookStorage addressBookStorage, JsonUserPrefsStorage userPrefsStorage) {
         this(addressBookStorage, userPrefsStorage,
@@ -35,9 +39,26 @@ public class StorageManager implements Storage {
     /** Creates storage with an explicitly configured independent event file. */
     public StorageManager(JsonAddressBookStorage addressBookStorage, JsonUserPrefsStorage userPrefsStorage,
             JsonEventStorage eventStorage) {
+        this(addressBookStorage, userPrefsStorage, eventStorage,
+                new JsonParticipationStorage(addressBookStorage.getAddressBookFilePath()
+                        .resolveSibling("participations.json")));
+    }
+
+    /** Creates storage with a configured participation file and sibling event file. */
+    public StorageManager(JsonAddressBookStorage addressBookStorage, JsonUserPrefsStorage userPrefsStorage,
+            JsonParticipationStorage participationStorage) {
+        this(addressBookStorage, userPrefsStorage,
+                new JsonEventStorage(addressBookStorage.getAddressBookFilePath().resolveSibling("events.json")),
+                participationStorage);
+    }
+
+    /** Creates storage for people, preferences, events and participations. */
+    public StorageManager(JsonAddressBookStorage addressBookStorage, JsonUserPrefsStorage userPrefsStorage,
+            JsonEventStorage eventStorage, JsonParticipationStorage participationStorage) {
         this.addressBookStorage = addressBookStorage;
         this.userPrefsStorage = userPrefsStorage;
         this.eventStorage = eventStorage;
+        this.participationStorage = participationStorage;
     }
 
     @Override
@@ -72,7 +93,6 @@ public class StorageManager implements Storage {
         userPrefsStorage.saveUserPrefs(userPrefs);
     }
 
-
     // ================ AddressBook methods ==============================
 
     @Override
@@ -90,6 +110,26 @@ public class StorageManager implements Storage {
     public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
         logger.fine("Attempting to write to data file: " + addressBookStorage.getAddressBookFilePath());
         addressBookStorage.saveAddressBook(addressBook);
+    }
+
+    // ================ Participation methods ==============================
+
+    @Override
+    public Path getParticipationFilePath() {
+        return participationStorage.getParticipationFilePath();
+    }
+
+    @Override
+    public Optional<ReadOnlyParticipations> readParticipations(EventList eventList, AddressBook addressBook)
+            throws DataLoadingException {
+        logger.fine("Attempting to read data from file: " + participationStorage.getParticipationFilePath());
+        return participationStorage.readParticipations(eventList, addressBook);
+    }
+
+    @Override
+    public void saveParticipations(ReadOnlyParticipations participations) throws IOException {
+        logger.fine("Attempting to write to data file: " + participationStorage.getParticipationFilePath());
+        participationStorage.saveParticipations(participations);
     }
 
 }

@@ -44,7 +44,13 @@ public class ModelManager implements Model {
      * an empty event collection, and no participation mappings.
      */
     public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs) {
+        this(addressBook, userPrefs, new EventList());
+    }
+
+    /** Initializes the model with saved events before creating the participation mapper. */
+    public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs, EventList initialEvents) {
         requireAllNonNull(addressBook, userPrefs);
+        requireNonNull(initialEvents);
 
         logger.fine(
                 "Initializing with address book: "
@@ -56,8 +62,9 @@ public class ModelManager implements Model {
         this.userPrefs = new UserPrefs(userPrefs);
         filteredPersons = new FilteredList<>(this.addressBook.getPersonList());
         eventList = new EventList();
+        initialEvents.getEvents().forEach(eventList::addEvent);
         mapper = new MapperManager(eventList, this.addressBook);
-        observableEvents = FXCollections.observableArrayList();
+        observableEvents = FXCollections.observableArrayList(eventList.getEvents());
         filteredEvents = new FilteredList<>(observableEvents);
         unmodifiableFilteredEvents = FXCollections.unmodifiableObservableList(filteredEvents);
     }
@@ -161,6 +168,11 @@ public class ModelManager implements Model {
         Event event = eventList.createEvent(name, capacity, description);
         observableEvents.setAll(eventList.getEvents());
         return event;
+    }
+
+    @Override
+    public List<Event> getEvents() {
+        return eventList.getEvents();
     }
 
     @Override

@@ -157,6 +157,13 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public Event createEvent(String name, int capacity, String description) {
+        Event event = eventList.createEvent(name, capacity, description);
+        observableEvents.setAll(eventList.getEvents());
+        return event;
+    }
+
+    @Override
     public ObservableList<Event> getFilteredEventList() {
         return unmodifiableFilteredEvents;
     }

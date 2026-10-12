@@ -93,6 +93,9 @@ public interface Model {
      */
     void addEvent(Event event);
 
+    /** Creates an event with an automatically assigned ID. */
+    Event createEvent(String name, int capacity, String description);
+
     /**
      * Returns a live, unmodifiable view of the filtered events in insertion order.
      */

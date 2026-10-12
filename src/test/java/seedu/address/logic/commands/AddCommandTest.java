@@ -117,6 +117,16 @@ public class AddCommandTest {
      * A default model stub that has all of the methods failing.
      */
     private class ModelStub implements Model {
+        @Override
+        public List<Event> getEvents() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Event createEvent(String name, int capacity, String description) {
+            throw new AssertionError("This method should not be called.");
+        }
+
 
         @Override
         public void addEvent(Event event) {

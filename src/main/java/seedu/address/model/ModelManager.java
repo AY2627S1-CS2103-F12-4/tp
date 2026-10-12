@@ -55,6 +55,11 @@ public class ModelManager implements Model {
         this(addressBook, userPrefs, new EventList(), EMPTY_PARTICIPATIONS);
     }
 
+    /** Initializes a model with saved events and no participations. */
+    public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs, EventList eventList) {
+        this(addressBook, userPrefs, eventList, EMPTY_PARTICIPATIONS);
+    }
+
     /**
      * Initializes a ModelManager with the given address book, user preferences,
      * events and participations.
@@ -262,6 +267,18 @@ public class ModelManager implements Model {
         // EventList is the source of truth; refresh the observable view after a
         // successful addition.
         observableEvents.setAll(eventList.getEvents());
+    }
+
+    @Override
+    public Event createEvent(String name, int capacity, String description) {
+        Event event = eventList.createEvent(name, capacity, description);
+        observableEvents.setAll(eventList.getEvents());
+        return event;
+    }
+
+    @Override
+    public List<Event> getEvents() {
+        return eventList.getEvents();
     }
 
     @Override

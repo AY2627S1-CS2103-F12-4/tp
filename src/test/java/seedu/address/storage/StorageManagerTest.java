@@ -14,6 +14,13 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.event.Event;
+import seedu.address.model.event.EventId;
+import seedu.address.model.event.EventList;
+import seedu.address.model.mapper.MapperManager;
+import seedu.address.model.mapper.ReadOnlyParticipations;
+import seedu.address.model.person.Person;
+import seedu.address.testutil.PersonBuilder;
 
 public class StorageManagerTest {
 
@@ -26,7 +33,8 @@ public class StorageManagerTest {
     public void setUp() {
         JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(getTempFilePath("ab"));
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(getTempFilePath("prefs"));
-        storageManager = new StorageManager(addressBookStorage, userPrefsStorage);
+        JsonParticipationStorage participationStorage = new JsonParticipationStorage(getTempFilePath("participations"));
+        storageManager = new StorageManager(addressBookStorage, userPrefsStorage, participationStorage);
     }
 
     private Path getTempFilePath(String fileName) {
@@ -63,6 +71,28 @@ public class StorageManagerTest {
     @Test
     public void getAddressBookFilePath() {
         assertNotNull(storageManager.getAddressBookFilePath());
+    }
+
+    @Test
+    public void participationsReadSave() throws Exception {
+        Person person = new PersonBuilder().withId("P1").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(person);
+        Event event = new Event(new EventId("E1"), "Orientation", 100, "Welcome event");
+        EventList eventList = new EventList();
+        eventList.addEvent(event);
+        MapperManager mapper = new MapperManager(eventList, addressBook);
+        mapper.addParticipation(event, person);
+
+        storageManager.saveParticipations(mapper);
+        ReadOnlyParticipations retrieved = storageManager.readParticipations(eventList, addressBook).orElseThrow();
+
+        assertEquals(mapper.getParticipations(), retrieved.getParticipations());
+    }
+
+    @Test
+    public void getParticipationFilePath() {
+        assertNotNull(storageManager.getParticipationFilePath());
     }
 
 }

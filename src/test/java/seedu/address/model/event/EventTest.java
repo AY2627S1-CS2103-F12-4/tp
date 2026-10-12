@@ -67,7 +67,7 @@ public class EventTest {
     }
 
     @Test
-    public void renamedEvent_preservesMappingKey() {
+    public void renamedEvent_preservesParticipationKey() {
         Event original = new Event(ID, NAME, 10, "Description");
         Map<String, String> registrations = new HashMap<>();
         registrations.put(original.getId(), "Participant registration");

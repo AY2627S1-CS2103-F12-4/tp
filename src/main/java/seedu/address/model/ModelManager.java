@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
@@ -43,6 +44,7 @@ public class ModelManager implements Model {
     private final UserPrefs userPrefs;
     private final FilteredList<Person> filteredPersons;
     private final EventList eventList;
+    private Event selectedEvent;
     private final ObservableList<Event> observableEvents;
     private final FilteredList<Event> filteredEvents;
     private final ObservableList<Event> unmodifiableFilteredEvents;
@@ -279,6 +281,16 @@ public class ModelManager implements Model {
     @Override
     public List<Event> getEvents() {
         return eventList.getEvents();
+    }
+
+    @Override
+    public void selectEvent(EventId eventId) {
+        selectedEvent = eventList.getEventFromId(requireNonNull(eventId).toString());
+    }
+
+    @Override
+    public Optional<Event> getSelectedEvent() {
+        return Optional.ofNullable(selectedEvent);
     }
 
     @Override

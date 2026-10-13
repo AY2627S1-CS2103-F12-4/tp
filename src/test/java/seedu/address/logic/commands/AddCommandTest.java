@@ -118,6 +118,11 @@ public class AddCommandTest {
      */
     private class ModelStub implements Model {
         @Override
+        public Event deleteEvent(EventId eventId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public List<Event> getEvents() {
             throw new AssertionError("This method should not be called.");
         }

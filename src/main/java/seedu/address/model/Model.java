@@ -155,6 +155,9 @@ public interface Model {
     /** Creates an event with an automatically assigned ID. */
     Event createEvent(String name, int capacity, String description);
 
+    /** Deletes an event and its participations, preserving people and the active filter. */
+    Event deleteEvent(EventId eventId);
+
     /** Returns a snapshot of all events, including those hidden by the active filter. */
     java.util.List<Event> getEvents();
 

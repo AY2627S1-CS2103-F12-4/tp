@@ -53,12 +53,15 @@ public class SearchParticipantCommand extends Command {
         }
         int matchCount = model.getParticipantSearchResults().size();
         if (matchCount == 0) {
-            return new CommandResult(String.format(MESSAGE_NO_MATCHES, keyword, event.getName()));
+            return new CommandResult(String.format(MESSAGE_NO_MATCHES, keyword, event.getName()),
+                    false, false, false, true);
         }
         if (matchCount == 1) {
-            return new CommandResult(String.format(MESSAGE_ONE_MATCH, keyword, event.getName()));
+            return new CommandResult(String.format(MESSAGE_ONE_MATCH, keyword, event.getName()),
+                    false, false, false, true);
         }
-        return new CommandResult(String.format(MESSAGE_MATCHES, matchCount, keyword, event.getName()));
+        return new CommandResult(String.format(MESSAGE_MATCHES, matchCount, keyword, event.getName()),
+                false, false, false, true);
     }
 
     @Override

@@ -222,6 +222,16 @@ public class SearchParticipantCommandTest {
         assertEquals("2 participants matching \"Michael\" found in Jordan's Wedding.", result.getFeedbackToUser());
         assertFalse(result.isExit());
         assertFalse(result.isShowHelp());
+        assertTrue(result.isShowParticipants());
+    }
+
+    @Test
+    public void execute_zeroOneAndMultipleMatches_alwaysRequestsParticipantView() throws Exception {
+        for (String keyword : List.of("Missing", "Michael Tan", "Michael")) {
+            CommandResult result = new SearchParticipantCommand(FIRST_EVENT, keyword).execute(model);
+            assertTrue(result.isShowParticipants());
+            assertFalse(result.isShowEvents());
+        }
     }
 
     @Test

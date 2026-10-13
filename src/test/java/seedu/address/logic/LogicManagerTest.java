@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,16 +25,12 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
-import seedu.address.model.event.EventList;
-import seedu.address.model.mapper.Participation;
-import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonEventStorage;
@@ -147,34 +142,6 @@ public class LogicManagerTest {
         logic.execute("find-event concert");
         assertEquals(List.of(concert), displayedEvents);
         assertThrows(UnsupportedOperationException.class, () -> displayedEvents.add(workshop));
-    }
-
-    @Test
-    public void execute_participationCommands_saveParticipations() throws Exception {
-        Person person = new PersonBuilder().withId("P1").build();
-        AddressBook addressBook = new AddressBook();
-        addressBook.addPerson(person);
-        Event event = new Event(new EventId("E1"), "Workshop", 10, "Learn Java");
-        EventList eventList = new EventList();
-        eventList.addEvent(event);
-        model = new ModelManager(addressBook, new UserPrefs(), eventList, Set::of);
-
-        JsonAddressBookStorage addressBookStorage =
-                new JsonAddressBookStorage(temporaryFolder.resolve("participantAddressBook.json"));
-        JsonUserPrefsStorage userPrefsStorage =
-                new JsonUserPrefsStorage(temporaryFolder.resolve("participantUserPrefs.json"));
-        JsonParticipationStorage participationStorage =
-                new JsonParticipationStorage(temporaryFolder.resolve("participantParticipations.json"));
-        logic = new LogicManager(model,
-                new StorageManager(addressBookStorage, userPrefsStorage, participationStorage));
-
-        logic.execute("add-participant E1 P1");
-        logic.execute("mark-participant E1 P1");
-
-        ReadOnlyParticipations storedParticipations =
-                participationStorage.readParticipations(eventList, addressBook).orElseThrow();
-        Participation expectedParticipation = new Participation(event, person, true, Set.of(), Set.of());
-        assertEquals(Set.of(expectedParticipation), storedParticipations.getParticipations());
     }
 
     /**

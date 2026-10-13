@@ -122,16 +122,36 @@ public interface Model {
     /**
      * Searches the event identified by {@code eventId} for a nonblank name phrase.
      * Replaces only transient search state; invalid input preserves the previous search.
+     * Matches names using case-insensitive substring comparison and preserves distinct person IDs.
+     * Results refresh after person and participation changes made through this model.
+     *
+     * @param eventId Stable ID of the event whose memberships are searched.
+     * @param keyword Name phrase, with surrounding whitespace ignored.
+     * @throws NullPointerException if either argument is null.
+     * @throws IllegalArgumentException if the keyword is blank.
+     * @throws EventNotFoundException if no event has the supplied ID.
      */
     void updateParticipantSearch(EventId eventId, String keyword);
 
-    /** Returns a live, unmodifiable search result list, ordered lexicographically by person ID. */
+    /**
+     * Returns a live, unmodifiable search result list, ordered lexicographically by person ID.
+     *
+     * @return The same observable view across searches and subsequent model changes.
+     */
     ObservableList<Participation> getParticipantSearchResults();
 
-    /** Returns the selected search event, or empty before the first search. */
+    /**
+     * Returns the selected search event, or empty before the first search.
+     *
+     * @return The event resolved from the selected stable ID.
+     */
     Optional<Event> getParticipantSearchEvent();
 
-    /** Returns the search phrase without surrounding whitespace, or empty before the first search. */
+    /**
+     * Returns the search phrase without surrounding whitespace, or empty before the first search.
+     *
+     * @return The original case and internal whitespace of the search phrase.
+     */
     Optional<String> getParticipantSearchKeyword();
 
     /** Returns the participations for {@code person}. */

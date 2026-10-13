@@ -18,6 +18,15 @@ public class SearchParticipantCommandParser implements Parser<SearchParticipantC
             "\\s*(?<eventId>\\S+)\\s+/name\\s+(?<keyword>.*?)\\s*", Pattern.DOTALL);
     private static final Pattern NAME_PREFIX = Pattern.compile("(?:^|\\s)/name(?:\\s|$)");
 
+    /**
+     * Parses {@code EVENT_ID /name NAME}, preserving the case and internal whitespace of the name phrase.
+     * Requires exactly one /name prefix with whitespace separating the arguments.
+     *
+     * @param args Arguments following the command word.
+     * @return A command carrying the validated event ID and name phrase.
+     * @throws NullPointerException if the arguments are null.
+     * @throws ParseException if the event ID, name phrase, or command structure is invalid.
+     */
     @Override
     public SearchParticipantCommand parse(String args) throws ParseException {
         requireNonNull(args);

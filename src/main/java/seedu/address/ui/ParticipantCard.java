@@ -24,6 +24,10 @@ public class ParticipantCard extends UiPart<Region> {
 
     /**
      * Creates a card for the supplied participation without substituting a list index for its ID.
+     * Displays roles in alphabetical order, or "No role" when none are assigned.
+     *
+     * @param participation Event membership supplying the person and roles to display.
+     * @throws NullPointerException if the participation is null.
      */
     public ParticipantCard(Participation participation) {
         super(FXML);

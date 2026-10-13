@@ -26,6 +26,10 @@ public class ParticipantListPanel extends UiPart<Region> {
 
     /**
      * Creates a panel bound to the supplied observable search results.
+     * Changes to the list update its cards; the caller updates the search heading separately.
+     *
+     * @param participants Observable list to display without copying its records.
+     * @throws NullPointerException if the participant list is null.
      */
     public ParticipantListPanel(ObservableList<Participation> participants) {
         super(FXML);
@@ -39,6 +43,11 @@ public class ParticipantListPanel extends UiPart<Region> {
 
     /**
      * Updates the heading to identify the event and name phrase associated with these results.
+     * Updates the heading even when the result list is empty.
+     *
+     * @param event Selected event whose name and stable ID identify the results.
+     * @param keyword Search phrase displayed with its original case.
+     * @throws NullPointerException if either argument is null.
      */
     public void setSearchContext(Event event, String keyword) {
         requireAllNonNull(event, keyword);

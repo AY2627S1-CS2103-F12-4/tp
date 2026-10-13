@@ -6,16 +6,16 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.event.EventId;
 
 /**
- * Parses an event index and a single /name search phrase.
+ * Parses an event ID and a single /name search phrase.
  */
 public class SearchParticipantCommandParser implements Parser<SearchParticipantCommand> {
     private static final Pattern ARGUMENT_FORMAT = Pattern.compile(
-            "\\s*(?<index>\\S+)\\s+/name\\s+(?<keyword>.*?)\\s*", Pattern.DOTALL);
+            "\\s*(?<eventId>\\S+)\\s+/name\\s+(?<keyword>.*?)\\s*", Pattern.DOTALL);
     private static final Pattern NAME_PREFIX = Pattern.compile("(?:^|\\s)/name(?:\\s|$)");
 
     @Override
@@ -30,8 +30,8 @@ public class SearchParticipantCommandParser implements Parser<SearchParticipantC
         if (keyword.isBlank() || NAME_PREFIX.matcher(keyword).find()) {
             throw invalidFormat();
         }
-        Index eventIndex = ParserUtil.parseIndex(matcher.group("index"));
-        return new SearchParticipantCommand(eventIndex, keyword);
+        EventId eventId = ParserUtil.parseEventId(matcher.group("eventId"));
+        return new SearchParticipantCommand(eventId, keyword);
     }
 
     private ParseException invalidFormat() {

@@ -2,6 +2,7 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
@@ -14,6 +15,7 @@ import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.event.Event;
+import seedu.address.model.mapper.Participation;
 import seedu.address.model.person.Person;
 import seedu.address.storage.Storage;
 
@@ -70,6 +72,21 @@ public class LogicManager implements Logic {
     @Override
     public ObservableList<Event> getFilteredEventList() {
         return model.getFilteredEventList();
+    }
+
+    @Override
+    public ObservableList<Participation> getParticipantSearchResults() {
+        return model.getParticipantSearchResults();
+    }
+
+    @Override
+    public Optional<Event> getParticipantSearchEvent() {
+        return model.getParticipantSearchEvent();
+    }
+
+    @Override
+    public Optional<String> getParticipantSearchKeyword() {
+        return model.getParticipantSearchKeyword();
     }
 
     @Override

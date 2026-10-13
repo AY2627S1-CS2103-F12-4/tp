@@ -1,5 +1,6 @@
 package seedu.address.model;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -117,6 +118,21 @@ public interface Model {
 
     /** Returns the participations for {@code event}. */
     Set<Participation> getParticipationsForEvent(Event event) throws EventNotFoundException;
+
+    /**
+     * Searches the event identified by {@code eventId} for a nonblank name phrase.
+     * Replaces only transient search state; invalid input preserves the previous search.
+     */
+    void updateParticipantSearch(EventId eventId, String keyword);
+
+    /** Returns a live, unmodifiable search result list, ordered lexicographically by person ID. */
+    ObservableList<Participation> getParticipantSearchResults();
+
+    /** Returns the selected search event, or empty before the first search. */
+    Optional<Event> getParticipantSearchEvent();
+
+    /** Returns the search phrase without surrounding whitespace, or empty before the first search. */
+    Optional<String> getParticipantSearchKeyword();
 
     /** Returns the participations for {@code person}. */
     Set<Participation> getParticipationsForPerson(Person person) throws PersonNotFoundException;

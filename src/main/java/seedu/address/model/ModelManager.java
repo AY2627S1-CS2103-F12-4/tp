@@ -294,6 +294,18 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public Event deleteEvent(EventId eventId) {
+        Event event = eventList.getEventFromId(requireNonNull(eventId).toString());
+        mapper.removeParticipationsForEvent(event);
+        eventList.removeEvent(event.getId());
+        if (event.equals(selectedEvent)) {
+            selectedEvent = null;
+        }
+        observableEvents.setAll(eventList.getEvents());
+        return event;
+    }
+
+    @Override
     public ObservableList<Event> getFilteredEventList() {
         return unmodifiableFilteredEvents;
     }

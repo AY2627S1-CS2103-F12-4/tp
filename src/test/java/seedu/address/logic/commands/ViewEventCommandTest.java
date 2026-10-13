@@ -95,6 +95,20 @@ public class ViewEventCommandTest {
     }
 
     @Test
+    public void deleteEvent_clearsSelectionOnlyWhenSelectedEventIsDeleted() throws Exception {
+        ModelManager model = new ModelManager();
+        Event selected = model.createEvent("Selected", 1, "");
+        model.createEvent("Other", 1, "");
+        new ViewEventCommand(new EventId("E1")).execute(model);
+        new DeleteEventCommand(new EventId("E2")).execute(model);
+        assertEquals(Optional.of(selected), model.getSelectedEvent());
+        assertThrows(CommandException.class, () -> new DeleteEventCommand(new EventId("E99")).execute(model));
+        assertEquals(Optional.of(selected), model.getSelectedEvent());
+        new DeleteEventCommand(new EventId("E1")).execute(model);
+        assertTrue(model.getSelectedEvent().isEmpty());
+    }
+
+    @Test
     public void equalsAndHashCode_compareEventIds() {
         ViewEventCommand command = new ViewEventCommand(new EventId("E1"));
         ViewEventCommand copy = new ViewEventCommand(new EventId("E1"));

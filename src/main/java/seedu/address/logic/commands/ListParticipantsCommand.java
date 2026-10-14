@@ -61,14 +61,17 @@ public class ListParticipantsCommand extends Command {
         String details = participants.stream()
                 .sorted(Comparator.comparing(
                         p -> p.getPerson().getId().toString()))
-                .map(p -> p.getPerson().getId()
-                        + " — " + p.getPerson().getName()
-                        + " — " + (p.getRoles().isEmpty()
+                .map(p -> (p.isPresent() ? "[Y]" : "[N]") + p.getPerson().getId()
+                        + "-" + p.getPerson().getName()
+                        + "-roles:" + (p.getRoles().isEmpty()
                         ? "No role"
                         : p.getRoles().stream()
                         .map(Object::toString)
                         .sorted()
-                        .collect(Collectors.joining(", "))))
+                        .collect(Collectors.joining(", ")))
+                        + "（Tags:" + (p.getTags().isEmpty() ? "None"
+                        : p.getTags().stream().map(tag -> tag.tagName).sorted()
+                        .collect(Collectors.joining(", "))) + "）")
                 .collect(Collectors.joining("\n"));
 
         return new CommandResult(

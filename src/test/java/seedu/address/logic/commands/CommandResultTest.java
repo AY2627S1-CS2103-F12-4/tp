@@ -57,7 +57,8 @@ public class CommandResultTest {
         CommandResult commandResult = new CommandResult("feedback");
         String expected = CommandResult.class.getCanonicalName() + "{feedbackToUser="
                 + commandResult.getFeedbackToUser() + ", showHelp=" + commandResult.isShowHelp()
-                + ", exit=" + commandResult.isExit() + ", showEvents=" + commandResult.isShowEvents() + "}";
+                + ", exit=" + commandResult.isExit() + ", showEvents=" + commandResult.isShowEvents()
+                + ", showParticipants=" + commandResult.isShowParticipants() + "}";
         assertEquals(expected, commandResult.toString());
     }
 
@@ -68,5 +69,20 @@ public class CommandResultTest {
         assertFalse(new CommandResult("feedback").isShowEvents());
         assertNotEquals(new CommandResult("feedback"), eventResult);
         assertEquals(new CommandResult("feedback", false, false, true), eventResult);
+    }
+
+    @Test
+    public void constructor_participantResults_requestsParticipantViewAndPreservesEquality() {
+        CommandResult result = new CommandResult("feedback", false, false, false, true);
+        CommandResult copy = new CommandResult("feedback", false, false, false, true);
+        assertTrue(result.isShowParticipants());
+        assertFalse(result.isShowEvents());
+        assertFalse(result.isShowHelp());
+        assertFalse(result.isExit());
+        assertFalse(new CommandResult("feedback").isShowParticipants());
+        assertFalse(new CommandResult("feedback", false, false, true).isShowParticipants());
+        assertEquals(result, copy);
+        assertEquals(result.hashCode(), copy.hashCode());
+        assertNotEquals(new CommandResult("feedback"), result);
     }
 }

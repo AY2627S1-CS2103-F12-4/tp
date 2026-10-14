@@ -24,6 +24,7 @@ import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.MarkParticipantCommand;
+import seedu.address.logic.commands.SearchRoleCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.EventId;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
@@ -75,6 +76,30 @@ public class AddressBookParserTest {
         MarkParticipantCommand command =
                 (MarkParticipantCommand) parser.parseCommand("mark-participant E1 P1");
         assertEquals(new MarkParticipantCommand(new EventId("E1"), new PersonId("P1")), command);
+    }
+
+    @Test
+    public void parseCommand_searchRole_returnsSearchRoleCommand() throws Exception {
+        assertEquals(new SearchRoleCommand(new EventId("E1"), "Best Man"),
+                parser.parseCommand("search-role E1 /role Best Man"));
+    }
+
+    @Test
+    public void parseCommand_searchRoleWithWhitespace_returnsNormalizedCommand() throws Exception {
+        assertEquals(new SearchRoleCommand(new EventId("E1"), "Best Man"),
+                parser.parseCommand(" \tsearch-role\tE1\t/role  Best \t Man  "));
+    }
+
+    @Test
+    public void parseCommand_searchRoleWithMissingQuery_throwsParseException() {
+        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, SearchRoleCommand.MESSAGE_USAGE);
+        assertThrows(ParseException.class, expectedMessage, () -> parser.parseCommand("search-role E1 /role"));
+    }
+
+    @Test
+    public void parseCommand_searchRoleWithInvalidId_throwsParseException() {
+        assertThrows(ParseException.class, EventId.MESSAGE_CONSTRAINTS, () ->
+                parser.parseCommand("search-role 1 /role Best Man"));
     }
 
     @Test

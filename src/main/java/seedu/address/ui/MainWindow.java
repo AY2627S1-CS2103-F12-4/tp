@@ -37,6 +37,7 @@ public class MainWindow extends UiPart<Stage> {
     // Independent Ui parts residing in this Ui container
     private PersonListPanel personListPanel;
     private EventListPanel eventListPanel;
+    private ParticipantListPanel participantListPanel;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
 
@@ -57,6 +58,12 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private Tab eventsTab;
+
+    @FXML
+    private Tab participantsTab;
+
+    @FXML
+    private StackPane participantListPanelPlaceholder;
 
     @FXML
     private StackPane resultDisplayPlaceholder;
@@ -132,6 +139,9 @@ public class MainWindow extends UiPart<Stage> {
         eventListPanel = new EventListPanel(logic.getFilteredEventList());
         eventListPanelPlaceholder.getChildren().add(eventListPanel.getRoot());
 
+        participantListPanel = new ParticipantListPanel(logic.getParticipantSearchResults());
+        participantListPanelPlaceholder.getChildren().add(participantListPanel.getRoot());
+
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
 
@@ -196,6 +206,14 @@ public class MainWindow extends UiPart<Stage> {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+
+            logic.getParticipantSearchEvent().ifPresentOrElse(
+                    event -> participantListPanel.setSearchContext(
+                            event, logic.getParticipantSearchKeyword().orElseThrow()),
+                    participantListPanel::clearSearchContext);
+            if (commandResult.isShowParticipants()) {
+                listTabs.getSelectionModel().select(participantsTab);
+            }
 
             if (commandResult.isShowEvents()) {
                 listTabs.getSelectionModel().select(eventsTab);

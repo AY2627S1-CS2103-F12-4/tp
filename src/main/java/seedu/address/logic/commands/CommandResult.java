@@ -22,6 +22,9 @@ public class CommandResult {
     /** The event list should be shown to the user. */
     private final boolean showEvents;
 
+    /** The participant search results should be shown to the user. */
+    private final boolean showParticipants;
+
     /**
      * Constructs a {@code CommandResult} with the specified fields.
      */
@@ -33,10 +36,19 @@ public class CommandResult {
      * Constructs a result with feedback, help, exit, and event-display instructions.
      */
     public CommandResult(String feedbackToUser, boolean showHelp, boolean exit, boolean showEvents) {
+        this(feedbackToUser, showHelp, exit, showEvents, false);
+    }
+
+    /**
+     * Constructs a result with feedback and instructions for help, exit, events, and participant results.
+     */
+    public CommandResult(String feedbackToUser, boolean showHelp, boolean exit,
+            boolean showEvents, boolean showParticipants) {
         this.feedbackToUser = requireNonNull(feedbackToUser);
         this.showHelp = showHelp;
         this.exit = exit;
         this.showEvents = showEvents;
+        this.showParticipants = showParticipants;
     }
 
     /**
@@ -63,6 +75,10 @@ public class CommandResult {
         return showEvents;
     }
 
+    public boolean isShowParticipants() {
+        return showParticipants;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -77,12 +93,13 @@ public class CommandResult {
         return feedbackToUser.equals(otherCommandResult.feedbackToUser)
                 && showHelp == otherCommandResult.showHelp
                 && exit == otherCommandResult.exit
-                && showEvents == otherCommandResult.showEvents;
+                && showEvents == otherCommandResult.showEvents
+                && showParticipants == otherCommandResult.showParticipants;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feedbackToUser, showHelp, exit, showEvents);
+        return Objects.hash(feedbackToUser, showHelp, exit, showEvents, showParticipants);
     }
 
     @Override
@@ -92,6 +109,7 @@ public class CommandResult {
                 .add("showHelp", showHelp)
                 .add("exit", exit)
                 .add("showEvents", showEvents)
+                .add("showParticipants", showParticipants)
                 .toString();
     }
 

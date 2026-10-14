@@ -1,11 +1,14 @@
 package seedu.address.logic;
 
+import java.util.Optional;
+
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
+import seedu.address.model.mapper.Participation;
 import seedu.address.model.person.Person;
 
 /**
@@ -26,6 +29,15 @@ public interface Logic {
 
     /** Returns a live, unmodifiable view of the filtered events. */
     ObservableList<Event> getFilteredEventList();
+
+    /** Returns a live, unmodifiable list of the current participant search results. */
+    ObservableList<Participation> getParticipantSearchResults();
+
+    /** Returns the selected search event, or empty before the first search. */
+    Optional<Event> getParticipantSearchEvent();
+
+    /** Returns the search phrase, or empty before the first search. */
+    Optional<String> getParticipantSearchKeyword();
 
     /**
      * Returns the user prefs' GUI settings.

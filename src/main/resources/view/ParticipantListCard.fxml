@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="4" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <padding><Insets top="10" right="10" bottom="10" left="15" /></padding>
+  <Label fx:id="name" styleClass="cell_big_label" wrapText="true" />
+  <Label fx:id="personId" styleClass="cell_small_label" />
+  <Label fx:id="roles" styleClass="cell_small_label" wrapText="true" />
+</VBox>

@@ -10,6 +10,7 @@ import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.EventId;
+import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
@@ -152,5 +153,32 @@ public class ParserUtil {
             tagSet.add(parseTag(tagName));
         }
         return tagSet;
+    }
+
+    /**
+     * Parses a {@code String role} into a {@code ParticipationRole}.
+     * Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException if the given {@code role} is invalid.
+     */
+    public static ParticipationRole parseParticipationRole(String role) throws ParseException {
+        requireNonNull(role);
+        String trimmedRole = role.trim();
+        if (!ParticipationRole.isValidRole(trimmedRole)) {
+            throw new ParseException(ParticipationRole.MESSAGE_CONSTRAINTS);
+        }
+        return new ParticipationRole(trimmedRole);
+    }
+
+    /**
+     * Parses {@code Collection<String> roles} into a {@code Set<ParticipationRole>}.
+     */
+    public static Set<ParticipationRole> parseParticipationRoles(Collection<String> roles) throws ParseException {
+        requireNonNull(roles);
+        Set<ParticipationRole> roleSet = new HashSet<>();
+        for (String role : roles) {
+            roleSet.add(parseParticipationRole(role));
+        }
+        return roleSet;
     }
 }

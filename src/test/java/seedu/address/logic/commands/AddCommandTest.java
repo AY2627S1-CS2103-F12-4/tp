@@ -26,6 +26,7 @@ import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
@@ -221,6 +222,12 @@ public class AddCommandTest {
 
         @Override
         public void addParticipation(EventId eventId, PersonId personId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void addParticipation(EventId eventId, PersonId personId,
+                                     Set<ParticipationRole> roles, Set<Tag> tags) {
             throw new AssertionError("This method should not be called.");
         }
 

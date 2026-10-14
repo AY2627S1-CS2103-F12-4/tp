@@ -28,6 +28,18 @@ public interface Mapper extends ReadOnlyParticipations {
             throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException;
 
     /**
+     * Adds a participation with event-specific {@code roles} and {@code tags}.
+     * Arguments must not be null.
+     *
+     * @throws DuplicateParticipationException if the participation already exists.
+     * @throws EventNotFoundException if the event cannot be found.
+     * @throws PersonNotFoundException if the person cannot be found.
+     */
+    void addParticipation(Event event, Person person,
+                          Set<ParticipationRole> roles, Set<Tag> tags)
+            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException;
+
+    /**
      * Removes the participation between {@code event} and {@code person}.
      * Both arguments must not be null.
      *

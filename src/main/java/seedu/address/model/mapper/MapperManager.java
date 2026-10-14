@@ -1,6 +1,7 @@
 package seedu.address.model.mapper;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -73,7 +74,15 @@ public class MapperManager implements Mapper {
     @Override
     public void addParticipation(Event event, Person person)
             throws DuplicateParticipationException {
+        addParticipation(event, person, Set.of(), Set.of());
+    }
 
+    @Override
+    public void addParticipation(Event event, Person person,
+                                 Set<ParticipationRole> roles, Set<Tag> tags)
+            throws DuplicateParticipationException {
+
+        requireAllNonNull(event, person, roles, tags);
         ParticipationKey key = createKey(event, person);
         eventList.getEventFromId(key.eventId());
         if (addressBook.getPersonFromId(key.personId()) == null) {
@@ -90,8 +99,8 @@ public class MapperManager implements Mapper {
                 key,
                 new ParticipationState(
                         false,
-                        Set.of(),
-                        Set.of()));
+                        tags,
+                        roles));
     }
 
     @Override

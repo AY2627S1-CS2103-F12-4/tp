@@ -119,6 +119,16 @@ public class AddCommandTest {
      */
     private class ModelStub implements Model {
         @Override
+        public void selectEvent(EventId eventId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Optional<Event> getSelectedEvent() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public void updateParticipantSearch(EventId eventId, String keyword) {
             throw new AssertionError("This method should not be called.");
         }

@@ -284,6 +284,39 @@ public class ParticipantSearchTest {
         assertEquals(Optional.of("Michael"), model.getParticipantSearchKeyword());
     }
 
+    @Test
+    public void selectedEventAndParticipantSearch_sameEventDeleted_clearsBothContexts() {
+        model.selectEvent(FIRST_EVENT_ID);
+        model.updateParticipantSearch(FIRST_EVENT_ID, "Michael");
+        model.deleteEvent(FIRST_EVENT_ID);
+        assertTrue(model.getSelectedEvent().isEmpty());
+        assertTrue(model.getParticipantSearchEvent().isEmpty());
+        assertTrue(model.getParticipantSearchKeyword().isEmpty());
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+    }
+
+    @Test
+    public void selectedEventAndParticipantSearch_deleteViewedEvent_preservesOtherEventSearch() {
+        model.selectEvent(SECOND_EVENT_ID);
+        model.updateParticipantSearch(FIRST_EVENT_ID, "Michael");
+        assertEquals(Optional.of(SECOND_EVENT), model.getSelectedEvent());
+        model.deleteEvent(SECOND_EVENT_ID);
+        assertTrue(model.getSelectedEvent().isEmpty());
+        assertEquals(Optional.of(FIRST_EVENT), model.getParticipantSearchEvent());
+        assertEquals(List.of("P1", "P2"), resultIds());
+    }
+
+    @Test
+    public void selectedEventAndParticipantSearch_deleteSearchedEvent_preservesOtherViewedEvent() {
+        model.updateParticipantSearch(FIRST_EVENT_ID, "Michael");
+        model.selectEvent(SECOND_EVENT_ID);
+        assertEquals(List.of("P1", "P2"), resultIds());
+        model.deleteEvent(FIRST_EVENT_ID);
+        assertEquals(Optional.of(SECOND_EVENT), model.getSelectedEvent());
+        assertTrue(model.getParticipantSearchEvent().isEmpty());
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+    }
+
     private List<String> resultIds() {
         return model.getParticipantSearchResults().stream()
                 .map(participation -> participation.getPerson().getId().toString()).toList();

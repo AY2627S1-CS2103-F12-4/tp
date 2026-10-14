@@ -47,6 +47,7 @@ public class ModelManager implements Model {
     private final UserPrefs userPrefs;
     private final FilteredList<Person> filteredPersons;
     private final EventList eventList;
+    private Event selectedEvent;
     private final ObservableList<Event> observableEvents;
     private final FilteredList<Event> filteredEvents;
     private final ObservableList<Event> unmodifiableFilteredEvents;
@@ -341,6 +342,16 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public void selectEvent(EventId eventId) {
+        selectedEvent = eventList.getEventFromId(requireNonNull(eventId).toString());
+    }
+
+    @Override
+    public Optional<Event> getSelectedEvent() {
+        return Optional.ofNullable(selectedEvent);
+    }
+
+    @Override
     public Event deleteEvent(EventId eventId) {
         Event event = eventList.getEventFromId(requireNonNull(eventId).toString());
         mapper.removeParticipationsForEvent(event);
@@ -349,6 +360,9 @@ public class ModelManager implements Model {
             participantSearchEventId = null;
             participantSearchKeyword = null;
             participantSearchResults.clear();
+        }
+        if (event.equals(selectedEvent)) {
+            selectedEvent = null;
         }
         observableEvents.setAll(eventList.getEvents());
         return event;

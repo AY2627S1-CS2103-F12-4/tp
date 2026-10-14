@@ -1,5 +1,6 @@
 package seedu.address.model;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -198,7 +199,13 @@ public interface Model {
     Event deleteEvent(EventId eventId);
 
     /** Returns a snapshot of all events, including those hidden by the active filter. */
-    java.util.List<Event> getEvents();
+    List<Event> getEvents();
+
+    /** Selects the stored event with this ID, leaving the current selection unchanged on failure. */
+    void selectEvent(EventId eventId);
+
+    /** Returns the selected event, or empty if none has been selected in this session. */
+    Optional<Event> getSelectedEvent();
 
     /**
      * Returns a live, unmodifiable view of the filtered events in insertion order.

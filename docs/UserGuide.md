@@ -48,7 +48,7 @@ Shows information on how to access the help page.
 
 Format: `help`
 
-![Help message](images/helpMessage.png)
+![Help message](images/helpMessageNew.png)
 
 ### Adding a person: `add`
 
@@ -94,7 +94,7 @@ Examples:
 
 ### Deleting a person: `delete`
 
-Deletes the person at the specified displayed list index. This is different from removing a person from one event.
+Deletes the person at the specified displayed list index. This also removes that person's registrations from all events. To remove someone from only one event, use `del-participant` instead.
 
 Format: `delete INDEX`
 
@@ -102,9 +102,9 @@ Example: `delete 2`
 
 ### Creating an event: `add-event`
 
-Creates an event with a name and capacity, and optionally a description.
+Creates an event with a name, capacity and required `/desc` parameter. The description value may be empty.
 
-Format: `add-event EVENT_NAME /cap CAPACITY [/desc DESCRIPTION]`
+Format: `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION`
 
 Example: `add-event Wedding /cap 50 /desc Wedding Ceremony`
 
@@ -205,7 +205,7 @@ Example: `view-participant E999 P1`
 
 ### Clearing all people: `clear`
 
-Clears address book entries. **Use with caution.**
+Clears all people from the address book and removes their registrations across events. **Use with caution.**
 
 Format: `clear`
 
@@ -228,7 +228,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 ## FAQ
 
 **Q:** How do I add a new person to an event?  
-**A:** Add them using `add` (if they are not already in the address book), find their person ID using `list`, then use `add-participant EVENT_ID PERSON_ID`.
+**A:** First add them with `add` if needed, then register them using `add-participant EVENT_ID PERSON_ID`. The current People list shows numbered indices, **not permanent person IDs** such as `P1`. You must obtain the correct person ID from an available command or record that explicitly shows it; do not assume the list index equals the ID. If no ID is shown, this is a current UI limitation.
 
 **Q:** Does `del-participant` delete the person's contact details?  
 **A:** No. It removes the participation in the specified event, not the underlying person record.
@@ -252,7 +252,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **Edit person** | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` |
 | **Find people** | `find KEYWORD [MORE_KEYWORDS]` |
 | **Delete person** | `delete INDEX` |
-| **Add event** | `add-event EVENT_NAME /cap CAPACITY [/desc DESCRIPTION]` |
+| **Add event** | `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION` |
 | **List events** | `list-event` |
 | **View event** | `view-event EVENT_ID` |
 | **Add participant** | `add-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |

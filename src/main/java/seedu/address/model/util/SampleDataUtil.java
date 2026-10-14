@@ -22,7 +22,7 @@ public class SampleDataUtil {
     public static Person[] getSamplePersons() {
         return new Person[] {
             new Person(
-                    new PersonId("P001"),
+                    new PersonId("P1"),
                     new Name("Alex Yeoh"),
                     new Phone("87438807"),
                     new Email("alexyeoh@example.com"),
@@ -30,7 +30,7 @@ public class SampleDataUtil {
                     getTagSet("friends")),
 
             new Person(
-                    new PersonId("P002"),
+                    new PersonId("P2"),
                     new Name("Bernice Yu"),
                     new Phone("99272758"),
                     new Email("berniceyu@example.com"),
@@ -38,7 +38,7 @@ public class SampleDataUtil {
                     getTagSet("colleagues", "friends")),
 
             new Person(
-                    new PersonId("P003"),
+                    new PersonId("P3"),
                     new Name("Charlotte Oliveiro"),
                     new Phone("93210283"),
                     new Email("charlotte@example.com"),
@@ -46,7 +46,7 @@ public class SampleDataUtil {
                     getTagSet("neighbours")),
 
             new Person(
-                    new PersonId("P004"),
+                    new PersonId("P4"),
                     new Name("David Li"),
                     new Phone("91031282"),
                     new Email("lidavid@example.com"),
@@ -54,7 +54,7 @@ public class SampleDataUtil {
                     getTagSet("family")),
 
             new Person(
-                    new PersonId("P005"),
+                    new PersonId("P5"),
                     new Name("Irfan Ibrahim"),
                     new Phone("92492021"),
                     new Email("irfan@example.com"),
@@ -62,7 +62,7 @@ public class SampleDataUtil {
                     getTagSet("classmates")),
 
             new Person(
-                    new PersonId("P006"),
+                    new PersonId("P6"),
                     new Name("Roy Balakrishnan"),
                     new Phone("92624417"),
                     new Email("royb@example.com"),

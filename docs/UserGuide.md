@@ -84,7 +84,8 @@ Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]... `
 
 <box type="tip" seamless>
 
-**Tip:** A person can have any number of tags, including zero.
+**Tip:** A person can have any number of tags, including zero. People may have the same name because each person is
+assigned a unique ID.
 </box>
 
 Examples:

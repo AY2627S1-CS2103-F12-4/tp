@@ -1,6 +1,8 @@
 package seedu.address.logic.commands;
 
-import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
@@ -31,18 +33,49 @@ public class AddCommandIntegrationTest {
         Person validPerson = new PersonBuilder().build();
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.addPerson(validPerson);
+        Person expectedPerson = new PersonBuilder(validPerson)
+                .withId(expectedModel.generateNextPersonId().toString())
+                .build();
+        expectedModel.addPerson(expectedPerson);
 
         assertCommandSuccess(new AddCommand(validPerson), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(validPerson)),
+                String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(expectedPerson)),
                 expectedModel);
     }
 
     @Test
-    public void execute_duplicatePerson_throwsCommandException() {
+    public void execute_personWithSameName_success() {
         Person personInList = model.getAddressBook().getPersonList().get(0);
-        assertCommandFailure(new AddCommand(personInList), model,
-                AddCommand.MESSAGE_DUPLICATE_PERSON);
+        Person personWithSameName = new PersonBuilder(personInList)
+                .withPhone(VALID_PHONE_BOB)
+                .withEmail(VALID_EMAIL_BOB)
+                .withAddress(VALID_ADDRESS_BOB)
+                .build();
+
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        Person expectedPerson = new PersonBuilder(personWithSameName)
+                .withId(expectedModel.generateNextPersonId().toString())
+                .build();
+        expectedModel.addPerson(expectedPerson);
+
+        assertCommandSuccess(new AddCommand(personWithSameName), model,
+                String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(expectedPerson)),
+                expectedModel);
+    }
+
+    @Test
+    public void execute_personWithSameDetails_success() {
+        Person personInList = model.getAddressBook().getPersonList().get(0);
+
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        Person expectedPerson = new PersonBuilder(personInList)
+                .withId(expectedModel.generateNextPersonId().toString())
+                .build();
+        expectedModel.addPerson(expectedPerson);
+
+        assertCommandSuccess(new AddCommand(personInList), model,
+                String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(expectedPerson)),
+                expectedModel);
     }
 
 }

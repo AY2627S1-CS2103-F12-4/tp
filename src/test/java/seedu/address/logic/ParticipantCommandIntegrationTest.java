@@ -26,9 +26,11 @@ import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
 import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
+import seedu.address.model.tag.Tag;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonParticipationStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -70,7 +72,8 @@ public class ParticipantCommandIntegrationTest {
 
     @Test
     public void execute_addParticipant_addsAndPersistsParticipation() throws Exception {
-        CommandResult result = logic.execute("add-participant E1 P1");
+        CommandResult result = logic.execute(
+                "add-participant E1 P1 /role Facilitator /role Guest Speaker /tag VIP /tag Alumni");
 
         assertEquals(String.format(AddParticipantCommand.MESSAGE_SUCCESS, EVENT_ID, PERSON_ID),
                 result.getFeedbackToUser());
@@ -78,6 +81,9 @@ public class ParticipantCommandIntegrationTest {
         assertEquals(EVENT, participation.getEvent());
         assertEquals(PERSON, participation.getPerson());
         assertFalse(participation.isPresent());
+        assertEquals(Set.of(new ParticipationRole("Facilitator"), new ParticipationRole("Guest Speaker")),
+                participation.getRoles());
+        assertEquals(Set.of(new Tag("VIP"), new Tag("Alumni")), participation.getTags());
     }
 
     @Test

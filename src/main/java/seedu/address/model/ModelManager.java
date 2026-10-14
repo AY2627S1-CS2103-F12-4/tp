@@ -24,6 +24,7 @@ import seedu.address.model.mapper.Mapper;
 import seedu.address.model.mapper.MapperManager;
 import seedu.address.model.mapper.ParticipantNameContainsKeywordPredicate;
 import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
 import seedu.address.model.mapper.exceptions.ParticipationAlreadyPresentException;
@@ -186,13 +187,20 @@ public class ModelManager implements Model {
     @Override
     public void addParticipation(EventId eventId, PersonId personId)
             throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException {
-        requireAllNonNull(eventId, personId);
+        addParticipation(eventId, personId, Set.of(), Set.of());
+    }
+
+    @Override
+    public void addParticipation(EventId eventId, PersonId personId,
+                                 Set<ParticipationRole> roles, Set<Tag> tags)
+            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException {
+        requireAllNonNull(eventId, personId, roles, tags);
         Event event = eventList.getEventFromId(eventId.toString());
         Person person = addressBook.getPersonFromId(personId);
         if (person == null) {
             throw new PersonNotFoundException();
         }
-        mapper.addParticipation(event, person);
+        mapper.addParticipation(event, person, roles, tags);
         refreshParticipantSearch();
     }
 

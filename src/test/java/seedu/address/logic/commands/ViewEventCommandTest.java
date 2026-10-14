@@ -51,11 +51,36 @@ public class ViewEventCommandTest {
         model.addParticipation(other, carol);
         var before = model.getParticipations().getParticipations();
         String feedback = new ViewEventCommand(new EventId("E1")).execute(model).getFeedbackToUser();
-        assertTrue(feedback.contains("2 participants found in Workshop.\nP1 — Alice — No role\nP2 — Bob — No role"));
+        assertTrue(feedback.contains("2 participants found in Workshop.\n"
+                + "[N]P1-Alice-roles:No role（Tags:None）\n[N]P2-Bob-roles:No role（Tags:None）"));
         assertFalse(feedback.contains("Carol"));
         assertEquals(before, model.getParticipations().getParticipations());
         new ViewEventCommand(new EventId("E2")).execute(model);
         assertEquals(Optional.of(other), model.getSelectedEvent());
+    }
+
+    @Test
+    public void execute_afterMarkingAttendance_displaysLatestState() throws Exception {
+        ModelManager model = new ModelManager();
+        Event event = model.createEvent("Workshop", 10, "");
+        var alice = new PersonBuilder().withId("P1").withName("Alice").build();
+        var bob = new PersonBuilder().withId("P2").withName("Bob").build();
+        model.addPerson(alice);
+        model.addPerson(bob);
+        model.addParticipation(event, alice);
+        model.addParticipation(event, bob);
+        var parser = new seedu.address.logic.parser.AddressBookParser();
+        String before = parser.parseCommand("view-event E1").execute(model).getFeedbackToUser();
+        assertTrue(before.contains("[N]P1-Alice-roles:No role（Tags:None）"));
+        model.setTags(event, alice, java.util.Set.of(
+                new seedu.address.model.tag.Tag("vip"), new seedu.address.model.tag.Tag("friend")));
+        parser.parseCommand("mark-participant E1 P1").execute(model);
+        String after = parser.parseCommand("view-event E1").execute(model).getFeedbackToUser();
+        assertTrue(after.contains("[Y]P1-Alice-roles:No role（Tags:friend, vip）"));
+        assertTrue(after.contains("[N]P2-Bob-roles:No role（Tags:None）"));
+        assertTrue(model.getParticipationsForEvent(event).stream()
+                .filter(participation -> participation.getPerson().equals(alice))
+                .findFirst().orElseThrow().isPresent());
     }
 
     @Test

@@ -259,6 +259,31 @@ public class ParticipantSearchTest {
         assertEquals(model, other);
     }
 
+    @Test
+    public void deleteEvent_selectedSearchEvent_clearsContextAndAllowsLaterMutations() {
+        model.updateParticipantSearch(FIRST_EVENT_ID, "Michael");
+        ObservableList<Participation> results = model.getParticipantSearchResults();
+        model.deleteEvent(FIRST_EVENT_ID);
+        assertTrue(results.isEmpty());
+        assertTrue(model.getParticipantSearchEvent().isEmpty());
+        assertTrue(model.getParticipantSearchKeyword().isEmpty());
+        model.setPerson(MICHAEL, new PersonBuilder(MICHAEL).withName("Michael Smith").build());
+        assertTrue(results.isEmpty());
+        model.updateParticipantSearch(SECOND_EVENT_ID, "Michael");
+        assertEquals(Optional.of(SECOND_EVENT), model.getParticipantSearchEvent());
+    }
+
+    @Test
+    public void deleteEvent_otherOrMissingEvent_preservesSearch() {
+        model.updateParticipantSearch(FIRST_EVENT_ID, "Michael");
+        model.deleteEvent(SECOND_EVENT_ID);
+        assertEquals(List.of("P1", "P2"), resultIds());
+        assertThrows(EventNotFoundException.class, () -> model.deleteEvent(new EventId("E99")));
+        assertEquals(List.of("P1", "P2"), resultIds());
+        assertEquals(Optional.of(FIRST_EVENT), model.getParticipantSearchEvent());
+        assertEquals(Optional.of("Michael"), model.getParticipantSearchKeyword());
+    }
+
     private List<String> resultIds() {
         return model.getParticipantSearchResults().stream()
                 .map(participation -> participation.getPerson().getId().toString()).toList();

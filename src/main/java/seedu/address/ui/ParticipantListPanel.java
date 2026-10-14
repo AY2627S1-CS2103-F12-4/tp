@@ -56,6 +56,14 @@ public class ParticipantListPanel extends UiPart<Region> {
     }
 
     /**
+     * Restores search instructions when no event is selected, such as after deleting the searched event.
+     */
+    public void clearSearchContext() {
+        eventHeading.setText("Participant search");
+        searchHeading.setText("Use search-participant EVENT_ID /name NAME");
+    }
+
+    /**
      * Renders a participant and clears recycled cells when they become empty.
      */
     private class ParticipantListViewCell extends ListCell<Participation> {

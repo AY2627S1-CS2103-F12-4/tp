@@ -207,8 +207,10 @@ public class MainWindow extends UiPart<Stage> {
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
 
-            logic.getParticipantSearchEvent().ifPresent(event -> participantListPanel.setSearchContext(
-                    event, logic.getParticipantSearchKeyword().orElseThrow()));
+            logic.getParticipantSearchEvent().ifPresentOrElse(
+                    event -> participantListPanel.setSearchContext(
+                            event, logic.getParticipantSearchKeyword().orElseThrow()),
+                    participantListPanel::clearSearchContext);
             if (commandResult.isShowParticipants()) {
                 listTabs.getSelectionModel().select(participantsTab);
             }

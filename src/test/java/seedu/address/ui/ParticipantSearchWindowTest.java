@@ -88,6 +88,25 @@ public class ParticipantSearchWindowTest {
         });
     }
 
+    @Test
+    public void deleteSearchedEvent_resetsParticipantContextAndSelectsEvents() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-participant E1 /name John");
+                enterCommand(window, "del-event E1");
+                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals("Participant search", heading(window, "eventHeading"));
+                assertEquals("Use search-participant EVENT_ID /name NAME", heading(window, "searchHeading"));
+                enterCommand(window, "find-event birthday");
+                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
     private MainWindow createWindow() {
         ModelManager model = new ModelManager();
         Event event = new Event(new EventId("E1"), "birthday", 30, "Party");

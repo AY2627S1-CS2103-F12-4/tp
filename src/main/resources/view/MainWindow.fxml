@@ -59,6 +59,11 @@
                 <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
               </StackPane>
             </Tab>
+            <Tab fx:id="participantsTab" text="Participants">
+              <StackPane fx:id="participantListPanelPlaceholder" styleClass="pane-with-border">
+                <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
+              </StackPane>
+            </Tab>
           </tabs>
         </TabPane>
 

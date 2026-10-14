@@ -3,7 +3,9 @@ package seedu.address.model;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -20,6 +22,7 @@ import seedu.address.model.event.EventList;
 import seedu.address.model.event.exceptions.EventNotFoundException;
 import seedu.address.model.mapper.Mapper;
 import seedu.address.model.mapper.MapperManager;
+import seedu.address.model.mapper.ParticipantNameContainsKeywordPredicate;
 import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
@@ -48,6 +51,11 @@ public class ModelManager implements Model {
     private final ObservableList<Event> observableEvents;
     private final FilteredList<Event> filteredEvents;
     private final ObservableList<Event> unmodifiableFilteredEvents;
+    private final ObservableList<Participation> participantSearchResults = FXCollections.observableArrayList();
+    private final ObservableList<Participation> unmodifiableParticipantSearchResults =
+            FXCollections.unmodifiableObservableList(participantSearchResults);
+    private EventId participantSearchEventId;
+    private String participantSearchKeyword;
 
     /**
      * Initializes a ModelManager with the given addressBook and userPrefs,
@@ -119,6 +127,7 @@ public class ModelManager implements Model {
         previousPersons.stream()
                 .filter(person -> this.addressBook.getPersonFromId(person.getId()) == null)
                 .forEach(mapper::removeParticipationsForPerson);
+        refreshParticipantSearch();
     }
 
     @Override
@@ -136,12 +145,14 @@ public class ModelManager implements Model {
     public void deletePerson(Person target) {
         addressBook.removePerson(target);
         mapper.removeParticipationsForPerson(target);
+        refreshParticipantSearch();
     }
 
     @Override
     public void addPerson(Person person) {
         addressBook.addPerson(person);
         updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+        refreshParticipantSearch();
     }
 
     @Override
@@ -154,6 +165,7 @@ public class ModelManager implements Model {
         requireAllNonNull(target, editedPerson);
 
         addressBook.setPerson(target, editedPerson);
+        refreshParticipantSearch();
     }
 
     // =========== Participations
@@ -168,6 +180,7 @@ public class ModelManager implements Model {
     public void addParticipation(Event event, Person person)
             throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException {
         mapper.addParticipation(event, person);
+        refreshParticipantSearch();
     }
 
     @Override
@@ -180,11 +193,13 @@ public class ModelManager implements Model {
             throw new PersonNotFoundException();
         }
         mapper.addParticipation(event, person);
+        refreshParticipantSearch();
     }
 
     @Override
     public void removeParticipation(Event event, Person person) throws ParticipationNotFoundException {
         mapper.removeParticipation(event, person);
+        refreshParticipantSearch();
     }
 
     @Override
@@ -197,6 +212,7 @@ public class ModelManager implements Model {
             throw new PersonNotFoundException();
         }
         mapper.removeParticipation(event, person);
+        refreshParticipantSearch();
     }
 
     @Override
@@ -218,11 +234,49 @@ public class ModelManager implements Model {
             throw new ParticipationAlreadyPresentException(eventId.toString(), personId.toString());
         }
         mapper.setPresent(event, person, true);
+        refreshParticipantSearch();
     }
 
     @Override
     public Set<Participation> getParticipationsForEvent(Event event) throws EventNotFoundException {
         return mapper.getParticipationsForEvent(event);
+    }
+
+    @Override
+    public void updateParticipantSearch(EventId eventId, String keyword) {
+        requireAllNonNull(eventId, keyword);
+        ParticipantNameContainsKeywordPredicate predicate = new ParticipantNameContainsKeywordPredicate(keyword);
+        Event event = eventList.getEventFromId(eventId.toString());
+        List<Participation> matches = getParticipationsForEvent(event).stream()
+                .filter(predicate)
+                .sorted(Comparator.comparing(participation -> participation.getPerson().getId().toString()))
+                .toList();
+        participantSearchEventId = eventId;
+        participantSearchKeyword = keyword.strip();
+        // Publish the context before notifying observers of the new results.
+        participantSearchResults.setAll(matches);
+    }
+
+    @Override
+    public ObservableList<Participation> getParticipantSearchResults() {
+        return unmodifiableParticipantSearchResults;
+    }
+
+    @Override
+    public Optional<Event> getParticipantSearchEvent() {
+        return Optional.ofNullable(participantSearchEventId)
+                .map(eventId -> eventList.getEventFromId(eventId.toString()));
+    }
+
+    @Override
+    public Optional<String> getParticipantSearchKeyword() {
+        return Optional.ofNullable(participantSearchKeyword);
+    }
+
+    private void refreshParticipantSearch() {
+        if (participantSearchEventId != null) {
+            updateParticipantSearch(participantSearchEventId, participantSearchKeyword);
+        }
     }
 
     @Override
@@ -233,13 +287,17 @@ public class ModelManager implements Model {
     @Override
     public Participation setPresent(Event event, Person person, boolean isPresent)
             throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException {
-        return mapper.setPresent(event, person, isPresent);
+        Participation participation = mapper.setPresent(event, person, isPresent);
+        refreshParticipantSearch();
+        return participation;
     }
 
     @Override
     public Participation setTags(Event event, Person person, Set<Tag> tags)
             throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException {
-        return mapper.setTags(event, person, tags);
+        Participation participation = mapper.setTags(event, person, tags);
+        refreshParticipantSearch();
+        return participation;
     }
 
     // =========== Filtered Person List Accessors
@@ -298,6 +356,11 @@ public class ModelManager implements Model {
         Event event = eventList.getEventFromId(requireNonNull(eventId).toString());
         mapper.removeParticipationsForEvent(event);
         eventList.removeEvent(event.getId());
+        if (eventId.equals(participantSearchEventId)) {
+            participantSearchEventId = null;
+            participantSearchKeyword = null;
+            participantSearchResults.clear();
+        }
         if (event.equals(selectedEvent)) {
             selectedEvent = null;
         }
@@ -331,6 +394,9 @@ public class ModelManager implements Model {
                 && filteredPersons.equals(otherModelManager.filteredPersons)
                 && eventList.getEvents().equals(otherModelManager.eventList.getEvents())
                 && filteredEvents.equals(otherModelManager.filteredEvents)
+                && Objects.equals(participantSearchEventId, otherModelManager.participantSearchEventId)
+                && Objects.equals(participantSearchKeyword, otherModelManager.participantSearchKeyword)
+                && participantSearchResults.equals(otherModelManager.participantSearchResults)
                 && eventList.getEvents().stream().allMatch(event -> mapper.getParticipationsForEvent(event)
                         .equals(otherModelManager.mapper.getParticipationsForEvent(event)));
     }

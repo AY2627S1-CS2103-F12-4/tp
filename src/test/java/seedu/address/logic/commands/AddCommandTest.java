@@ -129,6 +129,26 @@ public class AddCommandTest {
         }
 
         @Override
+        public void updateParticipantSearch(EventId eventId, String keyword) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public ObservableList<Participation> getParticipantSearchResults() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Optional<Event> getParticipantSearchEvent() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Optional<String> getParticipantSearchKeyword() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public Event deleteEvent(EventId eventId) {
             throw new AssertionError("This method should not be called.");
         }

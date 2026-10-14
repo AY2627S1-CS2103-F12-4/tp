@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -117,6 +118,36 @@ public class AddCommandTest {
      * A default model stub that has all of the methods failing.
      */
     private class ModelStub implements Model {
+        @Override
+        public void selectEvent(EventId eventId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Optional<Event> getSelectedEvent() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void updateParticipantSearch(EventId eventId, String keyword) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public ObservableList<Participation> getParticipantSearchResults() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Optional<Event> getParticipantSearchEvent() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public Optional<String> getParticipantSearchKeyword() {
+            throw new AssertionError("This method should not be called.");
+        }
+
         @Override
         public Event deleteEvent(EventId eventId) {
             throw new AssertionError("This method should not be called.");

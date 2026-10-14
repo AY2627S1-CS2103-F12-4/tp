@@ -1,5 +1,7 @@
 package seedu.address.model;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -118,6 +120,41 @@ public interface Model {
     /** Returns the participations for {@code event}. */
     Set<Participation> getParticipationsForEvent(Event event) throws EventNotFoundException;
 
+    /**
+     * Searches the event identified by {@code eventId} for a nonblank name phrase.
+     * Replaces only transient search state; invalid input preserves the previous search.
+     * Matches names using case-insensitive substring comparison and preserves distinct person IDs.
+     * Results refresh after person and participation changes made through this model.
+     *
+     * @param eventId Stable ID of the event whose memberships are searched.
+     * @param keyword Name phrase, with surrounding whitespace ignored.
+     * @throws NullPointerException if either argument is null.
+     * @throws IllegalArgumentException if the keyword is blank.
+     * @throws EventNotFoundException if no event has the supplied ID.
+     */
+    void updateParticipantSearch(EventId eventId, String keyword);
+
+    /**
+     * Returns a live, unmodifiable search result list, ordered lexicographically by person ID.
+     *
+     * @return The same observable view across searches and subsequent model changes.
+     */
+    ObservableList<Participation> getParticipantSearchResults();
+
+    /**
+     * Returns the selected search event, or empty before the first search.
+     *
+     * @return The event resolved from the selected stable ID.
+     */
+    Optional<Event> getParticipantSearchEvent();
+
+    /**
+     * Returns the search phrase without surrounding whitespace, or empty before the first search.
+     *
+     * @return The original case and internal whitespace of the search phrase.
+     */
+    Optional<String> getParticipantSearchKeyword();
+
     /** Returns the participations for {@code person}. */
     Set<Participation> getParticipationsForPerson(Person person) throws PersonNotFoundException;
 
@@ -155,11 +192,20 @@ public interface Model {
     /** Creates an event with an automatically assigned ID. */
     Event createEvent(String name, int capacity, String description);
 
-    /** Deletes an event and its participations, preserving people and the active filter. */
+    /**
+     * Deletes an event and its participations, preserving people and the active event filter.
+     * Clears participant search context and results if the deleted event is selected for search.
+     */
     Event deleteEvent(EventId eventId);
 
     /** Returns a snapshot of all events, including those hidden by the active filter. */
-    java.util.List<Event> getEvents();
+    List<Event> getEvents();
+
+    /** Selects the stored event with this ID, leaving the current selection unchanged on failure. */
+    void selectEvent(EventId eventId);
+
+    /** Returns the selected event, or empty if none has been selected in this session. */
+    Optional<Event> getSelectedEvent();
 
     /**
      * Returns a live, unmodifiable view of the filtered events in insertion order.

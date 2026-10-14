@@ -52,7 +52,7 @@ Format: `help`
 
 ### Adding a person: `add`
 
-Adds a person to the address book. A person must exist before they can be registered for an event.
+Adds a person to the address book. A person must exist before they can be registered for an event. People may have the same name because each person is assigned a unique ID.
 
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]...`
 

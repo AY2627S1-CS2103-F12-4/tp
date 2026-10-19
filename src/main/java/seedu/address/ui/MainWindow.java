@@ -57,6 +57,9 @@ public class MainWindow extends UiPart<Stage> {
     private TabPane listTabs;
 
     @FXML
+    private Tab peopleTab;
+
+    @FXML
     private Tab eventsTab;
 
     @FXML
@@ -174,6 +177,24 @@ public class MainWindow extends UiPart<Stage> {
         } else {
             helpWindow.focus();
         }
+    }
+
+    /** Opens the form for adding a person. */
+    @FXML
+    public void handleAddPerson() {
+        AddEntryDialog.showAddPersonDialog(primaryStage, command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(peopleTab);
+        });
+    }
+
+    /** Opens the form for adding an event. */
+    @FXML
+    public void handleAddEvent() {
+        AddEntryDialog.showAddEventDialog(primaryStage, command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(eventsTab);
+        });
     }
 
     void show() {

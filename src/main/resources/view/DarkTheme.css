@@ -280,6 +280,16 @@
     -fx-background-color: derive(-fx-focus-color, 30%);
 }
 
+.quick-add-button {
+    -fx-padding: 3 12 3 12;
+    -fx-border-width: 1;
+    -fx-font-size: 10pt;
+}
+
+#addEntryDialog .label {
+    -fx-text-fill: white;
+}
+
 .dialog-pane {
     -fx-background-color: #1d1d1d;
 }

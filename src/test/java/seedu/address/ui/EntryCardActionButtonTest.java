@@ -17,7 +17,7 @@ import javafx.scene.layout.StackPane;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 
-public class EntryCardDeleteButtonTest {
+public class EntryCardActionButtonTest {
 
     @Test
     public void personCard_deleteButton_runsConfiguredAction() throws Exception {
@@ -40,7 +40,7 @@ public class EntryCardDeleteButtonTest {
         runOnFxThread(() -> {
             AtomicInteger deleteActions = new AtomicInteger();
             Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
-            EventCard card = new EventCard(event, 1, deleteActions::incrementAndGet);
+            EventCard card = new EventCard(event, 1, () -> { }, deleteActions::incrementAndGet);
             Button deleteButton = (Button) card.getRoot().lookup("#deleteButton");
 
             HBox cardPane = (HBox) card.getRoot();
@@ -49,6 +49,21 @@ public class EntryCardDeleteButtonTest {
             deleteButton.fire();
 
             assertEquals(1, deleteActions.get());
+        });
+    }
+
+    @Test
+    public void eventCard_addParticipantButton_runsConfiguredAction() throws Exception {
+        runOnFxThread(() -> {
+            AtomicInteger addParticipantActions = new AtomicInteger();
+            Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
+            EventCard card = new EventCard(event, 1, addParticipantActions::incrementAndGet, () -> { });
+            Button addParticipantButton = (Button) card.getRoot().lookup("#addParticipantButton");
+
+            assertEquals("Add participant", addParticipantButton.getText());
+            addParticipantButton.fire();
+
+            assertEquals(1, addParticipantActions.get());
         });
     }
 

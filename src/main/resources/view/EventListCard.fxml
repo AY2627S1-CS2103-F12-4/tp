@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox id="cardPane" alignment="CENTER_LEFT" xmlns="http://javafx.com/javafx/17"
+<HBox id="cardPane" alignment="CENTER_LEFT" spacing="8" xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1">
   <padding>
     <Insets top="10" right="16" bottom="10" left="15" />
@@ -20,5 +20,7 @@
     <Label fx:id="capacity" styleClass="cell_small_label" />
     <Label fx:id="description" styleClass="cell_small_label" wrapText="true" />
   </VBox>
+  <Button fx:id="addParticipantButton" mnemonicParsing="false" styleClass="button, card-action-button"
+          text="Add participant" />
   <Button fx:id="deleteButton" mnemonicParsing="false" styleClass="button, card-delete-button" text="Delete" />
 </HBox>

@@ -25,13 +25,16 @@ public class EventCard extends UiPart<Region> {
     @FXML
     private Label description;
     @FXML
+    private Button addParticipantButton;
+    @FXML
     private Button deleteButton;
 
     /**
-     * Creates an event card with its displayed index and deletion action.
+     * Creates an event card with its displayed index and entry actions.
      */
-    public EventCard(Event event, int displayedIndex, Runnable deleteAction) {
+    public EventCard(Event event, int displayedIndex, Runnable addParticipantAction, Runnable deleteAction) {
         super(FXML);
+        requireNonNull(addParticipantAction);
         requireNonNull(deleteAction);
         index.setText(displayedIndex + ". ");
         name.setText(event.getName());
@@ -40,6 +43,7 @@ public class EventCard extends UiPart<Region> {
         description.setText(event.getDescription());
         description.setVisible(!event.getDescription().isBlank());
         description.setManaged(description.isVisible());
+        addParticipantButton.setOnAction(actionEvent -> addParticipantAction.run());
         deleteButton.setOnAction(actionEvent -> deleteAction.run());
     }
 }

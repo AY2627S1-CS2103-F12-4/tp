@@ -22,25 +22,29 @@ public class EventListPanel extends UiPart<Region> {
     private ListView<Event> eventListView;
 
     /**
-     * Creates an event list panel whose cards invoke the supplied deletion action.
+     * Creates an event list panel whose cards invoke the supplied entry actions.
      */
-    public EventListPanel(ObservableList<Event> events, Consumer<Event> deleteAction) {
+    public EventListPanel(ObservableList<Event> events, Consumer<Event> addParticipantAction,
+            Consumer<Event> deleteAction) {
         super(FXML);
+        requireNonNull(addParticipantAction);
         requireNonNull(deleteAction);
         eventListView.setItems(events);
         Label emptyMessage = new Label("No events to display.");
         emptyMessage.getStyleClass().add("label-bright");
         eventListView.setPlaceholder(emptyMessage);
-        eventListView.setCellFactory(listView -> new EventListViewCell(deleteAction));
+        eventListView.setCellFactory(listView -> new EventListViewCell(addParticipantAction, deleteAction));
     }
 
     /**
      * Renders an event and clears recycled cells when they become empty.
      */
     private class EventListViewCell extends ListCell<Event> {
+        private final Consumer<Event> addParticipantAction;
         private final Consumer<Event> deleteAction;
 
-        EventListViewCell(Consumer<Event> deleteAction) {
+        EventListViewCell(Consumer<Event> addParticipantAction, Consumer<Event> deleteAction) {
+            this.addParticipantAction = addParticipantAction;
             this.deleteAction = deleteAction;
         }
 
@@ -51,7 +55,9 @@ public class EventListPanel extends UiPart<Region> {
             if (empty || event == null) {
                 setGraphic(null);
             } else {
-                EventCard eventCard = new EventCard(event, getIndex() + 1, () -> deleteAction.accept(event));
+                Runnable onAddParticipant = () -> addParticipantAction.accept(event);
+                Runnable onDelete = () -> deleteAction.accept(event);
+                EventCard eventCard = new EventCard(event, getIndex() + 1, onAddParticipant, onDelete);
                 setGraphic(eventCard.getRoot());
             }
         }

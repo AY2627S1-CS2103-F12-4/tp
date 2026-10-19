@@ -24,6 +24,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
 import seedu.address.model.person.Person;
 import seedu.address.ui.dialogs.AddEventDialog;
+import seedu.address.ui.dialogs.AddParticipantDialog;
 import seedu.address.ui.dialogs.AddPersonDialog;
 import seedu.address.ui.dialogs.DeleteConfirmationDialog;
 
@@ -149,7 +150,8 @@ public class MainWindow extends UiPart<Stage> {
         personListPanel = new PersonListPanel(logic.getFilteredPersonList(), this::handleDeletePerson);
         personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
 
-        eventListPanel = new EventListPanel(logic.getFilteredEventList(), this::handleDeleteEvent);
+        eventListPanel = new EventListPanel(logic.getFilteredEventList(),
+                this::handleAddParticipant, this::handleDeleteEvent);
         eventListPanelPlaceholder.getChildren().add(eventListPanel.getRoot());
 
         participantListPanel = new ParticipantListPanel(logic.getParticipantSearchResults());
@@ -212,6 +214,14 @@ public class MainWindow extends UiPart<Stage> {
         if (dialog.showAndWait()) {
             executeDeleteCommand(DeleteCommand.COMMAND_WORD + " " + displayedIndex, peopleTab);
         }
+    }
+
+    private void handleAddParticipant(Event event) {
+        AddParticipantDialog dialog = new AddParticipantDialog(primaryStage, event.getId(), event.getName());
+        dialog.showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(eventsTab);
+        });
     }
 
     private void handleDeleteEvent(Event event) {

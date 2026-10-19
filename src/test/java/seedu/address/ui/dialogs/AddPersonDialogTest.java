@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -38,6 +40,23 @@ public class AddPersonDialogTest {
     public void buildCommand_blankTags_omitsTagPrefixes() {
         assertEquals("add n/Alex Yeoh p/87438807 e/alex@example.com a/Blk 30",
                 AddPersonDialog.buildCommand("Alex Yeoh", "87438807", "alex@example.com", "Blk 30", " "));
+    }
+
+    @Test
+    public void fieldLabels_requiredFieldsMarked() throws Exception {
+        runOnFxThread(() -> {
+            AtomicReference<Throwable> failure = new AtomicReference<>();
+            Stage owner = new Stage();
+            owner.setScene(new Scene(new StackPane()));
+            AddPersonDialog dialog = new AddPersonDialog(owner);
+            Platform.runLater(() -> checkRequiredFieldLabels(failure));
+
+            dialog.showAndWait(command -> { });
+
+            if (failure.get() != null) {
+                throw new AssertionError(failure.get());
+            }
+        });
     }
 
     @Test
@@ -91,6 +110,26 @@ public class AddPersonDialogTest {
                 dialogPane.getScene().getWindow().hide();
             }
         });
+    }
+
+    private void checkRequiredFieldLabels(AtomicReference<Throwable> failure) {
+        DialogPane dialogPane = showingDialogPane();
+        try {
+            GridPane form = (GridPane) dialogPane.lookup(".dialog-form");
+            List<String> labels = form.getChildren().stream()
+                    .filter(Label.class::isInstance)
+                    .map(Label.class::cast)
+                    .map(Label::getText)
+                    .toList();
+            assertEquals(List.of("Name *", "Phone *", "Email *", "Address *", "Tags (comma-separated)"), labels);
+            Label requiredFieldNote = (Label) dialogPane.lookup(".required-field-note");
+            assertEquals("* Required", requiredFieldNote.getText());
+            assertTrue(requiredFieldNote.isVisible());
+        } catch (Throwable throwable) {
+            failure.set(throwable);
+        } finally {
+            dialogPane.getScene().getWindow().hide();
+        }
     }
 
     private DialogPane showingDialogPane() {

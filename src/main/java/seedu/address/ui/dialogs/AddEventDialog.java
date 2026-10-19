@@ -12,9 +12,9 @@ public final class AddEventDialog extends FormDialog {
     /** Creates an add-event dialog owned by the given stage. */
     public AddEventDialog(Stage owner) {
         super(owner, "Add event", "Enter the event's details.");
-        name = addTextField(0, "Name", "Event name");
-        capacity = addTextField(1, "Capacity", "Maximum participants");
-        description = addTextField(2, "Description", "Event description");
+        name = addTextField(0, "Name", "Event name", true);
+        capacity = addTextField(1, "Capacity", "Maximum participants", true);
+        description = addTextField(2, "Description", "Event description", false);
     }
 
     /** Displays the dialog and submits valid event details through the command executor. */

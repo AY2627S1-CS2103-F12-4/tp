@@ -23,6 +23,7 @@ abstract class FormDialog {
 
     private final Dialog<Void> dialog = new Dialog<>();
     private final GridPane form = new GridPane();
+    private final Label requiredFieldNote = new Label("* Required");
     private final Label validationErrorLabel = new Label();
 
     FormDialog(Stage owner, String title, String header) {
@@ -38,6 +39,10 @@ abstract class FormDialog {
         form.setPadding(new Insets(10, 0, 0, 0));
         form.getStyleClass().add("dialog-form");
 
+        requiredFieldNote.getStyleClass().add("required-field-note");
+        requiredFieldNote.setManaged(false);
+        requiredFieldNote.setVisible(false);
+
         validationErrorLabel.getStyleClass().add("validation-error-label");
         validationErrorLabel.setMaxWidth(Double.MAX_VALUE);
         validationErrorLabel.prefWidthProperty().bind(form.widthProperty());
@@ -45,15 +50,19 @@ abstract class FormDialog {
         validationErrorLabel.setManaged(false);
         validationErrorLabel.setVisible(false);
 
-        dialog.getDialogPane().setContent(new VBox(8, form, validationErrorLabel));
+        dialog.getDialogPane().setContent(new VBox(8, form, requiredFieldNote, validationErrorLabel));
     }
 
-    TextField addTextField(int row, String labelText, String promptText) {
+    TextField addTextField(int row, String labelText, String promptText, boolean isRequired) {
         TextField field = new TextField();
         field.setPromptText(promptText);
         field.setPrefColumnCount(28);
-        form.add(new Label(labelText), 0, row);
+        form.add(new Label(labelText + (isRequired ? " *" : "")), 0, row);
         form.add(field, 1, row);
+        if (isRequired) {
+            requiredFieldNote.setManaged(true);
+            requiredFieldNote.setVisible(true);
+        }
         return field;
     }
 

@@ -17,11 +17,11 @@ public final class AddPersonDialog extends FormDialog {
     /** Creates an add-person dialog owned by the given stage. */
     public AddPersonDialog(Stage owner) {
         super(owner, "Add person", "Enter the person's details.");
-        name = addTextField(0, "Name", "Full name");
-        phone = addTextField(1, "Phone", "Phone number");
-        email = addTextField(2, "Email", "Email address");
-        address = addTextField(3, "Address", "Home address");
-        tags = addTextField(4, "Tags (comma-separated)", "friend, volunteer");
+        name = addTextField(0, "Name", "Full name", true);
+        phone = addTextField(1, "Phone", "Phone number", true);
+        email = addTextField(2, "Email", "Email address", true);
+        address = addTextField(3, "Address", "Home address", true);
+        tags = addTextField(4, "Tags (comma-separated)", "friend, volunteer", false);
     }
 
     /** Displays the dialog and submits valid person details through the command executor. */

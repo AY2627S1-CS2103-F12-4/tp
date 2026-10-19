@@ -358,6 +358,12 @@
     -fx-text-fill: #ff6b6b;
 }
 
+#addEntryDialog .required-field-note {
+    -fx-font-family: "Segoe UI Light";
+    -fx-font-size: 10pt;
+    -fx-text-fill: #d0d0d0;
+}
+
 .scroll-bar {
     -fx-background-color: derive(#1d1d1d, 20%);
 }

@@ -18,6 +18,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 /** Provides the shared layout and submission behavior for add-entry dialogs. */
 abstract class FormDialog {
     private static final ButtonType ADD_BUTTON = new ButtonType("Add", ButtonData.OK_DONE);
+    private static final String VALIDATION_ERROR_STYLE_CLASS = "validation-error";
 
     private final Dialog<Void> dialog = new Dialog<>();
     private final GridPane form = new GridPane();
@@ -33,6 +34,7 @@ abstract class FormDialog {
         form.setHgap(12);
         form.setVgap(10);
         form.setPadding(new Insets(10, 0, 0, 0));
+        form.getStyleClass().add("dialog-form");
         dialog.getDialogPane().setContent(form);
     }
 
@@ -52,6 +54,9 @@ abstract class FormDialog {
                 commandExecutor.execute(commandSupplier.get());
             } catch (CommandException | ParseException exception) {
                 dialog.setHeaderText(exception.getMessage());
+                if (!dialog.getDialogPane().getStyleClass().contains(VALIDATION_ERROR_STYLE_CLASS)) {
+                    dialog.getDialogPane().getStyleClass().add(VALIDATION_ERROR_STYLE_CLASS);
+                }
                 event.consume();
             }
         });

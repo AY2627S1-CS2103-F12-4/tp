@@ -286,10 +286,6 @@
     -fx-font-size: 10pt;
 }
 
-#addEntryDialog .label {
-    -fx-text-fill: white;
-}
-
 .dialog-pane {
     -fx-background-color: #1d1d1d;
 }
@@ -313,6 +309,51 @@
     -fx-font-style: italic;
     -fx-fill: white;
     -fx-text-fill: white;
+}
+
+#addEntryDialog,
+#addEntryDialog .dialog-form,
+#addEntryDialog > *.button-bar > *.container {
+    -fx-background-color: #383838;
+}
+
+#addEntryDialog .dialog-form .label {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 11pt;
+    -fx-text-fill: white;
+}
+
+#addEntryDialog .text-field {
+    -fx-background-color: #383838;
+    -fx-background-insets: 0;
+    -fx-border-color: #383838 #383838 #ffffff #383838;
+    -fx-border-insets: 0;
+    -fx-border-width: 1;
+    -fx-font-family: "Segoe UI Light";
+    -fx-font-size: 12pt;
+    -fx-padding: 6 8 6 8;
+    -fx-prompt-text-fill: #a8a8a8;
+    -fx-text-fill: white;
+}
+
+#addEntryDialog .text-field:focused {
+    -fx-border-color: #383838 #383838 #3e7b91 #383838;
+    -fx-border-width: 1 1 2 1;
+}
+
+#addEntryDialog:header *.header-panel {
+    -fx-background-color: #515658;
+}
+
+#addEntryDialog:header *.header-panel *.label {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 12pt;
+    -fx-font-style: normal;
+    -fx-text-fill: white;
+}
+
+#addEntryDialog.validation-error:header *.header-panel *.label {
+    -fx-text-fill: #ff6b6b;
 }
 
 .scroll-bar {

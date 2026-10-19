@@ -286,6 +286,18 @@
     -fx-font-size: 10pt;
 }
 
+.card-delete-button {
+    -fx-border-color: #ff6b6b;
+    -fx-border-width: 1;
+    -fx-font-size: 10pt;
+    -fx-padding: 3 10 3 10;
+    -fx-text-fill: #ff6b6b;
+}
+
+.card-delete-button:hover {
+    -fx-background-color: derive(#ff6b6b, -65%);
+}
+
 .dialog-pane {
     -fx-background-color: #1d1d1d;
 }
@@ -362,6 +374,32 @@
     -fx-font-family: "Segoe UI Light";
     -fx-font-size: 10pt;
     -fx-text-fill: #d0d0d0;
+}
+
+#deleteConfirmationDialog,
+#deleteConfirmationDialog > *.button-bar > *.container {
+    -fx-background-color: #383838;
+}
+
+#deleteConfirmationDialog:header *.header-panel {
+    -fx-background-color: #515658;
+}
+
+#deleteConfirmationDialog:header *.header-panel *.label {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 12pt;
+    -fx-font-style: normal;
+    -fx-text-fill: white;
+}
+
+#deleteConfirmationDialog .destructive-button {
+    -fx-background-color: #a83232;
+    -fx-border-color: #ff6b6b;
+    -fx-text-fill: white;
+}
+
+#deleteConfirmationDialog .destructive-button:hover {
+    -fx-background-color: #c43d3d;
 }
 
 .scroll-bar {

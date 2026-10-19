@@ -17,10 +17,15 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteEventCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.event.Event;
+import seedu.address.model.person.Person;
 import seedu.address.ui.dialogs.AddEventDialog;
 import seedu.address.ui.dialogs.AddPersonDialog;
+import seedu.address.ui.dialogs.DeleteConfirmationDialog;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -141,10 +146,10 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        personListPanel = new PersonListPanel(logic.getFilteredPersonList());
+        personListPanel = new PersonListPanel(logic.getFilteredPersonList(), this::handleDeletePerson);
         personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
 
-        eventListPanel = new EventListPanel(logic.getFilteredEventList());
+        eventListPanel = new EventListPanel(logic.getFilteredEventList(), this::handleDeleteEvent);
         eventListPanelPlaceholder.getChildren().add(eventListPanel.getRoot());
 
         participantListPanel = new ParticipantListPanel(logic.getParticipantSearchResults());
@@ -199,6 +204,31 @@ public class MainWindow extends UiPart<Stage> {
             executeCommand(command);
             listTabs.getSelectionModel().select(eventsTab);
         });
+    }
+
+    private void handleDeletePerson(Person person, int displayedIndex) {
+        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(
+                primaryStage, "Delete person", "Delete " + person.getName().fullName + "?");
+        if (dialog.showAndWait()) {
+            executeDeleteCommand(DeleteCommand.COMMAND_WORD + " " + displayedIndex, peopleTab);
+        }
+    }
+
+    private void handleDeleteEvent(Event event) {
+        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(primaryStage, "Delete event",
+                "Delete " + event.getName() + " (" + event.getId() + ")?");
+        if (dialog.showAndWait()) {
+            executeDeleteCommand(DeleteEventCommand.COMMAND_WORD + " " + event.getId(), eventsTab);
+        }
+    }
+
+    private void executeDeleteCommand(String command, Tab targetTab) {
+        try {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(targetTab);
+        } catch (CommandException | ParseException exception) {
+            // executeCommand already displays the error in the result panel.
+        }
     }
 
     void show() {

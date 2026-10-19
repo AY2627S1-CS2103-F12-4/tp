@@ -1,5 +1,8 @@
 package seedu.address.ui;
 
+import static java.util.Objects.requireNonNull;
+
+import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
@@ -21,18 +24,25 @@ public class PersonListPanel extends UiPart<Region> {
     private ListView<Person> personListView;
 
     /**
-     * Creates a {@code PersonListPanel} with the given {@code ObservableList}.
+     * Creates a person list panel whose cards invoke the supplied deletion action.
      */
-    public PersonListPanel(ObservableList<Person> personList) {
+    public PersonListPanel(ObservableList<Person> personList, BiConsumer<Person, Integer> deleteAction) {
         super(FXML);
+        requireNonNull(deleteAction);
         personListView.setItems(personList);
-        personListView.setCellFactory(listView -> new PersonListViewCell());
+        personListView.setCellFactory(listView -> new PersonListViewCell(deleteAction));
     }
 
     /**
      * Custom {@code ListCell} that displays the graphics of a {@code Person} using a {@code PersonCard}.
      */
     class PersonListViewCell extends ListCell<Person> {
+        private final BiConsumer<Person, Integer> deleteAction;
+
+        PersonListViewCell(BiConsumer<Person, Integer> deleteAction) {
+            this.deleteAction = deleteAction;
+        }
+
         @Override
         protected void updateItem(Person person, boolean empty) {
             super.updateItem(person, empty);
@@ -41,7 +51,10 @@ public class PersonListPanel extends UiPart<Region> {
                 setGraphic(null);
                 setText(null);
             } else {
-                setGraphic(new PersonCard(person, getIndex() + 1).getRoot());
+                int displayedIndex = getIndex() + 1;
+                Runnable onDelete = () -> deleteAction.accept(person, displayedIndex);
+                PersonCard personCard = new PersonCard(person, displayedIndex, onDelete);
+                setGraphic(personCard.getRoot());
             }
         }
     }

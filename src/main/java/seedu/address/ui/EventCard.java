@@ -1,6 +1,9 @@
 package seedu.address.ui;
 
+import static java.util.Objects.requireNonNull;
+
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import seedu.address.model.event.Event;
@@ -21,12 +24,15 @@ public class EventCard extends UiPart<Region> {
     private Label capacity;
     @FXML
     private Label description;
+    @FXML
+    private Button deleteButton;
 
     /**
-     * Creates a card for the supplied event with a one-based displayed index.
+     * Creates an event card with its displayed index and deletion action.
      */
-    public EventCard(Event event, int displayedIndex) {
+    public EventCard(Event event, int displayedIndex, Runnable deleteAction) {
         super(FXML);
+        requireNonNull(deleteAction);
         index.setText(displayedIndex + ". ");
         name.setText(event.getName());
         eventId.setText("Event ID: " + event.getId());
@@ -34,5 +40,6 @@ public class EventCard extends UiPart<Region> {
         description.setText(event.getDescription());
         description.setVisible(!event.getDescription().isBlank());
         description.setManaged(description.isVisible());
+        deleteButton.setOnAction(actionEvent -> deleteAction.run());
     }
 }

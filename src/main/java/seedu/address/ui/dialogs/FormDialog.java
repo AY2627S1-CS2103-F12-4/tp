@@ -40,6 +40,7 @@ abstract class FormDialog {
 
         validationErrorLabel.getStyleClass().add("validation-error-label");
         validationErrorLabel.setMaxWidth(Double.MAX_VALUE);
+        validationErrorLabel.prefWidthProperty().bind(form.widthProperty());
         validationErrorLabel.setWrapText(true);
         validationErrorLabel.setManaged(false);
         validationErrorLabel.setVisible(false);

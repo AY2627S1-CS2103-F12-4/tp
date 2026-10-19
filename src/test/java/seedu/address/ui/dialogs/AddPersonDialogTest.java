@@ -21,6 +21,11 @@ import javafx.stage.Window;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 public class AddPersonDialogTest {
+    private static final String LONG_VALIDATION_ERROR = "Emails should be of the format local-part@domain and "
+            + "adhere to the following constraints:\n"
+            + "1. The local-part should only contain alphanumeric characters and these special characters. "
+            + "The local-part may not start or end with any special characters.\n"
+            + "2. The local-part is followed by an '@' and then a domain name.";
 
     @Test
     public void buildCommand_allFields_formatsExistingCliCommand() {
@@ -36,7 +41,7 @@ public class AddPersonDialogTest {
     }
 
     @Test
-    public void validationError_longMessage_keepsDescriptionAndButtonBarVisible() throws Exception {
+    public void validationError_longMessage_keepsDialogWidthAndContentVisible() throws Exception {
         runOnFxThread(() -> {
             AtomicReference<Throwable> failure = new AtomicReference<>();
             Stage owner = new Stage();
@@ -45,8 +50,7 @@ public class AddPersonDialogTest {
             Platform.runLater(() -> submitInvalidFormAndCheckLayout(failure));
 
             dialog.showAndWait(command -> {
-                throw new ParseException("Names should only contain alphanumeric characters and spaces, "
-                        + "and should not be blank");
+                throw new ParseException(LONG_VALIDATION_ERROR);
             });
 
             if (failure.get() != null) {
@@ -57,6 +61,7 @@ public class AddPersonDialogTest {
 
     private void submitInvalidFormAndCheckLayout(AtomicReference<Throwable> failure) {
         DialogPane dialogPane = showingDialogPane();
+        double initialDialogWidth = dialogPane.getScene().getWindow().getWidth();
         Button addButton = (Button) dialogPane.getButtonTypes().stream()
                 .filter(buttonType -> buttonType.getText().equals("Add"))
                 .map(dialogPane::lookupButton)
@@ -72,9 +77,10 @@ public class AddPersonDialogTest {
                 Label errorLabel = (Label) dialogPane.lookup(".validation-error-label");
                 Bounds errorBounds = errorLabel.localToScene(errorLabel.getBoundsInLocal());
                 assertEquals("Enter the person's details.", dialogPane.getHeaderText());
-                assertEquals("Names should only contain alphanumeric characters and spaces, "
-                        + "and should not be blank", errorLabel.getText());
+                assertEquals(LONG_VALIDATION_ERROR, errorLabel.getText());
                 assertTrue(errorLabel.isVisible());
+                assertTrue(dialogPane.getScene().getWindow().getWidth() <= initialDialogWidth,
+                        "Validation errors should not widen the dialog");
                 assertTrue(formBounds.getMaxY() <= errorBounds.getMinY(),
                         "Validation errors should appear below the form fields");
                 assertTrue(errorBounds.getMaxY() <= buttonBounds.getMinY(),

@@ -16,6 +16,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -50,6 +51,23 @@ public class AddPersonDialogTest {
             owner.setScene(new Scene(new StackPane()));
             AddPersonDialog dialog = new AddPersonDialog(owner);
             Platform.runLater(() -> checkRequiredFieldLabels(failure));
+
+            dialog.showAndWait(command -> { });
+
+            if (failure.get() != null) {
+                throw new AssertionError(failure.get());
+            }
+        });
+    }
+
+    @Test
+    public void fieldFocus_borderWidthRemainsStable() throws Exception {
+        runOnFxThread(() -> {
+            AtomicReference<Throwable> failure = new AtomicReference<>();
+            Stage owner = new Stage();
+            owner.setScene(new Scene(new StackPane()));
+            AddPersonDialog dialog = new AddPersonDialog(owner);
+            Platform.runLater(() -> checkFieldBorderWidths(failure));
 
             dialog.showAndWait(command -> { });
 
@@ -125,6 +143,41 @@ public class AddPersonDialogTest {
             Label requiredFieldNote = (Label) dialogPane.lookup(".required-field-note");
             assertEquals("* Required", requiredFieldNote.getText());
             assertTrue(requiredFieldNote.isVisible());
+        } catch (Throwable throwable) {
+            failure.set(throwable);
+        } finally {
+            dialogPane.getScene().getWindow().hide();
+        }
+    }
+
+    private void checkFieldBorderWidths(AtomicReference<Throwable> failure) {
+        DialogPane dialogPane = showingDialogPane();
+        try {
+            GridPane form = (GridPane) dialogPane.lookup(".dialog-form");
+            List<TextField> fields = form.getChildren().stream()
+                    .filter(TextField.class::isInstance)
+                    .map(TextField.class::cast)
+                    .toList();
+            TextField field = fields.get(1);
+            field.applyCss();
+            double unfocusedBottomBorder = field.getBorder().getStrokes().getFirst().getWidths().getBottom();
+            field.requestFocus();
+            Platform.runLater(() -> checkFocusedBorderWidth(
+                    failure, dialogPane, field, unfocusedBottomBorder));
+        } catch (Throwable throwable) {
+            failure.set(throwable);
+            dialogPane.getScene().getWindow().hide();
+        }
+    }
+
+    private void checkFocusedBorderWidth(AtomicReference<Throwable> failure, DialogPane dialogPane,
+            TextField field, double unfocusedBottomBorder) {
+        try {
+            field.applyCss();
+            assertTrue(field.isFocused());
+            double focusedBottomBorder = field.getBorder().getStrokes().getFirst().getWidths().getBottom();
+            assertEquals(unfocusedBottomBorder, focusedBottomBorder,
+                    "Focusing a field should not change its border geometry");
         } catch (Throwable throwable) {
             failure.set(throwable);
         } finally {

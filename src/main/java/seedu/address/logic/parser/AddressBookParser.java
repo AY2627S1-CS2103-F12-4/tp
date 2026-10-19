@@ -28,6 +28,7 @@ import seedu.address.logic.commands.ListParticipantsCommand;
 import seedu.address.logic.commands.MarkParticipantCommand;
 import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.commands.SearchRoleCommand;
+import seedu.address.logic.commands.UnmarkParticipantCommand;
 import seedu.address.logic.commands.ViewEventCommand;
 import seedu.address.logic.commands.ViewParticipantCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -75,6 +76,7 @@ public class AddressBookParser {
             case DeleteCommand.COMMAND_WORD -> new DeleteCommandParser().parse(arguments);
             case DeleteEventCommand.COMMAND_WORD -> new DeleteEventCommandParser().parse(arguments);
             case DeleteParticipantCommand.COMMAND_WORD -> new DeleteParticipantCommandParser().parse(arguments);
+            case UnmarkParticipantCommand.COMMAND_WORD -> new UnmarkParticipantCommandParser().parse(arguments);
             case MarkParticipantCommand.COMMAND_WORD -> new MarkParticipantCommandParser().parse(arguments);
             case ClearCommand.COMMAND_WORD -> new ClearCommand();
             case FindCommand.COMMAND_WORD -> new FindCommandParser().parse(arguments);

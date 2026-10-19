@@ -185,6 +185,15 @@ Example: `mark-participant E1 P2`
 
 ![Mark participant](images/markParticipant.png)
 
+### Cancelling attendance: `unmark-participant`
+
+Marks a registered participant as absent without removing their registration, roles or tags.
+The participant must currently be marked as present; otherwise, an error is shown.
+
+Format: `unmark-participant EVENT_ID PERSON_ID`
+
+Example: `unmark-participant E1 P2`
+
 ### Removing a participant: `del-participant`
 
 Removes the person's registration from the specified event. The underlying person remains in the address book.
@@ -260,6 +269,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **View participant** | `view-participant EVENT_ID PERSON_ID` |
 | **Search participant** | `search-participant EVENT_ID /name NAME` |
 | **Search role** | `search-role EVENT_ID /role ROLE` |
+| **Cancel attendance** | `unmark-participant EVENT_ID PERSON_ID` |
 | **Mark attendance** | `mark-participant EVENT_ID PERSON_ID` |
 | **Remove participant** | `del-participant EVENT_ID PERSON_ID` |
 | **Clear people** | `clear` |

@@ -2,6 +2,7 @@ package seedu.address.ui.dialogs;
 
 import java.util.function.Supplier;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -57,6 +58,7 @@ abstract class FormDialog {
                 if (!dialog.getDialogPane().getStyleClass().contains(VALIDATION_ERROR_STYLE_CLASS)) {
                     dialog.getDialogPane().getStyleClass().add(VALIDATION_ERROR_STYLE_CLASS);
                 }
+                Platform.runLater(() -> dialog.getDialogPane().getScene().getWindow().sizeToScene());
                 event.consume();
             }
         });

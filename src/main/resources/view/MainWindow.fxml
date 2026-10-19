@@ -6,11 +6,9 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.image.Image?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -69,14 +67,8 @@
               </Tab>
             </tabs>
           </TabPane>
-          <HBox alignment="TOP_RIGHT" maxHeight="36" maxWidth="-Infinity" spacing="6"
-                StackPane.alignment="TOP_RIGHT" styleClass="quick-add-bar">
-            <padding><Insets top="4" right="10" bottom="4" left="0" /></padding>
-            <Button fx:id="addPersonButton" mnemonicParsing="false" onAction="#handleAddPerson"
-                    styleClass="button, quick-add-button" text="+ Person" />
-            <Button fx:id="addEventButton" mnemonicParsing="false" onAction="#handleAddEvent"
-                    styleClass="button, quick-add-button" text="+ Event" />
-          </HBox>
+          <StackPane fx:id="actionBarPlaceholder" maxHeight="36" maxWidth="-Infinity"
+                     StackPane.alignment="TOP_RIGHT" />
         </StackPane>
 
         <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER" />

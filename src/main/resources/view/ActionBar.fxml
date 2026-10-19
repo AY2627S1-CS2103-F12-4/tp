@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.HBox?>
+
+<HBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      alignment="TOP_RIGHT" spacing="6" styleClass="quick-add-bar">
+  <padding><Insets top="4" right="10" bottom="4" left="0" /></padding>
+  <Button fx:id="addPersonButton" mnemonicParsing="false" styleClass="button, quick-add-button" text="+ Person" />
+  <Button fx:id="addEventButton" mnemonicParsing="false" styleClass="button, quick-add-button" text="+ Event" />
+</HBox>

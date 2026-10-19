@@ -352,7 +352,9 @@
     -fx-text-fill: white;
 }
 
-#addEntryDialog.validation-error:header *.header-panel *.label {
+#addEntryDialog .validation-error-label {
+    -fx-font-family: "Segoe UI Semibold";
+    -fx-font-size: 11pt;
     -fx-text-fill: #ff6b6b;
 }
 

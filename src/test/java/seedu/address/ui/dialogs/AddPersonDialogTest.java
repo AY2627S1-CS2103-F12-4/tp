@@ -14,6 +14,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.DialogPane;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -35,7 +36,7 @@ public class AddPersonDialogTest {
     }
 
     @Test
-    public void validationError_longMessage_keepsButtonBarVisible() throws Exception {
+    public void validationError_longMessage_keepsDescriptionAndButtonBarVisible() throws Exception {
         runOnFxThread(() -> {
             AtomicReference<Throwable> failure = new AtomicReference<>();
             Stage owner = new Stage();
@@ -68,8 +69,16 @@ public class AddPersonDialogTest {
                 Bounds buttonBounds = addButton.localToScene(addButton.getBoundsInLocal());
                 Node form = dialogPane.lookup(".dialog-form");
                 Bounds formBounds = form.localToScene(form.getBoundsInLocal());
-                assertTrue(formBounds.getMaxY() <= buttonBounds.getMinY(),
-                        "Form fields should not overlap the button bar after showing an error");
+                Label errorLabel = (Label) dialogPane.lookup(".validation-error-label");
+                Bounds errorBounds = errorLabel.localToScene(errorLabel.getBoundsInLocal());
+                assertEquals("Enter the person's details.", dialogPane.getHeaderText());
+                assertEquals("Names should only contain alphanumeric characters and spaces, "
+                        + "and should not be blank", errorLabel.getText());
+                assertTrue(errorLabel.isVisible());
+                assertTrue(formBounds.getMaxY() <= errorBounds.getMinY(),
+                        "Validation errors should appear below the form fields");
+                assertTrue(errorBounds.getMaxY() <= buttonBounds.getMinY(),
+                        "Validation errors should not overlap the button bar");
             } catch (Throwable throwable) {
                 failure.set(throwable);
             } finally {

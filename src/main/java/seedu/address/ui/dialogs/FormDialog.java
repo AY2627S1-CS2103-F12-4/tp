@@ -12,6 +12,7 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -19,10 +20,10 @@ import seedu.address.logic.parser.exceptions.ParseException;
 /** Provides the shared layout and submission behavior for add-entry dialogs. */
 abstract class FormDialog {
     private static final ButtonType ADD_BUTTON = new ButtonType("Add", ButtonData.OK_DONE);
-    private static final String VALIDATION_ERROR_STYLE_CLASS = "validation-error";
 
     private final Dialog<Void> dialog = new Dialog<>();
     private final GridPane form = new GridPane();
+    private final Label validationErrorLabel = new Label();
 
     FormDialog(Stage owner, String title, String header) {
         dialog.initOwner(owner);
@@ -36,7 +37,14 @@ abstract class FormDialog {
         form.setVgap(10);
         form.setPadding(new Insets(10, 0, 0, 0));
         form.getStyleClass().add("dialog-form");
-        dialog.getDialogPane().setContent(form);
+
+        validationErrorLabel.getStyleClass().add("validation-error-label");
+        validationErrorLabel.setMaxWidth(Double.MAX_VALUE);
+        validationErrorLabel.setWrapText(true);
+        validationErrorLabel.setManaged(false);
+        validationErrorLabel.setVisible(false);
+
+        dialog.getDialogPane().setContent(new VBox(8, form, validationErrorLabel));
     }
 
     TextField addTextField(int row, String labelText, String promptText) {
@@ -54,10 +62,9 @@ abstract class FormDialog {
             try {
                 commandExecutor.execute(commandSupplier.get());
             } catch (CommandException | ParseException exception) {
-                dialog.setHeaderText(exception.getMessage());
-                if (!dialog.getDialogPane().getStyleClass().contains(VALIDATION_ERROR_STYLE_CLASS)) {
-                    dialog.getDialogPane().getStyleClass().add(VALIDATION_ERROR_STYLE_CLASS);
-                }
+                validationErrorLabel.setText(exception.getMessage());
+                validationErrorLabel.setManaged(true);
+                validationErrorLabel.setVisible(true);
                 Platform.runLater(() -> dialog.getDialogPane().getScene().getWindow().sizeToScene());
                 event.consume();
             }

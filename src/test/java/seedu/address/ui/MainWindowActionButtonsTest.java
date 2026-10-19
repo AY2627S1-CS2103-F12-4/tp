@@ -2,18 +2,34 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
+import static seedu.address.testutil.TypicalPersons.ALICE;
 
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.application.Platform;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
+import seedu.address.logic.Messages;
 import seedu.address.model.ModelManager;
+import seedu.address.model.event.Event;
+import seedu.address.model.event.EventId;
+import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonParticipationStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -26,7 +42,7 @@ public class MainWindowActionButtonsTest {
     @Test
     public void actionButtons_loaded_haveVisibleLabelsAndActions() throws Exception {
         runOnFxThread(() -> {
-            MainWindow window = createWindow();
+            MainWindow window = createWindow(new ModelManager());
             try {
                 Button addPersonButton = (Button) window.getPrimaryStage().getScene().lookup("#addPersonButton");
                 Button addEventButton = (Button) window.getPrimaryStage().getScene().lookup("#addEventButton");
@@ -43,8 +59,151 @@ public class MainWindowActionButtonsTest {
         });
     }
 
-    private MainWindow createWindow() {
-        ModelManager model = new ModelManager();
+    @Test
+    public void addPersonButton_submitValidForm_addsPerson() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> submitForm(failure,
+                        "Full name", "Alice Tan",
+                        "Phone number", "91234567",
+                        "Email address", "alice@example.com",
+                        "Home address", "1 Main Street"));
+
+                Button addPersonButton = (Button) window.getPrimaryStage().getScene().lookup("#addPersonButton");
+                addPersonButton.fire();
+
+                throwFailure(failure);
+                assertEquals(1, model.getFilteredPersonList().size());
+                assertEquals("Alice Tan", model.getFilteredPersonList().getFirst().getName().fullName);
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void addEventButton_submitValidForm_addsEvent() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> submitForm(failure,
+                        "Event name", "Workshop",
+                        "Maximum participants", "20",
+                        "Event description", "Learn Java"));
+
+                Button addEventButton = (Button) window.getPrimaryStage().getScene().lookup("#addEventButton");
+                addEventButton.fire();
+
+                throwFailure(failure);
+                assertEquals(1, model.getFilteredEventList().size());
+                assertEquals("Workshop", model.getFilteredEventList().getFirst().getName());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void personRowDeleteButton_confirmDeletion_deletesPerson() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            model.addPerson(ALICE);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                ListView<Person> list = personListView(window.getPersonListPanel());
+                ListCell<Person> cell = list.getCellFactory().call(list);
+                cell.updateListView(list);
+                cell.updateIndex(0);
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> clickDialogButton(failure, "Delete"));
+
+                Button deleteButton = (Button) cell.getGraphic().lookup("#deleteButton");
+                deleteButton.fire();
+
+                throwFailure(failure);
+                assertTrue(model.getFilteredPersonList().isEmpty());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void personRowDeleteButton_staleEntry_displaysCommandError() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            model.addPerson(ALICE);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                ListView<Person> list = personListView(window.getPersonListPanel());
+                ListCell<Person> cell = list.getCellFactory().call(list);
+                cell.updateListView(list);
+                cell.updateIndex(0);
+                Button staleDeleteButton = (Button) cell.getGraphic().lookup("#deleteButton");
+                model.deletePerson(ALICE);
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> clickDialogButton(failure, "Delete"));
+
+                staleDeleteButton.fire();
+
+                throwFailure(failure);
+                TextArea resultDisplay = (TextArea) window.getPrimaryStage().getScene().lookup("#resultDisplay");
+                assertEquals(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, resultDisplay.getText());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void eventRowButtons_addParticipantThenDeleteEvent_updatesModel() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
+            model.addPerson(ALICE);
+            model.addEvent(event);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                TabPane listTabs = (TabPane) window.getPrimaryStage().getScene().lookup("#listTabs");
+                listTabs.getSelectionModel().select(1);
+                window.getPrimaryStage().getScene().getRoot().applyCss();
+                ListView<Event> list = eventListView(window);
+                ListCell<Event> cell = list.getCellFactory().call(list);
+                cell.updateListView(list);
+                cell.updateIndex(0);
+
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> submitForm(failure, "e.g. P1", "P1"));
+                Button addParticipantButton = (Button) cell.getGraphic().lookup("#addParticipantButton");
+                addParticipantButton.fire();
+
+                throwFailure(failure);
+                assertEquals(1, model.getParticipationsForEvent(event).size());
+
+                Platform.runLater(() -> clickDialogButton(failure, "Delete"));
+                Button deleteButton = (Button) cell.getGraphic().lookup("#deleteButton");
+                deleteButton.fire();
+
+                throwFailure(failure);
+                assertTrue(model.getFilteredEventList().isEmpty());
+                assertTrue(model.getParticipations().getParticipations().isEmpty());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    private MainWindow createWindow(ModelManager model) {
         Logic logic = new LogicManager(model, new StorageManager(
                 new JsonAddressBookStorage(temporaryFolder.resolve("people.json")),
                 new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json")),
@@ -52,5 +211,79 @@ public class MainWindowActionButtonsTest {
         MainWindow window = new MainWindow(new Stage(), logic, temporaryFolder.resolve("people.json"));
         window.fillInnerParts();
         return window;
+    }
+
+    private void submitForm(AtomicReference<Throwable> failure, String... promptAndValues) {
+        try {
+            DialogPane dialogPane = showingDialogPane();
+            for (int i = 0; i < promptAndValues.length; i += 2) {
+                String prompt = promptAndValues[i];
+                TextField field = dialogPane.lookupAll(".text-field").stream()
+                        .filter(TextField.class::isInstance)
+                        .map(TextField.class::cast)
+                        .filter(candidate -> prompt.equals(candidate.getPromptText()))
+                        .findFirst()
+                        .orElseThrow();
+                field.setText(promptAndValues[i + 1]);
+            }
+            clickButton(dialogPane, "Add");
+        } catch (Throwable throwable) {
+            failure.set(throwable);
+            closeShowingDialog();
+        }
+    }
+
+    private void clickDialogButton(AtomicReference<Throwable> failure, String buttonText) {
+        try {
+            clickButton(showingDialogPane(), buttonText);
+        } catch (Throwable throwable) {
+            failure.set(throwable);
+            closeShowingDialog();
+        }
+    }
+
+    private void clickButton(DialogPane dialogPane, String buttonText) {
+        ButtonType buttonType = dialogPane.getButtonTypes().stream()
+                .filter(candidate -> buttonText.equals(candidate.getText()))
+                .findFirst()
+                .orElseThrow();
+        Button button = (Button) dialogPane.lookupButton(buttonType);
+        button.fire();
+    }
+
+    private DialogPane showingDialogPane() {
+        return Window.getWindows().stream()
+                .filter(Window::isShowing)
+                .map(Window::getScene)
+                .filter(scene -> scene != null)
+                .map(scene -> scene.getRoot())
+                .filter(DialogPane.class::isInstance)
+                .map(DialogPane.class::cast)
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private void closeShowingDialog() {
+        Window.getWindows().stream()
+                .filter(Window::isShowing)
+                .filter(window -> window.getScene() != null)
+                .filter(window -> window.getScene().getRoot() instanceof DialogPane)
+                .forEach(Window::hide);
+    }
+
+    private void throwFailure(AtomicReference<Throwable> failure) {
+        if (failure.get() != null) {
+            throw new AssertionError(failure.get());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private ListView<Person> personListView(PersonListPanel panel) {
+        return (ListView<Person>) panel.getRoot().lookup("#personListView");
+    }
+
+    @SuppressWarnings("unchecked")
+    private ListView<Event> eventListView(MainWindow window) {
+        return (ListView<Event>) window.getPrimaryStage().getScene().lookup("#eventListView");
     }
 }

@@ -546,6 +546,12 @@ Use case ends.
 ### Glossary
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
+* **Mapper**: The part of the Model that manages participations between people and events
+* **Participant**: A person registered for an event
+* **Participant role**: A responsibility assigned to a participant for a specific event
+* **Participant tag**: A label assigned to a participant for a specific event
+* **Participation**: The event-specific relationship between a person and an event, including attendance status, roles,
+  and tags
 * **Private contact detail**: A contact detail that is not meant to be shared with others
 
 --------------------------------------------------------------------------------------------------------------------

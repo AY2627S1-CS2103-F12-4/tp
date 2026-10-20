@@ -267,6 +267,12 @@ public class AddCommandTest {
         }
 
         @Override
+        public void editParticipation(EventId eventId, PersonId personId,
+                Set<ParticipationRole> roles, Set<Tag> tags) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public void markPresent(EventId eventId, PersonId personId) {
             throw new AssertionError("This method should not be called.");
         }

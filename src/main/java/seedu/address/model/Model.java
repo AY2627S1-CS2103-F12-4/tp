@@ -119,6 +119,9 @@ public interface Model {
     void removeParticipation(EventId eventId, PersonId personId)
             throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException;
 
+    /** Edits event-specific fields; null preserves a field and an empty set clears it. */
+    void editParticipation(EventId eventId, PersonId personId, Set<ParticipationRole> roles, Set<Tag> tags);
+
     /**
      * Marks the participation identified by {@code eventId} and {@code personId} as present.
      */

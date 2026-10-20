@@ -108,6 +108,24 @@ Format: `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION`
 
 Example: `add-event Wedding /cap 50 /desc Wedding Ceremony`
 
+### Editing an event: `edit-event`
+
+Updates an event identified by its stable Event ID. Supply at least one of a new name,
+capacity or description. Omitted fields retain their existing values; an empty
+`/desc` clears the description. The optional name appears directly after the ID,
+before any prefixed fields. Names may contain spaces and may match another event's name.
+
+The Event ID, registrations, roles, tags and attendance are preserved. Reducing
+capacity below the registration count does not remove existing participants.
+
+Format: `edit-event EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]`
+
+Examples:
+* `edit-event E1 Wedding Reception`
+* `edit-event E1 /cap 80`
+* `edit-event E1 /desc`
+* `edit-event E1 Wedding Reception /cap 80 /desc Updated venue`
+
 ### Listing events: `list-event`
 
 Displays the events in the application.
@@ -262,6 +280,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **Find people** | `find KEYWORD [MORE_KEYWORDS]` |
 | **Delete person** | `delete INDEX` |
 | **Add event** | `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION` |
+| **Edit event** | `edit-event EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]` |
 | **List events** | `list-event` |
 | **View event** | `view-event EVENT_ID` |
 | **Add participant** | `add-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |

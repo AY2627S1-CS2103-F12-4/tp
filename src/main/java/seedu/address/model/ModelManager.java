@@ -368,6 +368,16 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public void updateEvent(Event event) {
+        eventList.updateEvent(requireNonNull(event));
+        if (selectedEvent != null && selectedEvent.isSameEvent(event)) {
+            selectedEvent = event;
+        }
+        observableEvents.setAll(eventList.getEvents());
+        refreshParticipantSearch();
+    }
+
+    @Override
     public List<Event> getEvents() {
         return eventList.getEvents();
     }

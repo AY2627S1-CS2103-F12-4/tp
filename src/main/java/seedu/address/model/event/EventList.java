@@ -72,6 +72,13 @@ public class EventList {
         }
     }
 
+    /** Replaces the event with the same ID without changing insertion order or the next ID. */
+    public void updateEvent(Event event) {
+        requireNonNull(event);
+        getEventFromId(event.getId());
+        events.put(event.getId(), event);
+    }
+
     /**
      * Returns an immutable snapshot of the events in insertion order.
      */

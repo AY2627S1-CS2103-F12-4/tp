@@ -14,6 +14,7 @@ import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.ParticipationAlreadyAbsentException;
 import seedu.address.model.mapper.exceptions.ParticipationAlreadyPresentException;
 import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
@@ -123,6 +124,13 @@ public interface Model {
      */
     void markPresent(EventId eventId, PersonId personId)
             throws ParticipationNotFoundException, ParticipationAlreadyPresentException,
+            EventNotFoundException, PersonNotFoundException;
+
+    /**
+     * Marks the participation identified by {@code eventId} and {@code personId} as absent.
+     */
+    void unmarkPresent(EventId eventId, PersonId personId)
+            throws ParticipationNotFoundException, ParticipationAlreadyAbsentException,
             EventNotFoundException, PersonNotFoundException;
 
     /** Returns the participations for {@code event}. */

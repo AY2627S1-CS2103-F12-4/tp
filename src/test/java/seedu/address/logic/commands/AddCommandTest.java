@@ -262,6 +262,11 @@ public class AddCommandTest {
         }
 
         @Override
+        public void unmarkPresent(EventId eventId, PersonId personId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public void markPresent(EventId eventId, PersonId personId) {
             throw new AssertionError("This method should not be called.");
         }

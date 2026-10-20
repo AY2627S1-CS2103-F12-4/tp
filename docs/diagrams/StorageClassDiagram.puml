@@ -20,17 +20,33 @@ Class JsonAdaptedPerson
 Class JsonAdaptedTag
 }
 
+package "Participation Storage" #F4F6F6{
+Class JsonParticipationStorage
+Class JsonSerializableParticipations
+Class JsonAdaptedParticipation
+}
+
 }
 
 Class HiddenOutside #FFFFFF
 HiddenOutside ..> Storage
+Class "<<interface>>\nReadOnlyParticipations" as ReadOnlyParticipations MODEL_COLOR
+Class MapperManager MODEL_COLOR
 
 StorageManager .up.|> Storage
 StorageManager -down-> "1" JsonUserPrefsStorage
 StorageManager -down-> "1" JsonAddressBookStorage
+StorageManager -down-> "1" JsonParticipationStorage
 
 JsonAddressBookStorage ..> JsonSerializableAddressBook
 JsonSerializableAddressBook --> "*" JsonAdaptedPerson
 JsonAdaptedPerson --> "*" JsonAdaptedTag
+
+JsonParticipationStorage ..> JsonSerializableParticipations
+JsonParticipationStorage ..> ReadOnlyParticipations : reads and writes
+JsonSerializableParticipations --> "*" JsonAdaptedParticipation
+JsonSerializableParticipations ..> MapperManager : creates
+JsonAdaptedParticipation --> "*" JsonAdaptedTag
+MapperManager .up.|> ReadOnlyParticipations
 
 @enduml

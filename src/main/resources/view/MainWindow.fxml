@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <fx:root type="javafx.stage.Stage" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-         title="Address App" minWidth="450" minHeight="600" onCloseRequest="#handleExit">
+         title="Address App" minWidth="500" minHeight="600" onCloseRequest="#handleExit">
   <icons>
     <Image url="@/images/address_book_32.png" />
   </icons>
@@ -47,25 +47,29 @@
           </padding>
         </StackPane>
 
-        <TabPane fx:id="listTabs" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
-          <tabs>
-            <Tab text="People">
-              <StackPane fx:id="personListPanelPlaceholder" styleClass="pane-with-border">
-                <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
-              </StackPane>
-            </Tab>
-            <Tab fx:id="eventsTab" text="Events">
-              <StackPane fx:id="eventListPanelPlaceholder" styleClass="pane-with-border">
-                <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
-              </StackPane>
-            </Tab>
-            <Tab fx:id="participantsTab" text="Participants">
-              <StackPane fx:id="participantListPanelPlaceholder" styleClass="pane-with-border">
-                <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
-              </StackPane>
-            </Tab>
-          </tabs>
-        </TabPane>
+        <StackPane VBox.vgrow="ALWAYS">
+          <TabPane fx:id="listTabs" tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+              <Tab fx:id="peopleTab" text="People">
+                <StackPane fx:id="personListPanelPlaceholder" styleClass="pane-with-border">
+                  <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
+                </StackPane>
+              </Tab>
+              <Tab fx:id="eventsTab" text="Events">
+                <StackPane fx:id="eventListPanelPlaceholder" styleClass="pane-with-border">
+                  <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
+                </StackPane>
+              </Tab>
+              <Tab fx:id="participantsTab" text="Participants">
+                <StackPane fx:id="participantListPanelPlaceholder" styleClass="pane-with-border">
+                  <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
+                </StackPane>
+              </Tab>
+            </tabs>
+          </TabPane>
+          <StackPane fx:id="actionBarPlaceholder" maxHeight="36" maxWidth="-Infinity"
+                     StackPane.alignment="TOP_RIGHT" />
+        </StackPane>
 
         <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER" />
       </VBox>

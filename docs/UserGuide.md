@@ -30,6 +30,10 @@ AttendPlusPlus is a **desktop application for managing events and their particip
 
 ## Features
 
+Successful commands show a short status message in the output panel, such as
+`Event added successfully.` or `Viewing event...`. View lists and details in the GUI panels.
+Failed commands continue to show the specific error and usage guidance where applicable.
+
 <box type="info" seamless>
 
 **Command format conventions:**

@@ -130,6 +130,7 @@
         "searching-participants-by-name-search-participant": "Searching participants by name: search-participant",
         "searching-participants-by-role-search-role": "Searching participants by role: search-role",
         "marking-attendance-mark-participant": "Marking attendance: mark-participant",
+        "cancelling-attendance-unmark-participant": "Cancelling attendance: unmark-participant",
         "removing-a-participant-del-participant": "Removing a participant: del-participant",
         "handling-invalid-ids": "Handling invalid IDs",
         "clearing-all-people-clear": "Clearing all people: clear",

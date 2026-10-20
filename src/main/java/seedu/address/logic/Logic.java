@@ -1,6 +1,7 @@
 package seedu.address.logic;
 
 import java.util.Optional;
+import java.util.Set;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
@@ -48,4 +49,8 @@ public interface Logic {
      * Set the user prefs' GUI settings.
      */
     void setGuiSettings(GuiSettings guiSettings);
+    /**
+     * Returns all participants registered for the given event.
+     */
+    Set<Participation> getParticipationsForEvent(Event event);
 }

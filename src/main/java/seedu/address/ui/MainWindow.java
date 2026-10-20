@@ -34,7 +34,7 @@ public class MainWindow extends UiPart<Stage> {
     private Logic logic;
     private Path dataFilePath;
 
-    // Independent Ui parts residing in this Ui container
+    // Independent UI parts residing in this UI container
     private PersonListPanel personListPanel;
     private EventListPanel eventListPanel;
     private ParticipantListPanel participantListPanel;
@@ -60,9 +60,6 @@ public class MainWindow extends UiPart<Stage> {
     private Tab eventsTab;
 
     @FXML
-    private Tab participantsTab;
-
-    @FXML
     private StackPane participantListPanelPlaceholder;
 
     @FXML
@@ -78,14 +75,11 @@ public class MainWindow extends UiPart<Stage> {
     public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath) {
         super(FXML, primaryStage);
 
-        // Set dependencies
         this.primaryStage = primaryStage;
         this.logic = logic;
         this.dataFilePath = dataFilePath;
 
-        // Configure the UI
         setWindowDefaultSize(logic.getGuiSettings());
-
         setAccelerators();
 
         helpWindow = new HelpWindow();
@@ -101,9 +95,11 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Sets the accelerator of a MenuItem.
+     *
      * @param keyCombination the KeyCombination value of the accelerator
      */
-    private void setAccelerator(MenuItem menuItem, KeyCombination keyCombination) {
+    private void setAccelerator(MenuItem menuItem,
+                                KeyCombination keyCombination) {
         menuItem.setAccelerator(keyCombination);
 
         /*
@@ -111,18 +107,15 @@ public class MainWindow extends UiPart<Stage> {
          * https://bugs.openjdk.java.net/browse/JDK-8131666
          * is fixed in a later version of the SDK.
          *
-         * According to the bug report, TextInputControl (TextField, TextArea) will
-         * consume function-key events. Because CommandBox contains a TextField and
-         * ResultDisplay contains a TextArea, some accelerators (e.g., F1) will
-         * not work when the focus is in them because the key event is consumed by
-         * the TextInputControl(s).
-         *
-         * For now, we add the following event filter to capture such key events and open
-         * the help window purposely so as to support accelerators even when focus is
-         * in CommandBox or ResultDisplay.
+         * According to the bug report, TextInputControl (TextField, TextArea)
+         * will consume function-key events. Because CommandBox contains a
+         * TextField and ResultDisplay contains a TextArea, some accelerators
+         * (e.g., F1) will not work when the focus is in them because the key
+         * event is consumed by the TextInputControl(s).
          */
         getRoot().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getTarget() instanceof TextInputControl && keyCombination.match(event)) {
+            if (event.getTarget() instanceof TextInputControl
+                    && keyCombination.match(event)) {
                 menuItem.getOnAction().handle(new ActionEvent());
                 event.consume();
             }
@@ -133,23 +126,40 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        personListPanel = new PersonListPanel(logic.getFilteredPersonList());
-        personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
+        personListPanel =
+                new PersonListPanel(logic.getFilteredPersonList());
+        personListPanelPlaceholder.getChildren()
+                .add(personListPanel.getRoot());
 
-        eventListPanel = new EventListPanel(logic.getFilteredEventList());
-        eventListPanelPlaceholder.getChildren().add(eventListPanel.getRoot());
+        participantListPanel =
+                new ParticipantListPanel(
+                        logic.getParticipantSearchResults());
+        participantListPanelPlaceholder.getChildren()
+                .add(participantListPanel.getRoot());
 
-        participantListPanel = new ParticipantListPanel(logic.getParticipantSearchResults());
-        participantListPanelPlaceholder.getChildren().add(participantListPanel.getRoot());
+        eventListPanel =
+                new EventListPanel(
+                        logic.getFilteredEventList(),
+                        event -> participantListPanel
+                                .showParticipantsForEvent(
+                                        event,
+                                        logic.getParticipationsForEvent(event)));
+        eventListPanelPlaceholder.getChildren()
+                .add(eventListPanel.getRoot());
 
         resultDisplay = new ResultDisplay();
-        resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
+        resultDisplayPlaceholder.getChildren()
+                .add(resultDisplay.getRoot());
 
-        StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
-        statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
+        StatusBarFooter statusBarFooter =
+                new StatusBarFooter(dataFilePath);
+        statusbarPlaceholder.getChildren()
+                .add(statusBarFooter.getRoot());
 
-        CommandBox commandBox = new CommandBox(this::executeCommand);
-        commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+        CommandBox commandBox =
+                new CommandBox(this::executeCommand);
+        commandBoxPlaceholder.getChildren()
+                .add(commandBox.getRoot());
     }
 
     /**
@@ -158,14 +168,17 @@ public class MainWindow extends UiPart<Stage> {
     private void setWindowDefaultSize(GuiSettings guiSettings) {
         primaryStage.setHeight(guiSettings.getWindowHeight());
         primaryStage.setWidth(guiSettings.getWindowWidth());
+
         if (guiSettings.getWindowCoordinates() != null) {
-            primaryStage.setX(guiSettings.getWindowCoordinates().getX());
-            primaryStage.setY(guiSettings.getWindowCoordinates().getY());
+            primaryStage.setX(
+                    guiSettings.getWindowCoordinates().getX());
+            primaryStage.setY(
+                    guiSettings.getWindowCoordinates().getY());
         }
     }
 
     /**
-     * Opens the help window or focuses on it if it's already opened.
+     * Opens the help window or focuses on it if it is already opened.
      */
     @FXML
     public void handleHelp() {
@@ -185,8 +198,12 @@ public class MainWindow extends UiPart<Stage> {
      */
     @FXML
     private void handleExit() {
-        GuiSettings guiSettings = new GuiSettings(primaryStage.getWidth(), primaryStage.getHeight(),
-                (int) primaryStage.getX(), (int) primaryStage.getY());
+        GuiSettings guiSettings = new GuiSettings(
+                primaryStage.getWidth(),
+                primaryStage.getHeight(),
+                (int) primaryStage.getX(),
+                (int) primaryStage.getY());
+
         logic.setGuiSettings(guiSettings);
         helpWindow.hide();
         primaryStage.hide();
@@ -196,26 +213,36 @@ public class MainWindow extends UiPart<Stage> {
         return personListPanel;
     }
 
+    ParticipantListPanel getParticipantListPanel() {
+        return participantListPanel;
+    }
+
     /**
      * Executes the command and returns the result.
      *
      * @see seedu.address.logic.Logic#execute(String)
      */
-    private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
+    private CommandResult executeCommand(String commandText)
+            throws CommandException, ParseException {
         try {
             CommandResult commandResult = logic.execute(commandText);
-            logger.info("Result: " + commandResult.getFeedbackToUser());
-            resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+
+            logger.info(
+                    "Result: " + commandResult.getFeedbackToUser());
+
+            resultDisplay.setFeedbackToUser(
+                    commandResult.getFeedbackToUser());
 
             logic.getParticipantSearchEvent().ifPresentOrElse(
                     event -> participantListPanel.setSearchContext(
-                            event, logic.getParticipantSearchKeyword().orElseThrow()),
+                            event,
+                            logic.getParticipantSearchKeyword()
+                                    .orElseThrow()),
                     participantListPanel::clearSearchContext);
-            if (commandResult.isShowParticipants()) {
-                listTabs.getSelectionModel().select(participantsTab);
-            }
 
-            if (commandResult.isShowEvents()) {
+            // Participants are displayed inside the Events tab.
+            if (commandResult.isShowParticipants()
+                    || commandResult.isShowEvents()) {
                 listTabs.getSelectionModel().select(eventsTab);
             }
 
@@ -229,7 +256,10 @@ public class MainWindow extends UiPart<Stage> {
 
             return commandResult;
         } catch (CommandException | ParseException e) {
-            logger.info("An error occurred while executing command: " + commandText);
+            logger.info(
+                    "An error occurred while executing command: "
+                            + commandText);
+
             resultDisplay.setFeedbackToUser(e.getMessage());
             throw e;
         }

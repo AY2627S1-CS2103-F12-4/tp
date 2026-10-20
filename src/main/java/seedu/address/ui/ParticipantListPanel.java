@@ -2,6 +2,10 @@ package seedu.address.ui;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.Collection;
+import java.util.Comparator;
+
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -12,66 +16,117 @@ import seedu.address.model.event.Event;
 import seedu.address.model.mapper.Participation;
 
 /**
- * Displays live participant search results and their selected event and search phrase.
+ * Displays participants belonging to the selected event or participant
+ * search results.
  */
 public class ParticipantListPanel extends UiPart<Region> {
+
     private static final String FXML = "ParticipantListPanel.fxml";
+
+    private final ObservableList<Participation> participantSearchResults;
 
     @FXML
     private Label eventHeading;
+
     @FXML
     private Label searchHeading;
+
     @FXML
     private ListView<Participation> participantListView;
 
     /**
-     * Creates a panel bound to the supplied observable search results.
-     * Changes to the list update its cards; the caller updates the search heading separately.
-     *
-     * @param participants Observable list to display without copying its records.
-     * @throws NullPointerException if the participant list is null.
+     * Creates a participant panel bound initially to participant search
+     * results.
      */
-    public ParticipantListPanel(ObservableList<Participation> participants) {
+    public ParticipantListPanel(
+            ObservableList<Participation> participantSearchResults) {
         super(FXML);
-        requireAllNonNull(participants);
-        participantListView.setItems(participants);
-        Label emptyMessage = new Label("No matching participants.");
+
+        requireAllNonNull(participantSearchResults);
+
+        this.participantSearchResults = participantSearchResults;
+        participantListView.setItems(participantSearchResults);
+
+        Label emptyMessage =
+                new Label("Select an event to view its participants.");
         emptyMessage.getStyleClass().add("label-bright");
         participantListView.setPlaceholder(emptyMessage);
-        participantListView.setCellFactory(listView -> new ParticipantListViewCell());
+
+        participantListView.setCellFactory(
+                listView -> new ParticipantListViewCell());
     }
 
     /**
-     * Updates the heading to identify the event and name phrase associated with these results.
-     * Updates the heading even when the result list is empty.
-     *
-     * @param event Selected event whose name and stable ID identify the results.
-     * @param keyword Search phrase displayed with its original case.
-     * @throws NullPointerException if either argument is null.
+     * Displays all participants belonging to the selected event.
+     */
+    public void showParticipantsForEvent(
+            Event event,
+            Collection<Participation> participants) {
+        requireAllNonNull(event, participants);
+
+        ObservableList<Participation> displayedParticipants =
+                FXCollections.observableArrayList(
+                        participants.stream()
+                                .sorted(Comparator.comparing(
+                                        participation -> participation
+                                                .getPerson()
+                                                .getId()
+                                                .toString()))
+                                .toList());
+
+        participantListView.setItems(displayedParticipants);
+
+        eventHeading.setText(
+                event.getName() + " (" + event.getId() + ")");
+        searchHeading.setText("Participants");
+
+        Label emptyMessage =
+                new Label("No participants found for this event.");
+        emptyMessage.getStyleClass().add("label-bright");
+        participantListView.setPlaceholder(emptyMessage);
+    }
+
+    /**
+     * Displays participant name-search results.
      */
     public void setSearchContext(Event event, String keyword) {
         requireAllNonNull(event, keyword);
-        eventHeading.setText(event.getName() + " (" + event.getId() + ")");
+
+        participantListView.setItems(participantSearchResults);
+
+        eventHeading.setText(
+                event.getName() + " (" + event.getId() + ")");
         searchHeading.setText("Matching \"" + keyword + "\"");
+
+        Label emptyMessage = new Label("No matching participants.");
+        emptyMessage.getStyleClass().add("label-bright");
+        participantListView.setPlaceholder(emptyMessage);
     }
 
     /**
-     * Restores search instructions when no event is selected, such as after deleting the searched event.
+     * Restores the instructions shown when no event has been selected.
      */
     public void clearSearchContext() {
-        eventHeading.setText("Participant search");
-        searchHeading.setText("Use search-participant EVENT_ID /name NAME");
+        eventHeading.setText("Participants");
+        searchHeading.setText("Select an event to view its participants.");
     }
 
     /**
-     * Renders a participant and clears recycled cells when they become empty.
+     * Renders participant cards.
      */
-    private class ParticipantListViewCell extends ListCell<Participation> {
+    private class ParticipantListViewCell
+            extends ListCell<Participation> {
+
         @Override
-        protected void updateItem(Participation participation, boolean empty) {
+        protected void updateItem(
+                Participation participation,
+                boolean empty) {
             super.updateItem(participation, empty);
             setText(null);
-            setGraphic(empty || participation == null ? null : new ParticipantCard(participation).getRoot());
+
+            setGraphic(empty || participation == null
+                    ? null
+                    : new ParticipantCard(participation).getRoot());
         }
     }
 }

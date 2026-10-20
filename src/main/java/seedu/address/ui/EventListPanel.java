@@ -26,10 +26,11 @@ public class EventListPanel extends UiPart<Region> {
      * Creates a panel bound to the supplied event list.
      *
      * @param events events to display
-     * @param onEventSelected action performed when an event is selected
+     * @param onEventSelected action performed when the event selection changes
      */
-    public EventListPanel(ObservableList<Event> events,
-                          Consumer<Event> onEventSelected) {
+    public EventListPanel(
+            ObservableList<Event> events,
+            Consumer<Event> onEventSelected) {
         super(FXML);
 
         requireNonNull(events);
@@ -46,11 +47,15 @@ public class EventListPanel extends UiPart<Region> {
 
         eventListView.getSelectionModel()
                 .selectedItemProperty()
-                .addListener((observable, previousEvent, selectedEvent) -> {
-                    if (selectedEvent != null) {
-                        onEventSelected.accept(selectedEvent);
-                    }
-                });
+                .addListener((observable, previousEvent, selectedEvent) ->
+                        onEventSelected.accept(selectedEvent));
+    }
+
+    /**
+     * Clears the currently selected event.
+     */
+    public void clearSelection() {
+        eventListView.getSelectionModel().clearSelection();
     }
 
     /**

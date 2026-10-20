@@ -108,6 +108,17 @@ Format: `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION`
 
 Example: `add-event Wedding /cap 50 /desc Wedding Ceremony`
 
+### Editing an event: `edit-event`
+
+Updates capacity and description using the event's exact, case-sensitive name.
+Both parameters are required; an empty description clears it. The name and ID remain unchanged.
+If no event matches, or multiple events have that name, an error is shown and nothing is changed.
+Existing registrations and attendance are preserved, including when capacity is reduced below registration count.
+
+Format: `edit-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION`
+
+Example: `edit-event Wedding /cap 80 /desc Updated venue`
+
 ### Listing events: `list-event`
 
 Displays the events in the application.
@@ -253,6 +264,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **Find people** | `find KEYWORD [MORE_KEYWORDS]` |
 | **Delete person** | `delete INDEX` |
 | **Add event** | `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION` |
+| **Edit event** | `edit-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION` |
 | **List events** | `list-event` |
 | **View event** | `view-event EVENT_ID` |
 | **Add participant** | `add-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |

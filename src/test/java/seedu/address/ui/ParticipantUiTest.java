@@ -9,11 +9,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -204,6 +206,29 @@ public class ParticipantUiTest {
             assertEquals(
                     "No participants found for this event.",
                     placeholderText(panel));
+        });
+    }
+
+    @Test
+    public void panel_participantButtons_runConfiguredActions() throws Exception {
+        runOnFxThread(() -> {
+            AtomicReference<Participation> edited = new AtomicReference<>();
+            AtomicReference<Participation> deleted = new AtomicReference<>();
+            ParticipantListPanel panel = new ParticipantListPanel(
+                    FXCollections.observableArrayList(), edited::set, deleted::set);
+            panel.showParticipantsForEvent(EVENT, Set.of(PARTICIPATION));
+
+            ListView<Participation> list = listView(panel);
+            ListCell<Participation> cell = list.getCellFactory().call(list);
+            cell.updateListView(list);
+            cell.updateIndex(0);
+            Button editButton = (Button) cell.getGraphic().lookup("#editButton");
+            Button deleteButton = (Button) cell.getGraphic().lookup("#deleteButton");
+            editButton.fire();
+            deleteButton.fire();
+
+            assertSame(PARTICIPATION, edited.get());
+            assertSame(PARTICIPATION, deleted.get());
         });
     }
 

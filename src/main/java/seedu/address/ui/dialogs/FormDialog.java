@@ -17,22 +17,26 @@ import javafx.stage.Stage;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 
-/** Provides the shared layout and submission behavior for add-entry dialogs. */
+/** Provides the shared layout and submission behavior for entry dialogs. */
 abstract class FormDialog {
-    private static final ButtonType ADD_BUTTON = new ButtonType("Add", ButtonData.OK_DONE);
-
     private final Dialog<Void> dialog = new Dialog<>();
     private final GridPane form = new GridPane();
     private final Label requiredFieldNote = new Label("* Required");
     private final Label validationErrorLabel = new Label();
+    private final ButtonType submitButton;
 
     FormDialog(Stage owner, String title, String header) {
+        this(owner, title, header, "Add");
+    }
+
+    FormDialog(Stage owner, String title, String header, String submitButtonText) {
+        submitButton = new ButtonType(submitButtonText, ButtonData.OK_DONE);
         dialog.initOwner(owner);
         dialog.setTitle(title);
         dialog.setHeaderText(header);
         dialog.getDialogPane().setId("addEntryDialog");
         dialog.getDialogPane().getStylesheets().add("view/DarkTheme.css");
-        dialog.getDialogPane().getButtonTypes().addAll(ADD_BUTTON, ButtonType.CANCEL);
+        dialog.getDialogPane().getButtonTypes().addAll(submitButton, ButtonType.CANCEL);
 
         form.setHgap(12);
         form.setVgap(10);
@@ -67,8 +71,8 @@ abstract class FormDialog {
     }
 
     void showAndWait(TextField initialFocus, CommandExecutor commandExecutor, Supplier<String> commandSupplier) {
-        Button addButton = (Button) dialog.getDialogPane().lookupButton(ADD_BUTTON);
-        addButton.addEventFilter(ActionEvent.ACTION, event -> {
+        Button submitButtonNode = (Button) dialog.getDialogPane().lookupButton(submitButton);
+        submitButtonNode.addEventFilter(ActionEvent.ACTION, event -> {
             try {
                 commandExecutor.execute(commandSupplier.get());
             } catch (CommandException | ParseException exception) {

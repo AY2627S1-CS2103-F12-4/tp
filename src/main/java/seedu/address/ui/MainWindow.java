@@ -18,11 +18,14 @@ import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
+import seedu.address.logic.commands.ArchiveEventCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteEventCommand;
+import seedu.address.logic.commands.DeleteParticipantCommand;
 import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.commands.SearchRoleCommand;
+import seedu.address.logic.commands.UnarchiveEventCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
@@ -32,6 +35,9 @@ import seedu.address.ui.dialogs.AddEventDialog;
 import seedu.address.ui.dialogs.AddParticipantDialog;
 import seedu.address.ui.dialogs.AddPersonDialog;
 import seedu.address.ui.dialogs.DeleteConfirmationDialog;
+import seedu.address.ui.dialogs.EditEventDialog;
+import seedu.address.ui.dialogs.EditParticipantDialog;
+import seedu.address.ui.dialogs.EditPersonDialog;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -60,8 +66,7 @@ public class MainWindow extends UiPart<Stage> {
     private HelpWindow helpWindow;
 
     private Event selectedEvent;
-    private ParticipantDisplayMode participantDisplayMode =
-            ParticipantDisplayMode.NONE;
+    private ParticipantDisplayMode participantDisplayMode = ParticipantDisplayMode.NONE;
     private boolean isExecutingCommand;
     private boolean isUpdatingParticipantPanel;
 
@@ -102,7 +107,7 @@ public class MainWindow extends UiPart<Stage> {
      * Creates a {@code MainWindow} with the given dependencies.
      *
      * @param primaryStage primary application stage
-     * @param logic application logic
+     * @param logic        application logic
      * @param dataFilePath path shown in the status bar
      */
     public MainWindow(
@@ -134,7 +139,7 @@ public class MainWindow extends UiPart<Stage> {
     /**
      * Sets the accelerator of a MenuItem.
      *
-     * @param menuItem menu item receiving the accelerator
+     * @param menuItem       menu item receiving the accelerator
      * @param keyCombination accelerator key combination
      */
     private void setAccelerator(
@@ -161,12 +166,15 @@ public class MainWindow extends UiPart<Stage> {
     void fillInnerParts() {
         personListPanel = new PersonListPanel(
                 logic.getFilteredPersonList(),
+                this::handleEditPerson,
                 this::handleDeletePerson);
         personListPanelPlaceholder.getChildren()
                 .add(personListPanel.getRoot());
 
         participantListPanel = new ParticipantListPanel(
-                logic.getParticipantSearchResults());
+                logic.getParticipantSearchResults(),
+                this::handleEditParticipant,
+                this::handleDeleteParticipant);
         participantListPanelPlaceholder.getChildren()
                 .add(participantListPanel.getRoot());
 
@@ -174,6 +182,8 @@ public class MainWindow extends UiPart<Stage> {
                 logic.getFilteredEventList(),
                 this::handleEventSelection,
                 this::handleAddParticipant,
+                this::handleEditEvent,
+                this::handleToggleEventArchive,
                 this::handleDeleteEvent);
         eventListPanelPlaceholder.getChildren()
                 .add(eventListPanel.getRoot());
@@ -195,13 +205,11 @@ public class MainWindow extends UiPart<Stage> {
         resultDisplayPlaceholder.getChildren()
                 .add(resultDisplay.getRoot());
 
-        StatusBarFooter statusBarFooter =
-                new StatusBarFooter(dataFilePath);
+        StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
         statusbarPlaceholder.getChildren()
                 .add(statusBarFooter.getRoot());
 
-        CommandBox commandBox =
-                new CommandBox(this::executeCommand);
+        CommandBox commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren()
                 .add(commandBox.getRoot());
     }
@@ -327,11 +335,10 @@ public class MainWindow extends UiPart<Stage> {
             return;
         }
 
-        Optional<Event> currentEvent =
-                logic.getFilteredEventList().stream()
-                        .filter(event -> event.getId()
-                                .equals(selectedEvent.getId()))
-                        .findFirst();
+        Optional<Event> currentEvent = logic.getFilteredEventList().stream()
+                .filter(event -> event.getId()
+                        .equals(selectedEvent.getId()))
+                .findFirst();
 
         if (currentEvent.isEmpty()) {
             eventListPanel.clearSelection();
@@ -407,8 +414,7 @@ public class MainWindow extends UiPart<Stage> {
             return false;
         }
 
-        String commandWord =
-                trimmedCommand.split("\\s+", 2)[0];
+        String commandWord = trimmedCommand.split("\\s+", 2)[0];
 
         return commandWord.equals(SearchParticipantCommand.COMMAND_WORD)
                 || commandWord.equals(SearchRoleCommand.COMMAND_WORD);
@@ -455,16 +461,22 @@ public class MainWindow extends UiPart<Stage> {
         });
     }
 
+    private void handleEditPerson(Person person, int displayedIndex) {
+        new EditPersonDialog(primaryStage, person, displayedIndex).showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(peopleTab);
+        });
+    }
+
     private void handleDeletePerson(
             Person person,
             int displayedIndex) {
-        DeleteConfirmationDialog dialog =
-                new DeleteConfirmationDialog(
-                        primaryStage,
-                        "Delete person",
-                        "Delete "
-                                + person.getName().fullName
-                                + "?");
+        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(
+                primaryStage,
+                "Delete person",
+                "Delete "
+                        + person.getName().fullName
+                        + "?");
 
         if (dialog.showAndWait()) {
             executeDeleteCommand(
@@ -476,11 +488,10 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private void handleAddParticipant(Event event) {
-        AddParticipantDialog dialog =
-                new AddParticipantDialog(
-                        primaryStage,
-                        event.getId(),
-                        event.getName());
+        AddParticipantDialog dialog = new AddParticipantDialog(
+                primaryStage,
+                event.getId(),
+                event.getName());
 
         dialog.showAndWait(command -> {
             executeCommand(command);
@@ -488,16 +499,60 @@ public class MainWindow extends UiPart<Stage> {
         });
     }
 
+    private void handleEditParticipant(Participation participation) {
+        new EditParticipantDialog(primaryStage, participation).showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(eventsTab);
+        });
+    }
+
+    private void handleDeleteParticipant(Participation participation) {
+        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(
+                primaryStage,
+                "Delete participant",
+                "Remove " + participation.getPerson().getName().fullName
+                        + " from " + participation.getEvent().getName() + "?");
+
+        if (dialog.showAndWait()) {
+            executeDeleteCommand(DeleteParticipantCommand.COMMAND_WORD + " "
+                    + participation.getEvent().getId() + " "
+                    + participation.getPerson().getId(), eventsTab);
+        }
+    }
+
+    private void handleEditEvent(Event event) {
+        new EditEventDialog(primaryStage, event).showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(eventsTab);
+        });
+    }
+
+    private void handleToggleEventArchive(Event event) {
+        try {
+            executeCommand(buildArchiveCommand(event));
+            listTabs.getSelectionModel().select(eventsTab);
+        } catch (CommandException | ParseException exception) {
+            // executeCommand already displays the error.
+        }
+    }
+
+    /** Returns the command that toggles the supplied event's archive state. */
+    static String buildArchiveCommand(Event event) {
+        String commandWord = event.isArchived()
+                ? UnarchiveEventCommand.COMMAND_WORD
+                : ArchiveEventCommand.COMMAND_WORD;
+        return commandWord + " " + event.getId();
+    }
+
     private void handleDeleteEvent(Event event) {
-        DeleteConfirmationDialog dialog =
-                new DeleteConfirmationDialog(
-                        primaryStage,
-                        "Delete event",
-                        "Delete "
-                                + event.getName()
-                                + " ("
-                                + event.getId()
-                                + ")?");
+        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(
+                primaryStage,
+                "Delete event",
+                "Delete "
+                        + event.getName()
+                        + " ("
+                        + event.getId()
+                        + ")?");
 
         if (dialog.showAndWait()) {
             executeDeleteCommand(
@@ -554,11 +609,12 @@ public class MainWindow extends UiPart<Stage> {
      */
     private CommandResult executeCommand(String commandText)
             throws CommandException, ParseException {
+        // Reconcile selection after the command finishes publishing its event filter
+        // and result rows.
         isExecutingCommand = true;
 
         try {
-            CommandResult commandResult =
-                    logic.execute(commandText);
+            CommandResult commandResult = logic.execute(commandText);
 
             logger.info(
                     "Result: "

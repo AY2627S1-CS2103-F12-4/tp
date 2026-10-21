@@ -99,6 +99,6 @@ public class EventTest {
     public void toString_containsIdentityAndName() {
         Event event = new Event(ID, NAME, 10, "Description");
         assertEquals(Event.class.getCanonicalName() + "{id=" + ID + ", name=" + NAME
-                + ", capacity=10, description=Description}", event.toString());
+                + ", capacity=10, description=Description, archived=false}", event.toString());
     }
 }

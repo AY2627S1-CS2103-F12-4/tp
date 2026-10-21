@@ -12,12 +12,26 @@ import org.junit.jupiter.api.Test;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 
 public class EntryCardActionButtonTest {
+
+    @Test
+    public void eventCard_archiveState_displaysSuffixWithoutChangingStoredName() throws Exception {
+        runOnFxThread(() -> {
+            Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
+            EventCard archived = new EventCard(event.withArchived(true), 1, () -> { }, () -> { });
+            Label archivedName = (Label) archived.getRoot().lookup("#name");
+            assertEquals("Workshop <archived>", archivedName.getText());
+            EventCard active = new EventCard(event, 1, () -> { }, () -> { });
+            assertEquals("Workshop", ((Label) active.getRoot().lookup("#name")).getText());
+            assertEquals("Workshop", event.withArchived(true).getName());
+        });
+    }
 
     @Test
     public void personCard_deleteButton_runsConfiguredAction() throws Exception {

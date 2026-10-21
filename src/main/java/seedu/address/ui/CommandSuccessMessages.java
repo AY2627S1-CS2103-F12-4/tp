@@ -17,6 +17,8 @@ public final class CommandSuccessMessages {
             case "clear" -> "All people cleared successfully.";
             case "list" -> "Listing people...";
             case "find" -> "Showing person search results...";
+            case "archive-event" -> "Event archived successfully.";
+            case "unarchive-event" -> "Event restored successfully.";
             case "add-event" -> "Event added successfully.";
             case "edit-event" -> "Event updated successfully.";
             case "del-event" -> "Event deleted successfully.";

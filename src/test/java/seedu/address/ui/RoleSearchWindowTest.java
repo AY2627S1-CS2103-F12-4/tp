@@ -332,6 +332,72 @@ public class RoleSearchWindowTest {
         });
     }
 
+    @Test
+    public void participantCommands_showAllEventParticipantsAndAllowRoleSearchToResume() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-role Speaker");
+                tabs(window).getSelectionModel().select(0);
+                enterCommand(window, "list-participants E1");
+                assertEquals("Events", selectedTab(window));
+                assertEquals("E1", events(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals(List.of("E1/P1", "E1/P2"), resultIds(window));
+                assertEquals("Participants", heading(window, "searchHeading"));
+
+                events(window).getSelectionModel().select(1);
+                events(window).getSelectionModel().select(0);
+                assertEquals(List.of("E1/P1", "E1/P2"), resultIds(window));
+                enterCommand(window, "search-role Speaker");
+                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals("Matching \"Speaker\"", heading(window, "searchHeading"));
+                assertEquals("2 registrations across 2 events with roles matching \"Speaker\".", feedback(window));
+
+                tabs(window).getSelectionModel().select(0);
+                enterCommand(window, "view-participant E1 P2");
+                assertEquals("Events", selectedTab(window));
+                assertEquals("E1", events(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals(List.of("E1/P1", "E1/P2"), resultIds(window));
+                assertEquals("Participants", heading(window, "searchHeading"));
+                enterCommand(window, "edit-participant E1 P1 /role Guest");
+                assertEquals(List.of(WORKSHOP), events(window).getItems());
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals(SELECT_EVENT_PROMPT, heading(window, "searchHeading"));
+                enterCommand(window, "search-role Speaker");
+                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals("Matching \"Speaker\"", heading(window, "searchHeading"));
+                assertEquals("1 registration across 1 event with roles matching \"Speaker\".", feedback(window));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void participantCommands_targetOutsideRoleSearchFilter_clearPanelUntilSearchResumes() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                for (String command : List.of("list-participants E2", "view-participant E2 P1")) {
+                    enterCommand(window, "search-role Speaker /event E1");
+                    enterCommand(window, command);
+                    assertEquals("Events", selectedTab(window));
+                    assertEquals(List.of(CONFERENCE), events(window).getItems());
+                    assertNull(events(window).getSelectionModel().getSelectedItem());
+                    assertTrue(participants(window).getItems().isEmpty());
+                    assertEquals(SELECT_EVENT_PROMPT, heading(window, "searchHeading"));
+
+                    enterCommand(window, "search-role Speaker");
+                    assertEquals(List.of("E1/P1"), resultIds(window));
+                    assertEquals("Matching \"Speaker\"", heading(window, "searchHeading"));
+                }
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
     private MainWindow createWindow() {
         return createWindow(createModel());
     }

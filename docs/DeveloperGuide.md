@@ -159,6 +159,55 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Role search
+
+`SearchRoleCommandParser` accepts `search-role ROLE [/event EVENTID]`, normalizes
+query whitespace, and validates the optional event ID. The complete role phrase
+precedes the optional scope. Duplicate or unsupported command prefixes are
+rejected. `SearchRoleCommand` calls the global or scoped
+`Model#updateParticipantRoleSearch` overload, reports registration and event counts,
+and requests the Events tab through `CommandResult`.
+
+`ModelManager` holds transient participant search state: a `NAME` or `ROLE` search
+type, a query, and an optional event ID. An absent event scope with a present query
+represents a global role search; it does not mean that no search is active. This
+state is separate from the selected event and is not persisted in storage. The
+existing name-search syntax and matching behavior are retained.
+
+For role searches, the model obtains candidate events from the event list, excludes
+archived events, and retrieves each event's registrations through
+`Model#getParticipationsForEvent`, which delegates to the mapper.
+`ParticipationRoleContainsKeywordPredicate` matches a case-insensitive substring
+within any single assigned role. Each registration appears at most once, with all
+of its roles retained. Results follow event-list order, then lexicographic Person
+ID order within each event. Existing people and event display filters do not limit
+the search candidates. A nonexistent scoped event fails before search state or
+display filters are changed; an archived scoped event yields no matches.
+
+The model filters the event list to IDs with matching registrations and publishes
+the search context and event filter before notifying observers of the result rows.
+`getParticipantSearchResults()` exposes a live, unmodifiable observable list through
+both `Model` and `Logic`. `getParticipantSearchResultsForEvent(event)` returns an
+immutable snapshot filtered by stable event ID. Consumers of that snapshot must
+read it again when the observable result list changes, even if the matching event
+IDs remain the same.
+
+Relevant model mutations refresh the active search, including role edits,
+registration changes, person updates, event edits, and archive changes. Deleting a
+globally searched event refreshes the remaining results; deleting the scoped event
+clears the search. `clearParticipantRoleSearch()` clears only role-search state and
+restores the ordinary nonarchived event list. `ListEventCommand` and
+`FindEventCommand` call it before applying their own event filter, preserving an
+active legacy name search. Starting a name search replaces role-search state and
+restores the ordinary event list.
+
+`MainWindow` displays the command's detailed role-search feedback and selects the
+Events tab. The existing Participants tab remains bound to the shared observable
+results. `ParticipantListPanel` displays a global or event-specific heading using
+the query and optional scope, including when there are no matches. The per-event
+snapshot API supports integration with the combined Events view; that GUI layout
+change is handled separately.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation

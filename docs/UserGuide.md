@@ -223,13 +223,46 @@ Example: `search-participant E1 /name Michael`
 
 ### Searching participants by role: `search-role`
 
-Finds participants in an event by their event-specific role.
+Finds registrations with matching event-specific roles across all nonarchived events,
+or within one event when `/event EVENTID` is supplied.
 
-Format: `search-role EVENT_ID /role ROLE`
+Format: `search-role ROLE [/event EVENTID]`
 
-Example: `search-role E1 /role Best Man`
+Examples:
 
-![Search by role](images/searchRole.png)
+* `search-role Best Man` searches all nonarchived events.
+* `search-role Best Man /event E1` searches only event `E1`.
+* `search-role man` matches roles such as `Best Man` and `Manager`.
+
+Matching is case-insensitive and uses the complete search phrase as a substring of
+an individual role. Leading and trailing whitespace is ignored, and consecutive
+whitespace in the query is treated as one space. A registration matches if any of
+its roles matches; text from separate roles is not combined. Registrations without
+roles do not match. Put the optional `/event EVENTID` after the role phrase;
+duplicate `/event` arguments and unsupported command prefixes produce an error.
+
+The command selects the **Events** tab and shows only events containing matching
+registrations. Switch to the **Participants** tab to see the matching registrations,
+including all their assigned roles. Its heading shows either **All nonarchived
+events** or the scoped event's name and ID, together with the search phrase.
+Switching tabs preserves the search. Events follow their stored order, and
+registrations within each event are ordered lexicographically by Person ID
+(for example, `P1`, `P10`, `P2`).
+
+Feedback counts registrations and matching events. A registration counts once even
+if several of its roles match. The same person registered in two matching events
+counts as two registrations. If nothing matches, both result lists are empty.
+Archived events are excluded even when explicitly scoped. An unknown event ID
+produces an error and preserves the previous results.
+
+A new role search replaces the previous search and event filter, and searches
+independently of the displayed people list. Results refresh when registrations,
+participant details, or event details change, including archiving or restoring an
+event. Deleting the scoped event clears the search; deleting an event during a
+global search refreshes the remaining matches. Use `list-event` to clear the role
+search and show all nonarchived events, or `find-event` to replace it with an event
+name filter. A participant name search also replaces the role search and restores
+the ordinary nonarchived event list.
 
 ### Marking attendance: `mark-participant`
 
@@ -328,7 +361,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **List participants** | `list-participants EVENT_ID` |
 | **View participant** | `view-participant EVENT_ID PERSON_ID` |
 | **Search participant** | `search-participant EVENT_ID /name NAME` |
-| **Search role** | `search-role EVENT_ID /role ROLE` |
+| **Search role** | `search-role ROLE [/event EVENTID]` |
 | **Cancel attendance** | `unmark-participant EVENT_ID PERSON_ID` |
 | **Mark attendance** | `mark-participant EVENT_ID PERSON_ID` |
 | **Remove participant** | `del-participant EVENT_ID PERSON_ID` |

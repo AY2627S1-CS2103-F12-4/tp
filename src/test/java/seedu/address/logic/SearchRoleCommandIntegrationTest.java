@@ -2,8 +2,8 @@ package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_ROLE;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.IOException;
@@ -48,7 +48,8 @@ public class SearchRoleCommandIntegrationTest {
     private static final Event WEDDING = new Event(new EventId("E1"), "Jordan's Wedding", 20, "Celebration");
     private static final Event WORKSHOP = new Event(new EventId("E2"), "Workshop", 10, "Learn Java");
     private static final Event EMPTY_EVENT = new Event(new EventId("E3"), "Empty Event", 5, "No participants");
-    private static final List<Event> EVENTS = List.of(WEDDING, WORKSHOP, EMPTY_EVENT);
+    private static final Event ARCHIVED_EVENT = new Event(new EventId("E4"), "Archived", 10, "", true);
+    private static final List<Event> EVENTS = List.of(WEDDING, WORKSHOP, EMPTY_EVENT, ARCHIVED_EVENT);
     private static final Person ALICE = new PersonBuilder().withId("P1").withName("Alice Tan").build();
     private static final Person BOB = new PersonBuilder().withId("P2").withName("Bob Lim").build();
     private static final Person CARA = new PersonBuilder().withId("P3").withName("Cara Lee").build();
@@ -60,10 +61,10 @@ public class SearchRoleCommandIntegrationTest {
                     Set.of(new ParticipationRole("Assistant Best Man"), new ParticipationRole("Speaker"))),
             new Participation(WEDDING, CARA),
             new Participation(WORKSHOP, ALICE, false, Set.of(), Set.of(new ParticipationRole("Organizer"))),
-            new Participation(WORKSHOP, DAN, true, Set.of(), Set.of(new ParticipationRole("Best Man"))));
+            new Participation(WORKSHOP, DAN, true, Set.of(), Set.of(new ParticipationRole("Best Man"))),
+            new Participation(ARCHIVED_EVENT, CARA, false, Set.of(), Set.of(new ParticipationRole("Best Man"))));
     private static final String BEST_MAN_RESULT =
-            "2 participants with roles matching \"Best Man\" found in Jordan's Wedding.\n"
-                    + "P1 — Alice Tan — Best Man, Usher\nP2 — Bob Lim — Assistant Best Man, Speaker";
+            "2 registrations across 1 event with roles matching \"Best Man\".";
 
     @TempDir
     public Path temporaryFolder;
@@ -98,79 +99,87 @@ public class SearchRoleCommandIntegrationTest {
     }
 
     @Test
-    public void execute_savedRoles_returnsDetailsAndPreservesAllRecords() throws Exception {
-        CommandResult result = logic.execute("search-role E1 /role Best Man");
+    public void execute_savedRoles_returnsResultsAndPreservesAllRecords() throws Exception {
+        CommandResult result = logic.execute("search-role Best Man /event E1");
 
         assertEquals(BEST_MAN_RESULT, result.getFeedbackToUser());
+        assertEquals(List.of(WEDDING), logic.getFilteredEventList());
+        assertEquals(List.of("P1", "P2"), logic.getParticipantSearchResults().stream()
+                .map(participation -> participation.getPerson().getId().toString()).toList());
         assertFalse(result.isShowHelp());
         assertFalse(result.isExit());
-        assertFalse(result.isShowEvents());
+        assertTrue(result.isShowEvents());
+        assertFalse(result.isShowParticipants());
         assertMemoryAndStorageUnchanged();
     }
 
     @Test
     public void execute_partialMixedCaseQueryWithTabs_matchesSavedRoles() throws Exception {
-        CommandResult result = logic.execute(" \tsearch-role\tE1\t/role \t bEsT \t ");
+        CommandResult result = logic.execute(" \tsearch-role\t bEsT \t/event\tE1\t ");
 
-        assertEquals("2 participants with roles matching \"bEsT\" found in Jordan's Wedding.\n"
-                + "P1 — Alice Tan — Best Man, Usher\nP2 — Bob Lim — Assistant Best Man, Speaker",
+        assertEquals("2 registrations across 1 event with roles matching \"bEsT\".",
                 result.getFeedbackToUser());
         assertMemoryAndStorageUnchanged();
     }
 
     @Test
     public void execute_roleOnlyInOtherEvent_returnsNoMatchesAndPreservesData() throws Exception {
-        assertEquals("No participants with roles matching \"Organizer\" were found in Jordan's Wedding.",
-                logic.execute("search-role E1 /role Organizer").getFeedbackToUser());
+        assertEquals("No registrations with roles matching \"Organizer\" in nonarchived events.",
+                logic.execute("search-role Organizer /event E1").getFeedbackToUser());
         assertMemoryAndStorageUnchanged();
     }
 
     @Test
     public void execute_emptyEvent_returnsNoMatchesAndPreservesData() throws Exception {
-        assertEquals("No participants with roles matching \"Best Man\" were found in Empty Event.",
-                logic.execute("search-role E3 /role Best Man").getFeedbackToUser());
+        assertEquals("No registrations with roles matching \"Best Man\" in nonarchived events.",
+                logic.execute("search-role Best Man /event E3").getFeedbackToUser());
         assertMemoryAndStorageUnchanged();
     }
 
     @Test
     public void execute_repeatedSearches_usesFullEventRecordsForEachQuery() throws Exception {
-        assertEquals(BEST_MAN_RESULT, logic.execute("search-role E1 /role Best Man").getFeedbackToUser());
-        assertEquals("1 participants with roles matching \"Speaker\" found in Jordan's Wedding.\n"
-                + "P2 — Bob Lim — Assistant Best Man, Speaker",
-                logic.execute("search-role E1 /role Speaker").getFeedbackToUser());
-        assertEquals("1 participants with roles matching \"Best Man\" found in Workshop.\n"
-                + "P4 — Dan Ng — Best Man",
-                logic.execute("search-role E2 /role Best Man").getFeedbackToUser());
-        assertEquals(BEST_MAN_RESULT, logic.execute("search-role E1 /role Best Man").getFeedbackToUser());
+        assertEquals(BEST_MAN_RESULT, logic.execute("search-role Best Man /event E1").getFeedbackToUser());
+        assertEquals("1 registration across 1 event with roles matching \"Speaker\".",
+                logic.execute("search-role Speaker /event E1").getFeedbackToUser());
+        assertEquals("1 registration across 1 event with roles matching \"Best Man\".",
+                logic.execute("search-role Best Man /event E2").getFeedbackToUser());
+        assertEquals(BEST_MAN_RESULT, logic.execute("search-role Best Man /event E1").getFeedbackToUser());
         assertMemoryAndStorageUnchanged();
     }
 
     @Test
-    public void execute_activeFilters_preservesFiltersAndSearchesHiddenEvent() throws Exception {
+    public void execute_activeFilters_replacesEventFilterAndSearchesHiddenEvent() throws Exception {
         model.updateFilteredEventList(event -> event.equals(WORKSHOP));
         model.updateFilteredPersonList(person -> person.equals(CARA));
 
-        assertEquals(BEST_MAN_RESULT, logic.execute("search-role E1 /role Best Man").getFeedbackToUser());
+        assertEquals(BEST_MAN_RESULT, logic.execute("search-role Best Man /event E1").getFeedbackToUser());
 
-        assertEquals(List.of(WORKSHOP), logic.getFilteredEventList());
+        assertEquals(List.of(WEDDING), logic.getFilteredEventList());
         assertEquals(List.of(CARA), logic.getFilteredPersonList());
         assertMemoryAndStorageUnchanged();
     }
 
     @Test
     public void execute_invalidInput_throwsParseExceptionAndPreservesFiles() throws Exception {
+        logic.execute("search-role Best Man");
+        List<Participation> previousResults = List.copyOf(logic.getParticipantSearchResults());
+        List<Event> previousEvents = List.copyOf(logic.getFilteredEventList());
         String addressBookJson = Files.readString(storage.getAddressBookFilePath());
         String eventsJson = Files.readString(storage.getEventFilePath());
         String participationsJson = Files.readString(storage.getParticipationFilePath());
         String usageError = String.format(MESSAGE_INVALID_COMMAND_FORMAT, SearchRoleCommand.MESSAGE_USAGE);
 
-        assertThrows(ParseException.class, usageError, () -> logic.execute("search-role E1 /role"));
-        assertThrows(ParseException.class, usageError, () -> logic.execute("search-role /role Best Man"));
+        for (String input : List.of("search-role Best Man /event", "search-role /event E1",
+                "search-role Best Man /event E1 /event E2", "search-role E1 /role Best Man")) {
+            assertThrows(ParseException.class, usageError, () -> logic.execute(input));
+        }
         assertThrows(ParseException.class, EventId.MESSAGE_CONSTRAINTS, () ->
-                logic.execute("search-role 1 /role Best Man"));
-        assertThrows(ParseException.class, Messages.getErrorMessageForDuplicatePrefixes(PREFIX_ROLE), () ->
-                logic.execute("search-role E1 /role Best Man /role Usher"));
+                logic.execute("search-role Best Man /event 1"));
 
+        assertEquals(previousResults, logic.getParticipantSearchResults());
+        assertEquals(previousEvents, logic.getFilteredEventList());
+        assertTrue(logic.getParticipantSearchEvent().isEmpty());
+        assertEquals("Best Man", logic.getParticipantSearchKeyword().orElseThrow());
         assertEquals(addressBookJson, Files.readString(storage.getAddressBookFilePath()));
         assertEquals(eventsJson, Files.readString(storage.getEventFilePath()));
         assertEquals(participationsJson, Files.readString(storage.getParticipationFilePath()));
@@ -180,17 +189,33 @@ public class SearchRoleCommandIntegrationTest {
     @Test
     public void execute_missingEvent_throwsCommandExceptionAndPreservesData() throws Exception {
         assertThrows(CommandException.class, "Event E99 does not exist.", () ->
-                logic.execute("search-role E99 /role Best Man"));
+                logic.execute("search-role Best Man /event E99"));
         assertMemoryAndStorageUnchanged();
     }
 
     @Test
     public void execute_afterReload_returnsSameResultsAndRetainsAllData() throws Exception {
-        CommandResult beforeReload = logic.execute("search-role E1 /role Best Man");
+        CommandResult beforeReload = logic.execute("search-role Best Man /event E1");
         model = readStoredModel();
         logic = new LogicManager(model, storage);
 
-        assertEquals(beforeReload, logic.execute("search-role E1 /role Best Man"));
+        assertTrue(logic.getParticipantSearchResults().isEmpty());
+        assertTrue(logic.getParticipantSearchKeyword().isEmpty());
+        assertEquals(beforeReload, logic.execute("search-role Best Man /event E1"));
+        assertMemoryAndStorageUnchanged();
+    }
+
+    @Test
+    public void execute_globalSearch_exposesOnlyNonarchivedMatchesAcrossEvents() throws Exception {
+        CommandResult result = logic.execute("search-role Best Man");
+        assertEquals("3 registrations across 2 events with roles matching \"Best Man\".", result.getFeedbackToUser());
+        assertEquals(List.of(WEDDING, WORKSHOP), logic.getFilteredEventList());
+        assertEquals(List.of("E1/P1", "E1/P2", "E2/P4"), logic.getParticipantSearchResults().stream()
+                .map(participation -> participation.getEvent().getId() + "/" + participation.getPerson().getId())
+                .toList());
+        assertTrue(logic.getParticipantSearchEvent().isEmpty());
+        assertEquals("Best Man", logic.getParticipantSearchKeyword().orElseThrow());
+        assertTrue(result.isShowEvents());
         assertMemoryAndStorageUnchanged();
     }
 
@@ -210,7 +235,7 @@ public class SearchRoleCommandIntegrationTest {
         logic = new LogicManager(model, storageWithSaveFailure);
         String expectedMessage = String.format(LogicManager.FILE_OPS_ERROR_FORMAT, saveFailure.getMessage());
 
-        assertThrows(CommandException.class, expectedMessage, () -> logic.execute("search-role E1 /role Best Man"));
+        assertThrows(CommandException.class, expectedMessage, () -> logic.execute("search-role Best Man /event E1"));
         assertMemoryAndStorageUnchanged();
     }
 

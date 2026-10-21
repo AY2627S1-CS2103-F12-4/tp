@@ -160,6 +160,11 @@ public class AddCommandTest {
         }
 
         @Override
+        public void updateEvent(Event event) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public Event createEvent(String name, int capacity, String description) {
             throw new AssertionError("This method should not be called.");
         }

@@ -17,8 +17,16 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteEventCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.event.Event;
+import seedu.address.model.person.Person;
+import seedu.address.ui.dialogs.AddEventDialog;
+import seedu.address.ui.dialogs.AddParticipantDialog;
+import seedu.address.ui.dialogs.AddPersonDialog;
+import seedu.address.ui.dialogs.DeleteConfirmationDialog;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -45,6 +53,9 @@ public class MainWindow extends UiPart<Stage> {
     private StackPane commandBoxPlaceholder;
 
     @FXML
+    private StackPane actionBarPlaceholder;
+
+    @FXML
     private MenuItem helpMenuItem;
 
     @FXML
@@ -55,6 +66,9 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private TabPane listTabs;
+
+    @FXML
+    private Tab peopleTab;
 
     @FXML
     private Tab eventsTab;
@@ -133,14 +147,18 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        personListPanel = new PersonListPanel(logic.getFilteredPersonList());
+        personListPanel = new PersonListPanel(logic.getFilteredPersonList(), this::handleDeletePerson);
         personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
 
-        eventListPanel = new EventListPanel(logic.getFilteredEventList());
+        eventListPanel = new EventListPanel(logic.getFilteredEventList(),
+                this::handleAddParticipant, this::handleDeleteEvent);
         eventListPanelPlaceholder.getChildren().add(eventListPanel.getRoot());
 
         participantListPanel = new ParticipantListPanel(logic.getParticipantSearchResults());
         participantListPanelPlaceholder.getChildren().add(participantListPanel.getRoot());
+
+        ActionBar actionBar = new ActionBar(this::handleAddPerson, this::handleAddEvent);
+        actionBarPlaceholder.getChildren().add(actionBar.getRoot());
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
@@ -176,6 +194,53 @@ public class MainWindow extends UiPart<Stage> {
         }
     }
 
+    private void handleAddPerson() {
+        new AddPersonDialog(primaryStage).showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(peopleTab);
+        });
+    }
+
+    private void handleAddEvent() {
+        new AddEventDialog(primaryStage).showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(eventsTab);
+        });
+    }
+
+    private void handleDeletePerson(Person person, int displayedIndex) {
+        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(
+                primaryStage, "Delete person", "Delete " + person.getName().fullName + "?");
+        if (dialog.showAndWait()) {
+            executeDeleteCommand(DeleteCommand.COMMAND_WORD + " " + displayedIndex, peopleTab);
+        }
+    }
+
+    private void handleAddParticipant(Event event) {
+        AddParticipantDialog dialog = new AddParticipantDialog(primaryStage, event.getId(), event.getName());
+        dialog.showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(eventsTab);
+        });
+    }
+
+    private void handleDeleteEvent(Event event) {
+        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(primaryStage, "Delete event",
+                "Delete " + event.getName() + " (" + event.getId() + ")?");
+        if (dialog.showAndWait()) {
+            executeDeleteCommand(DeleteEventCommand.COMMAND_WORD + " " + event.getId(), eventsTab);
+        }
+    }
+
+    private void executeDeleteCommand(String command, Tab targetTab) {
+        try {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(targetTab);
+        } catch (CommandException | ParseException exception) {
+            // executeCommand already displays the error in the result panel.
+        }
+    }
+
     void show() {
         primaryStage.show();
     }
@@ -205,7 +270,7 @@ public class MainWindow extends UiPart<Stage> {
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
-            resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+            resultDisplay.setFeedbackToUser(CommandSuccessMessages.forCommand(commandText));
 
             logic.getParticipantSearchEvent().ifPresentOrElse(
                     event -> participantListPanel.setSearchContext(

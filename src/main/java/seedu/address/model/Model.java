@@ -211,6 +211,9 @@ public interface Model {
     /** Creates an event with an automatically assigned ID. */
     Event createEvent(String name, int capacity, String description);
 
+    /** Updates an existing event, preserving its ID, participations and active filter. */
+    void updateEvent(Event event);
+
     /**
      * Deletes an event and its participations, preserving people and the active event filter.
      * Clears participant search context and results if the deleted event is selected for search.

@@ -46,6 +46,21 @@ Failed commands continue to show the specific error and usage guidance where app
 
 </box>
 
+### Using the GUI buttons
+
+The GUI buttons provide form-based shortcuts for common commands. Submitted forms use the same validation and show
+the same success or error messages as commands entered in the command box.
+
+| Location | Buttons, from left to right | Behaviour |
+|---|---|---|
+| Top action bar | **+ Person**, **+ Event** | Opens a form for adding a person or event. |
+| Each person in the People tab | **Edit**, **Delete** | **Edit** opens a pre-filled person form. **Delete** asks for confirmation, then deletes the person and their registrations from all events. |
+| Each event in the Events tab | **Add participant**, **Edit event**, **Archive** or **Unarchive**, **Delete** | **Add participant** registers a person by ID and accepts optional roles and event-specific tags. **Edit event** opens a pre-filled event form. **Archive** hides an active event from the event list; the button reads **Unarchive** for an archived event and restores it when selected. **Delete** asks for confirmation, then deletes the event and its registrations. |
+| Each participant shown for an event | **Edit participation**, **Delete** | **Edit participation** opens a pre-filled form that replaces the participant's roles and event-specific tags; leave a field blank to clear it. **Delete** asks for confirmation, then removes only that event registration. The person remains in the address book. |
+
+Select an event to display its participants and their action buttons. Closing a form or declining a deletion leaves
+the data unchanged.
+
 ### Viewing help: `help`
 
 Shows information on how to access the help page.

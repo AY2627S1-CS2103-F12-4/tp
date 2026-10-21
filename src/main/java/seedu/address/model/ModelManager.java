@@ -357,6 +357,24 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public void clearParticipantRoleSearch() {
+        if (participantSearchType == ParticipantSearchType.ROLE) {
+            clearParticipantSearch();
+        }
+    }
+
+    private void clearParticipantSearch() {
+        boolean clearsRoleSearch = participantSearchType == ParticipantSearchType.ROLE;
+        participantSearchEventId = null;
+        participantSearchKeyword = null;
+        participantSearchType = null;
+        if (clearsRoleSearch) {
+            updateFilteredEventList(unused -> true);
+        }
+        participantSearchResults.clear();
+    }
+
+    @Override
     public ObservableList<Participation> getParticipantSearchResults() {
         return unmodifiableParticipantSearchResults;
     }
@@ -479,14 +497,7 @@ public class ModelManager implements Model {
         mapper.removeParticipationsForEvent(event);
         eventList.removeEvent(event.getId());
         if (eventId.equals(participantSearchEventId)) {
-            boolean clearsRoleSearch = participantSearchType == ParticipantSearchType.ROLE;
-            participantSearchEventId = null;
-            participantSearchKeyword = null;
-            participantSearchType = null;
-            if (clearsRoleSearch) {
-                updateFilteredEventList(unused -> true);
-            }
-            participantSearchResults.clear();
+            clearParticipantSearch();
         }
         if (event.equals(selectedEvent)) {
             selectedEvent = null;

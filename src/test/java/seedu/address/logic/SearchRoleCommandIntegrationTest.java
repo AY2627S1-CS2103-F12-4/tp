@@ -220,6 +220,111 @@ public class SearchRoleCommandIntegrationTest {
     }
 
     @Test
+    public void execute_listAndFindEvents_clearRoleSearchAndPreventLaterReactivation() throws Exception {
+        List<String> resetCommands = List.of("list-event", "find-event Workshop", "find-event Missing");
+        List<List<Event>> expectedEvents = List.of(List.of(WEDDING, WORKSHOP, EMPTY_EVENT),
+                List.of(WORKSHOP), List.of());
+        for (String scope : List.of("", " /event E1")) {
+            for (int i = 0; i < resetCommands.size(); i++) {
+                logic.execute("search-role Best Man" + scope);
+                logic.execute(resetCommands.get(i));
+                assertEquals(expectedEvents.get(i), logic.getFilteredEventList());
+                assertTrue(logic.getParticipantSearchResults().isEmpty());
+                assertTrue(logic.getParticipantSearchKeyword().isEmpty());
+                assertTrue(logic.getParticipantSearchEvent().isEmpty());
+
+                logic.execute("edit-participant E1 P2 /tag refreshed");
+                assertTrue(logic.getParticipantSearchResults().isEmpty());
+                assertTrue(logic.getParticipantSearchKeyword().isEmpty());
+                assertEquals(expectedEvents.get(i), logic.getFilteredEventList());
+            }
+        }
+    }
+
+    @Test
+    public void execute_listAndFindEvents_preserveLegacyNameSearchBehavior() throws Exception {
+        for (String command : List.of("list-event", "find-event Workshop")) {
+            logic.execute("search-participant E1 /name Alice");
+            logic.execute(command);
+            assertEquals(List.of("P1"), logic.getParticipantSearchResults().stream()
+                    .map(participation -> participation.getPerson().getId().toString()).toList());
+            assertEquals("Alice", logic.getParticipantSearchKeyword().orElseThrow());
+            assertEquals(WEDDING, logic.getParticipantSearchEvent().orElseThrow());
+        }
+    }
+
+    @Test
+    public void execute_switchingSearchTypesAndFailedSearches_preserveTheActivePredicate() throws Exception {
+        logic.execute("search-role Best Man");
+        logic.execute("search-participant E1 /name Alice");
+        logic.execute("edit-participant E1 P2 /role Best Man");
+        assertEquals(List.of("P1"), logic.getParticipantSearchResults().stream()
+                .map(participation -> participation.getPerson().getId().toString()).toList());
+        assertEquals(List.of(WEDDING, WORKSHOP, EMPTY_EVENT), logic.getFilteredEventList());
+
+        logic.execute("search-role Speaker");
+        assertTrue(logic.getParticipantSearchResults().isEmpty());
+        logic.execute("edit-participant E1 P1 /role Speaker");
+        assertEquals(List.of("P1"), logic.getParticipantSearchResults().stream()
+                .map(participation -> participation.getPerson().getId().toString()).toList());
+
+        logic.execute("search-participant E1 /name Speaker");
+        logic.execute("edit-participant E1 P2 /role Speaker");
+        assertTrue(logic.getParticipantSearchResults().isEmpty());
+        assertThrows(CommandException.class, "Event E99 does not exist.", () ->
+                logic.execute("search-role Speaker /event E99"));
+        assertEquals(WEDDING, logic.getParticipantSearchEvent().orElseThrow());
+        assertTrue(logic.getParticipantSearchResults().isEmpty());
+
+        logic.execute("search-role Speaker");
+        List<Participation> results = List.copyOf(logic.getParticipantSearchResults());
+        assertEquals(2, results.size());
+        assertThrows(CommandException.class, "Event E99 does not exist.", () ->
+                logic.execute("search-participant E99 /name Alice"));
+        String usageError = String.format(MESSAGE_INVALID_COMMAND_FORMAT, SearchRoleCommand.MESSAGE_USAGE);
+        assertThrows(ParseException.class, usageError, () -> logic.execute("search-role /event E1"));
+        assertEquals(results, logic.getParticipantSearchResults());
+        assertEquals(List.of(WEDDING), logic.getFilteredEventList());
+        assertTrue(logic.getParticipantSearchEvent().isEmpty());
+        assertEquals("Speaker", logic.getParticipantSearchKeyword().orElseThrow());
+    }
+
+    @Test
+    public void execute_archiveAndRestore_keepGlobalAndScopedRoleSearchesActive() throws Exception {
+        for (String scope : List.of("", " /event E1")) {
+            logic.execute("search-role Best Man" + scope);
+            logic.execute("archive-event E1");
+            assertEquals(scope.isEmpty() ? List.of(WORKSHOP) : List.of(), logic.getFilteredEventList());
+            assertEquals(scope.isEmpty() ? 1 : 0, logic.getParticipantSearchResults().size());
+            assertEquals("Best Man", logic.getParticipantSearchKeyword().orElseThrow());
+
+            logic.execute("unarchive-event E1");
+            assertEquals(scope.isEmpty() ? List.of(WEDDING, WORKSHOP) : List.of(WEDDING), logic.getFilteredEventList());
+            assertEquals(scope.isEmpty() ? 3 : 2, logic.getParticipantSearchResults().size());
+        }
+    }
+
+    @Test
+    public void execute_eventDeletion_refreshesGlobalResultsAndClearsDeletedScope() throws Exception {
+        logic.execute("search-role Best Man");
+        logic.execute("del-event E1");
+        assertEquals(List.of(WORKSHOP), logic.getFilteredEventList());
+        assertEquals(List.of("P4"), logic.getParticipantSearchResults().stream()
+                .map(participation -> participation.getPerson().getId().toString()).toList());
+        assertEquals("Best Man", logic.getParticipantSearchKeyword().orElseThrow());
+
+        logic.execute("search-role Best Man /event E2");
+        logic.execute("del-event E2");
+        assertEquals(List.of(EMPTY_EVENT), logic.getFilteredEventList());
+        assertTrue(logic.getParticipantSearchResults().isEmpty());
+        assertTrue(logic.getParticipantSearchKeyword().isEmpty());
+        assertTrue(logic.getParticipantSearchEvent().isEmpty());
+        logic.execute("add-participant E3 P1 /role Best Man");
+        assertEquals(List.of(EMPTY_EVENT), logic.getFilteredEventList());
+        assertTrue(logic.getParticipantSearchResults().isEmpty());
+    }
+
+    @Test
     public void execute_participationSaveFailure_reportsErrorWithoutChangingData() throws Exception {
         IOException saveFailure = new IOException("Cannot save participations");
         JsonParticipationStorage failingStorage = new JsonParticipationStorage(storage.getParticipationFilePath()) {

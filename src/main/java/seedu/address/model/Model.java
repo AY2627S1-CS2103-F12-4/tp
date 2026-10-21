@@ -178,6 +178,12 @@ public interface Model {
     void updateParticipantRoleSearch(EventId eventId, String keyword);
 
     /**
+     * Clears an active role search and restores the ordinary nonarchived event list.
+     * Leaves an active name search, selected event, and person filter unchanged.
+     */
+    void clearParticipantRoleSearch();
+
+    /**
      * Returns live, unmodifiable results for the active name or role search.
      * Global role results follow event insertion order, then lexicographic person-ID order within each event.
      * Scoped results are ordered lexicographically by person ID.

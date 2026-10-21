@@ -28,6 +28,7 @@ public class FindEventCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
+        model.clearParticipantRoleSearch();
         model.updateFilteredEventList(predicate);
         if (model.getFilteredEventList().isEmpty()) {
             return new CommandResult(MESSAGE_NO_MATCHES, false, false, true);

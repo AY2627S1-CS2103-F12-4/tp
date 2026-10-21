@@ -145,6 +145,11 @@ public class AddCommandTest {
         }
 
         @Override
+        public void clearParticipantRoleSearch() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public ObservableList<Participation> getParticipantSearchResults() {
             throw new AssertionError("This method should not be called.");
         }

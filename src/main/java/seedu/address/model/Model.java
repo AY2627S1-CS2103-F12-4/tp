@@ -141,7 +141,8 @@ public interface Model {
 
     /**
      * Searches the event identified by {@code eventId} for a nonblank name phrase.
-     * Replaces only transient search state; invalid input preserves the previous search.
+     * Replaces transient search state; invalid input preserves the previous search.
+     * Preserves the event filter unless replacing a role search, which restores the ordinary event list.
      * Matches names using case-insensitive substring comparison and preserves distinct person IDs.
      * Results refresh after person and participation changes made through this model.
      *
@@ -154,23 +155,54 @@ public interface Model {
     void updateParticipantSearch(EventId eventId, String keyword);
 
     /**
-     * Returns a live, unmodifiable search result list, ordered lexicographically by person ID.
+     * Searches roles across all nonarchived events and filters events to those with matching registrations.
+     * Matches a case-insensitive substring within a single role, with normalized query whitespace.
+     * Each registration appears once even when several of its roles match. Invalid input preserves search state.
+     *
+     * @param keyword Nonblank role phrase, which need not satisfy assigned-role constraints.
+     * @throws NullPointerException if the keyword is null.
+     * @throws IllegalArgumentException if the keyword is blank.
+     */
+    void updateParticipantRoleSearch(String keyword);
+
+    /**
+     * Searches roles within the event identified by its stable ID, independently of existing display filters.
+     * An archived event produces no results. A nonexistent event or invalid input preserves search state.
+     *
+     * @param eventId Stable ID of the event whose memberships are searched.
+     * @param keyword Nonblank role phrase, with surrounding and repeated internal whitespace ignored.
+     * @throws NullPointerException if either argument is null.
+     * @throws IllegalArgumentException if the keyword is blank.
+     * @throws EventNotFoundException if no event has the supplied ID.
+     */
+    void updateParticipantRoleSearch(EventId eventId, String keyword);
+
+    /**
+     * Returns live, unmodifiable results for the active name or role search.
+     * Global role results follow event insertion order, then lexicographic person-ID order within each event.
+     * Scoped results are ordered lexicographically by person ID.
      *
      * @return The same observable view across searches and subsequent model changes.
      */
     ObservableList<Participation> getParticipantSearchResults();
 
     /**
-     * Returns the selected search event, or empty before the first search.
+     * Returns an immutable snapshot of matching registrations for the event's stable ID.
+     * Read again when the observable search results change to obtain updated rows.
+     */
+    List<Participation> getParticipantSearchResultsForEvent(Event event);
+
+    /**
+     * Returns the scoped search event, or empty during a global role search or when no search is active.
      *
      * @return The event resolved from the selected stable ID.
      */
     Optional<Event> getParticipantSearchEvent();
 
     /**
-     * Returns the search phrase without surrounding whitespace, or empty before the first search.
+     * Returns the search phrase, or empty when no search is active.
      *
-     * @return The original case and internal whitespace of the search phrase.
+     * @return The original case with surrounding whitespace removed; role queries also collapse internal whitespace.
      */
     Optional<String> getParticipantSearchKeyword();
 
@@ -215,8 +247,8 @@ public interface Model {
     void updateEvent(Event event);
 
     /**
-     * Deletes an event and its participations, preserving people and the active event filter.
-     * Clears participant search context and results if the deleted event is selected for search.
+     * Deletes an event and its participations, preserving people and refreshing any active role search.
+     * Clears search context if the scoped event is deleted; a role scope also restores the ordinary event list.
      */
     Event deleteEvent(EventId eventId);
 

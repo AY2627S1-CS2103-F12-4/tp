@@ -126,6 +126,7 @@
         "listing-events-list-event": "Listing events: list-event",
         "viewing-event-details-view-event": "Viewing event details: view-event",
         "adding-a-participant-add-participant": "Adding a participant: add-participant",
+        "editing-a-participant-edit-participant": "Editing a participant: edit-participant",
         "listing-participants-in-an-event-list-participants": "Listing participants in an event: list-participants",
         "viewing-participant-details-view-participant": "Viewing participant details: view-participant",
         "searching-participants-by-name-search-participant": "Searching participants by name: search-participant",

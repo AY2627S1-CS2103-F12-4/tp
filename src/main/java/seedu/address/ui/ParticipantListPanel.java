@@ -12,10 +12,12 @@ import seedu.address.model.event.Event;
 import seedu.address.model.mapper.Participation;
 
 /**
- * Displays live participant search results and their selected event and search phrase.
+ * Displays live participant search results, their event scope, and their search phrase.
  */
 public class ParticipantListPanel extends UiPart<Region> {
     private static final String FXML = "ParticipantListPanel.fxml";
+    private static final String SEARCH_INSTRUCTIONS = "Use search-participant EVENT_ID /name NAME"
+            + " or search-role ROLE [/event EVENTID]";
 
     @FXML
     private Label eventHeading;
@@ -42,7 +44,7 @@ public class ParticipantListPanel extends UiPart<Region> {
     }
 
     /**
-     * Updates the heading to identify the event and name phrase associated with these results.
+     * Updates the heading to identify the event and search phrase associated with these results.
      * Updates the heading even when the result list is empty.
      *
      * @param event Selected event whose name and stable ID identify the results.
@@ -55,12 +57,19 @@ public class ParticipantListPanel extends UiPart<Region> {
         searchHeading.setText("Matching \"" + keyword + "\"");
     }
 
+    /** Updates the heading for a global role search across nonarchived events. */
+    public void setSearchContext(String keyword) {
+        requireAllNonNull(keyword);
+        eventHeading.setText("All nonarchived events");
+        searchHeading.setText("Matching \"" + keyword + "\"");
+    }
+
     /**
-     * Restores search instructions when no event is selected, such as after deleting the searched event.
+     * Restores search instructions when no search is active, such as after deleting the scoped event.
      */
     public void clearSearchContext() {
         eventHeading.setText("Participant search");
-        searchHeading.setText("Use search-participant EVENT_ID /name NAME");
+        searchHeading.setText(SEARCH_INSTRUCTIONS);
     }
 
     /**

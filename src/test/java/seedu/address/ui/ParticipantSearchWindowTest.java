@@ -98,7 +98,8 @@ public class ParticipantSearchWindowTest {
                 assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
                 assertTrue(participants(window).getItems().isEmpty());
                 assertEquals("Participant search", heading(window, "eventHeading"));
-                assertEquals("Use search-participant EVENT_ID /name NAME", heading(window, "searchHeading"));
+                assertEquals("Use search-participant EVENT_ID /name NAME or search-role ROLE [/event EVENTID]",
+                        heading(window, "searchHeading"));
                 enterCommand(window, "find-event birthday");
                 assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
             } finally {

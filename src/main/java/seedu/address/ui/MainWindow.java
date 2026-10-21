@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
@@ -19,6 +20,7 @@ import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteEventCommand;
+import seedu.address.logic.commands.SearchRoleCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
@@ -270,12 +272,19 @@ public class MainWindow extends UiPart<Stage> {
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
-            resultDisplay.setFeedbackToUser(CommandSuccessMessages.forCommand(commandText));
+            boolean isRoleSearch = commandText.strip().split("\\s+", 2)[0].equals(SearchRoleCommand.COMMAND_WORD);
+            resultDisplay.setFeedbackToUser(isRoleSearch ? commandResult.getFeedbackToUser()
+                    : CommandSuccessMessages.forCommand(commandText));
 
-            logic.getParticipantSearchEvent().ifPresentOrElse(
-                    event -> participantListPanel.setSearchContext(
-                            event, logic.getParticipantSearchKeyword().orElseThrow()),
-                    participantListPanel::clearSearchContext);
+            Optional<String> searchKeyword = logic.getParticipantSearchKeyword();
+            Optional<Event> searchEvent = logic.getParticipantSearchEvent();
+            if (searchKeyword.isEmpty()) {
+                participantListPanel.clearSearchContext();
+            } else if (searchEvent.isPresent()) {
+                participantListPanel.setSearchContext(searchEvent.orElseThrow(), searchKeyword.orElseThrow());
+            } else {
+                participantListPanel.setSearchContext(searchKeyword.orElseThrow());
+            }
             if (commandResult.isShowParticipants()) {
                 listTabs.getSelectionModel().select(participantsTab);
             }

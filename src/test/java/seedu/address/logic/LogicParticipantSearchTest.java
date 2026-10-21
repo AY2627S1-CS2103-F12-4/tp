@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
 import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonEventStorage;
@@ -82,6 +84,30 @@ public class LogicParticipantSearchTest {
         assertEquals(before, logic.getParticipantSearchResults());
         assertEquals(Optional.of(event), logic.getParticipantSearchEvent());
         assertEquals(Optional.of("Michael"), logic.getParticipantSearchKeyword());
+    }
+
+    @Test
+    public void getResultsForEvent_globalRoleSearch_returnsMatchingSnapshotsThatCanBeRefreshed() throws Exception {
+        Event other = model.createEvent("Workshop", 10, "");
+        model.editParticipation(new EventId(event.getId()), person.getId(),
+                Set.of(new ParticipationRole("Speaker")), null);
+        model.addParticipation(new EventId(other.getId()), person.getId(),
+                Set.of(new ParticipationRole("Speaker")), Set.of());
+        logic.execute("search-role Speaker");
+
+        List<Participation> snapshot = logic.getParticipantSearchResultsForEvent(event);
+        assertEquals(1, snapshot.size());
+        assertEquals(event, snapshot.getFirst().getEvent());
+        assertEquals(other, logic.getParticipantSearchResultsForEvent(other).getFirst().getEvent());
+        assertThrows(UnsupportedOperationException.class, snapshot::clear);
+        assertTrue(logic.getParticipantSearchEvent().isEmpty());
+        assertEquals(Optional.of("Speaker"), logic.getParticipantSearchKeyword());
+
+        logic.execute("edit-participant E1 P1 /role Guest");
+        assertTrue(logic.getParticipantSearchResultsForEvent(event).isEmpty());
+        assertEquals(1, snapshot.size());
+        assertEquals(1, logic.getParticipantSearchResultsForEvent(other).size());
+        assertEquals(List.of(other), logic.getFilteredEventList());
     }
 
     @Test

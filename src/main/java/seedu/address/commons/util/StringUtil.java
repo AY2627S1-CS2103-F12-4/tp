@@ -13,6 +13,14 @@ import java.util.Arrays;
 public class StringUtil {
 
     /**
+     * Returns text with surrounding whitespace removed and each whitespace run replaced by one space.
+     * Includes Unicode whitespace and preserves the case of all other characters.
+     */
+    public static String normalizeWhitespace(String text) {
+        return requireNonNull(text).replaceAll("(?U)\\s+", " ").strip();
+    }
+
+    /**
      * Returns true if the {@code sentence} contains the {@code word}.
      *   Ignores case, but a full word match is required.
      *   <br>examples:<pre>

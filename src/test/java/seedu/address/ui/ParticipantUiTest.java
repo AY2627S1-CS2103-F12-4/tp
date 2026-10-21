@@ -117,7 +117,7 @@ public class ParticipantUiTest {
                     labelText(panel, "eventHeading"));
 
             assertEquals(
-                    "Use search-participant EVENT_ID /name NAME",
+                    "Use search-participant NAME [/event EVENTID]",
                     labelText(panel, "searchHeading"));
 
             assertEquals(
@@ -270,6 +270,22 @@ public class ParticipantUiTest {
             assertEquals(
                     PARTICIPATION,
                     listView(panel).getItems().getFirst());
+        });
+    }
+
+    @Test
+    public void panel_globalSearchContext_displaysScopeAndPhrase() throws Exception {
+        runOnFxThread(() -> {
+            ObservableList<Participation> results = FXCollections.observableArrayList(PARTICIPATION);
+            ParticipantListPanel panel = new ParticipantListPanel(results);
+            panel.showParticipantsForEvent(EVENT, Set.of());
+            panel.setSearchContext("jOhN");
+            assertSame(results, listView(panel).getItems());
+            assertEquals(PARTICIPATION, listView(panel).getItems().getFirst());
+            assertEquals("All nonarchived events", labelText(panel, "eventHeading"));
+            assertEquals("Matching \"jOhN\"", labelText(panel, "searchHeading"));
+            assertEquals("No matching participants.", placeholderText(panel));
+            assertThrows(NullPointerException.class, () -> panel.setSearchContext((String) null));
         });
     }
 

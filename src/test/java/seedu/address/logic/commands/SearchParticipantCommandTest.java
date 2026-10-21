@@ -52,8 +52,10 @@ public class SearchParticipantCommandTest {
     public void constructor_invalidArguments_throwsException() {
         assertThrows(NullPointerException.class, () -> new SearchParticipantCommand(null, "Michael"));
         assertThrows(NullPointerException.class, () -> new SearchParticipantCommand(FIRST_EVENT, null));
+        assertThrows(NullPointerException.class, () -> new SearchParticipantCommand((String) null));
         for (String keyword : List.of("", " ", "\t\n", "\u2003")) {
             assertThrows(IllegalArgumentException.class, () -> new SearchParticipantCommand(FIRST_EVENT, keyword));
+            assertThrows(IllegalArgumentException.class, () -> new SearchParticipantCommand(keyword));
         }
     }
 
@@ -65,7 +67,7 @@ public class SearchParticipantCommandTest {
 
     @Test
     public void execute_multipleMatches_returnsCount() throws Exception {
-        assertEquals("2 participants matching \"Michael\" found in Jordan's Wedding.",
+        assertEquals("2 matching registrations across 1 event for \"Michael\".",
                 executeSearch(FIRST_EVENT, "Michael"));
         assertEquals(List.of("P1", "P2"), model.getParticipantSearchResults().stream()
                 .map(participation -> participation.getPerson().getId().toString()).toList());
@@ -75,46 +77,46 @@ public class SearchParticipantCommandTest {
 
     @Test
     public void execute_oneMatch_returnsSingularMessage() throws Exception {
-        assertEquals("1 participant matching \"Michael Tan\" found in Jordan's Wedding.",
+        assertEquals("1 matching registration across 1 event for \"Michael Tan\".",
                 executeSearch(FIRST_EVENT, "Michael Tan"));
     }
 
     @Test
     public void execute_caseInsensitivePartialMatch_preservesQueryInFeedback() throws Exception {
-        assertEquals("2 participants matching \"cHaE\" found in Jordan's Wedding.",
+        assertEquals("2 matching registrations across 1 event for \"cHaE\".",
                 executeSearch(FIRST_EVENT, "  cHaE  "));
     }
 
     @Test
     public void execute_matchOnlyInAnotherEvent_returnsNoMatches() throws Exception {
-        assertEquals("No participants matching \"Jordan\" were found in Jordan's Wedding.",
+        assertEquals("No matching registrations for \"Jordan\" in nonarchived events.",
                 executeSearch(FIRST_EVENT, "Jordan"));
     }
 
     @Test
     public void execute_personNotRegisteredForEvent_returnsNoMatches() throws Exception {
         model.removeParticipation(WEDDING, MICHAEL);
-        assertEquals("No participants matching \"Michael Tan\" were found in Jordan's Wedding.",
+        assertEquals("No matching registrations for \"Michael Tan\" in nonarchived events.",
                 executeSearch(FIRST_EVENT, "Michael Tan"));
     }
 
     @Test
     public void execute_emptyEvent_returnsNoMatches() throws Exception {
         model.removeParticipation(WORKSHOP, JORDAN);
-        assertEquals("No participants matching \"Jordan\" were found in Workshop.",
+        assertEquals("No matching registrations for \"Jordan\" in nonarchived events.",
                 executeSearch(new EventId("E2"), "Jordan"));
     }
 
     @Test
     public void execute_filteredEvents_searchesByIdEvenWhenHidden() throws Exception {
         model.updateFilteredEventList(event -> event.equals(WORKSHOP));
-        assertEquals("2 participants matching \"Michael\" found in Jordan's Wedding.",
+        assertEquals("2 matching registrations across 1 event for \"Michael\".",
                 executeSearch(FIRST_EVENT, "Michael"));
-        assertEquals(List.of(WORKSHOP), model.getFilteredEventList());
+        assertEquals(List.of(WEDDING), model.getFilteredEventList());
         model.updateFilteredEventList(event -> false);
-        assertEquals("1 participant matching \"Jordan\" found in Workshop.",
+        assertEquals("1 matching registration across 1 event for \"Jordan\".",
                 executeSearch(new EventId("E2"), "Jordan"));
-        assertTrue(model.getFilteredEventList().isEmpty());
+        assertEquals(List.of(WORKSHOP), model.getFilteredEventList());
     }
 
     @Test
@@ -146,13 +148,13 @@ public class SearchParticipantCommandTest {
     @Test
     public void execute_personFilter_doesNotHideMatchingParticipants() throws Exception {
         model.updateFilteredPersonList(person -> false);
-        assertEquals("2 participants matching \"Michael\" found in Jordan's Wedding.",
+        assertEquals("2 matching registrations across 1 event for \"Michael\".",
                 executeSearch(FIRST_EVENT, "Michael"));
         assertTrue(model.getFilteredPersonList().isEmpty());
     }
 
     @Test
-    public void execute_repeatedSearches_preservesDataAndFilters() throws Exception {
+    public void execute_repeatedSearches_preservesDataAndPeopleFilter() throws Exception {
         model.setPresent(WEDDING, MICHAEL, true);
         model.setTags(WEDDING, MICHAEL, Set.of(new Tag("vip")));
         model.updateFilteredPersonList(person -> person.getId().equals(JORDAN.getId()));
@@ -169,7 +171,7 @@ public class SearchParticipantCommandTest {
         assertEquals(originalEvents, model.getEvents());
         assertEquals(originalParticipations, model.getParticipations().getParticipations());
         assertEquals(List.of(JORDAN), model.getFilteredPersonList());
-        assertEquals(List.of(WEDDING), model.getFilteredEventList());
+        assertTrue(model.getFilteredEventList().isEmpty());
     }
 
     @Test
@@ -188,7 +190,7 @@ public class SearchParticipantCommandTest {
             }
         };
         modelWithSameNames.addEvent(WEDDING);
-        assertEquals("2 participants matching \"Michael\" found in Jordan's Wedding.",
+        assertEquals("2 matching registrations across 1 event for \"Michael\".",
                 new SearchParticipantCommand(FIRST_EVENT, "Michael").execute(modelWithSameNames).getFeedbackToUser());
         assertEquals(List.of("P1", "P27"), modelWithSameNames.getParticipantSearchResults().stream()
                 .map(participation -> participation.getPerson().getId().toString()).toList());
@@ -218,19 +220,19 @@ public class SearchParticipantCommandTest {
     @Test
     public void parseAndExecute_validCommand_returnsFeedback() throws Exception {
         CommandResult result = new AddressBookParser()
-                .parseCommand("search-participant E1 /name Michael").execute(model);
-        assertEquals("2 participants matching \"Michael\" found in Jordan's Wedding.", result.getFeedbackToUser());
+                .parseCommand("search-participant Michael /event E1").execute(model);
+        assertEquals("2 matching registrations across 1 event for \"Michael\".", result.getFeedbackToUser());
         assertFalse(result.isExit());
         assertFalse(result.isShowHelp());
-        assertTrue(result.isShowParticipants());
+        assertFalse(result.isShowParticipants());
     }
 
     @Test
-    public void execute_zeroOneAndMultipleMatches_alwaysRequestsParticipantView() throws Exception {
+    public void execute_zeroOneAndMultipleMatches_alwaysRequestsEventView() throws Exception {
         for (String keyword : List.of("Missing", "Michael Tan", "Michael")) {
             CommandResult result = new SearchParticipantCommand(FIRST_EVENT, keyword).execute(model);
-            assertTrue(result.isShowParticipants());
-            assertFalse(result.isShowEvents());
+            assertFalse(result.isShowParticipants());
+            assertTrue(result.isShowEvents());
         }
     }
 
@@ -246,6 +248,38 @@ public class SearchParticipantCommandTest {
         assertNotEquals(command, new SearchParticipantCommand(new EventId("E2"), "Michael"));
         assertNotEquals(command, new SearchParticipantCommand(FIRST_EVENT, "Jordan"));
         assertNotEquals(command, new SearchParticipantCommand(FIRST_EVENT, "MICHAEL"));
+    }
+
+    @Test
+    public void execute_globalSearch_countsRegistrationsSeparatelyAcrossEvents() throws Exception {
+        model.addParticipation(WORKSHOP, MICHAEL);
+        CommandResult result = new SearchParticipantCommand("Michael").execute(model);
+        assertEquals("3 matching registrations across 2 events for \"Michael\".", result.getFeedbackToUser());
+        assertEquals(List.of(WEDDING, WORKSHOP), model.getFilteredEventList());
+        assertEquals(3, model.getParticipantSearchResults().size());
+        assertTrue(result.isShowEvents());
+        assertFalse(result.isShowParticipants());
+    }
+
+    @Test
+    public void execute_archivedScopeAndEmptyGlobalSearch_showEmptyEventResults() throws Exception {
+        model.updateEvent(WEDDING.withArchived(true));
+        CommandResult scoped = new SearchParticipantCommand(FIRST_EVENT, "Michael").execute(model);
+        assertEquals("No matching registrations for \"Michael\" in nonarchived events.", scoped.getFeedbackToUser());
+        assertTrue(model.getFilteredEventList().isEmpty());
+        CommandResult global = new SearchParticipantCommand("Michael").execute(model);
+        assertEquals(scoped, global);
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+    }
+
+    @Test
+    public void equals_globalAndScopedSearches_distinguishScopeAndNormalizeWhitespace() {
+        SearchParticipantCommand global = new SearchParticipantCommand("Michael Tan");
+        SearchParticipantCommand equivalent = new SearchParticipantCommand(" Michael\t Tan ");
+        assertEquals(global, equivalent);
+        assertEquals(global.hashCode(), equivalent.hashCode());
+        assertNotEquals(global, new SearchParticipantCommand(FIRST_EVENT, "Michael Tan"));
+        assertNotEquals(global, new SearchParticipantCommand("MICHAEL TAN"));
     }
 
     private String executeSearch(EventId eventId, String keyword) throws CommandException {

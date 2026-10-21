@@ -105,6 +105,11 @@ public class EventListPanel extends UiPart<Region> {
         eventListView.getSelectionModel().clearSelection();
     }
 
+    /** Selects an event from the displayed list. */
+    public void selectEvent(Event event) {
+        eventListView.getSelectionModel().select(requireNonNull(event));
+    }
+
     /**
      * Renders an event and clears recycled cells when they become empty.
      */

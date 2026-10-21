@@ -10,12 +10,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
@@ -296,21 +298,51 @@ public class ModelManager implements Model {
     @Override
     public void updateParticipantSearch(EventId eventId, String keyword) {
         requireAllNonNull(eventId, keyword);
-        ParticipantNameContainsKeywordPredicate predicate = new ParticipantNameContainsKeywordPredicate(keyword);
+        // Resolve the scope even when archived so nonexistent IDs still fail without changing search state.
         Event event = eventList.getEventFromId(eventId.toString());
-        List<Participation> matches = getParticipationsForEvent(event).stream()
-                .filter(predicate)
-                .sorted(Comparator.comparing(participation -> participation.getPerson().getId().toString()))
+        updateParticipantSearch(List.of(event), eventId, keyword);
+    }
+
+    @Override
+    public void updateParticipantSearch(String keyword) {
+        updateParticipantSearch(eventList.getEvents(), null, keyword);
+    }
+
+    private void updateParticipantSearch(List<Event> events, EventId eventId, String keyword) {
+        ParticipantNameContainsKeywordPredicate predicate = new ParticipantNameContainsKeywordPredicate(keyword);
+        List<Participation> matches = events.stream()
+                .filter(event -> !event.isArchived())
+                .flatMap(event -> getParticipationsForEvent(event).stream()
+                        .filter(predicate)
+                        .sorted(Comparator.comparing(participation -> participation.getPerson().getId().toString())))
                 .toList();
+        Set<String> matchingEventIds = matches.stream()
+                .map(participation -> participation.getEvent().getId()).collect(Collectors.toSet());
         participantSearchEventId = eventId;
-        participantSearchKeyword = keyword.strip();
-        // Publish the context before notifying observers of the new results.
+        participantSearchKeyword = StringUtil.normalizeWhitespace(keyword);
+        // Publish the context and matching events before notifying observers of the new result rows.
+        updateFilteredEventList(event -> matchingEventIds.contains(event.getId()));
         participantSearchResults.setAll(matches);
+    }
+
+    @Override
+    public void clearParticipantSearch() {
+        participantSearchEventId = null;
+        participantSearchKeyword = null;
+        updateFilteredEventList(event -> true);
+        participantSearchResults.clear();
     }
 
     @Override
     public ObservableList<Participation> getParticipantSearchResults() {
         return unmodifiableParticipantSearchResults;
+    }
+
+    @Override
+    public List<Participation> getParticipantSearchResultsForEvent(Event event) {
+        requireNonNull(event);
+        return participantSearchResults.stream()
+                .filter(participation -> participation.getEvent().isSameEvent(event)).toList();
     }
 
     @Override
@@ -325,8 +357,12 @@ public class ModelManager implements Model {
     }
 
     private void refreshParticipantSearch() {
-        if (participantSearchEventId != null) {
-            updateParticipantSearch(participantSearchEventId, participantSearchKeyword);
+        if (participantSearchKeyword != null) {
+            if (participantSearchEventId == null) {
+                updateParticipantSearch(participantSearchKeyword);
+            } else {
+                updateParticipantSearch(participantSearchEventId, participantSearchKeyword);
+            }
         }
     }
 
@@ -378,12 +414,14 @@ public class ModelManager implements Model {
         // EventList is the source of truth; refresh the observable view after a
         // successful addition.
         observableEvents.setAll(eventList.getEvents());
+        refreshParticipantSearch();
     }
 
     @Override
     public Event createEvent(String name, int capacity, String description) {
         Event event = eventList.createEvent(name, capacity, description);
         observableEvents.setAll(eventList.getEvents());
+        refreshParticipantSearch();
         return event;
     }
 
@@ -418,14 +456,13 @@ public class ModelManager implements Model {
         mapper.removeParticipationsForEvent(event);
         eventList.removeEvent(event.getId());
         if (eventId.equals(participantSearchEventId)) {
-            participantSearchEventId = null;
-            participantSearchKeyword = null;
-            participantSearchResults.clear();
+            clearParticipantSearch();
         }
         if (event.equals(selectedEvent)) {
             selectedEvent = null;
         }
         observableEvents.setAll(eventList.getEvents());
+        refreshParticipantSearch();
         return event;
     }
 

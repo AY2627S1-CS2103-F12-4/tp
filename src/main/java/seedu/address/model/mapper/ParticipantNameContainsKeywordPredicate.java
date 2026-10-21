@@ -6,9 +6,11 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import java.util.Locale;
 import java.util.function.Predicate;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * Matches a participant's full name against a case-insensitive substring.
- * Apply this predicate to the participations returned for the selected event.
+ * Event membership is scoped by the caller. Whitespace runs are normalized in names and queries.
  */
 public class ParticipantNameContainsKeywordPredicate implements Predicate<Participation> {
     private final String keyword;
@@ -24,8 +26,9 @@ public class ParticipantNameContainsKeywordPredicate implements Predicate<Partic
      */
     public ParticipantNameContainsKeywordPredicate(String keyword) {
         requireNonNull(keyword);
-        checkArgument(!keyword.isBlank(), "Participant search names must not be blank.");
-        this.keyword = keyword.strip().toLowerCase(Locale.ROOT);
+        String normalizedKeyword = StringUtil.normalizeWhitespace(keyword);
+        checkArgument(!normalizedKeyword.isEmpty(), "Participant search names must not be blank.");
+        this.keyword = normalizedKeyword.toLowerCase(Locale.ROOT);
     }
 
     /**
@@ -39,7 +42,8 @@ public class ParticipantNameContainsKeywordPredicate implements Predicate<Partic
     @Override
     public boolean test(Participation participation) {
         requireNonNull(participation);
-        return participation.getPerson().getName().fullName.toLowerCase(Locale.ROOT).contains(keyword);
+        return StringUtil.normalizeWhitespace(participation.getPerson().getName().fullName)
+                .toLowerCase(Locale.ROOT).contains(keyword);
     }
 
     @Override

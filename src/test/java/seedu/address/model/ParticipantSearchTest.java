@@ -121,15 +121,14 @@ public class ParticipantSearchTest {
     }
 
     @Test
-    public void updateFilters_activeSearch_preservesSelectedEventAndResults() {
+    public void updatePersonFilter_activeSearch_preservesSearchAndEventFilter() {
         model.updateParticipantSearch(FIRST_EVENT_ID, "Michael");
-        model.updateFilteredEventList(event -> event.equals(SECOND_EVENT));
         model.updateFilteredPersonList(person -> false);
         assertEquals(Optional.of(FIRST_EVENT), model.getParticipantSearchEvent());
         assertEquals(List.of("P1", "P2"), resultIds());
         model.removeParticipation(FIRST_EVENT, MICHAEL);
         assertEquals(List.of("P2"), resultIds());
-        assertEquals(List.of(SECOND_EVENT), model.getFilteredEventList());
+        assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
         assertTrue(model.getFilteredPersonList().isEmpty());
     }
 
@@ -314,6 +313,117 @@ public class ParticipantSearchTest {
         model.deleteEvent(FIRST_EVENT_ID);
         assertEquals(Optional.of(SECOND_EVENT), model.getSelectedEvent());
         assertTrue(model.getParticipantSearchEvent().isEmpty());
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+    }
+
+    @Test
+    public void globalSearch_matchesRegistrationsInEventOrderAndExcludesArchivedEvents() {
+        Event archived = new Event(new EventId("E3"), "Archived", 10, "", true);
+        model.addEvent(archived);
+        model.addEvent(new Event(new EventId("E4"), "Empty", 10, ""));
+        model.addParticipation(SECOND_EVENT, MICHAEL);
+        model.addParticipation(SECOND_EVENT, JORDAN);
+        model.addParticipation(archived, MICHAEL);
+        model.updateFilteredEventList(event -> false);
+        model.updateFilteredPersonList(person -> false);
+
+        model.updateParticipantSearch("a");
+
+        assertEquals(List.of(FIRST_EVENT, SECOND_EVENT), model.getFilteredEventList());
+        assertEquals(List.of("P1", "P2", "P1", "P10"), resultIds());
+        assertTrue(model.getParticipantSearchEvent().isEmpty());
+        assertEquals(Optional.of("a"), model.getParticipantSearchKeyword());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+        assertTrue(model.getParticipantSearchResultsForEvent(archived).isEmpty());
+    }
+
+    @Test
+    public void getResultsForEvent_returnsImmutableSnapshotUsingStableEventId() {
+        model.addParticipation(SECOND_EVENT, MICHAEL);
+        model.updateParticipantSearch("Michael");
+        List<Participation> snapshot = model.getParticipantSearchResultsForEvent(FIRST_EVENT);
+        assertEquals(List.of("P1", "P2"), snapshot.stream()
+                .map(participation -> participation.getPerson().getId().toString()).toList());
+        Event renamed = new Event(FIRST_EVENT_ID, "Renamed", 30, "");
+        assertEquals(snapshot, model.getParticipantSearchResultsForEvent(renamed));
+        assertEquals(1, model.getParticipantSearchResultsForEvent(SECOND_EVENT).size());
+        assertThrows(UnsupportedOperationException.class, snapshot::clear);
+        assertThrows(NullPointerException.class, () -> model.getParticipantSearchResultsForEvent(null));
+
+        model.removeParticipation(FIRST_EVENT, MICHAEL);
+        assertEquals(2, snapshot.size());
+        assertEquals(1, model.getParticipantSearchResultsForEvent(FIRST_EVENT).size());
+    }
+
+    @Test
+    public void globalSearch_mutationsRefreshResultsAndEventVisibility() {
+        ObservableList<Participation> results = model.getParticipantSearchResults();
+        model.updateParticipantSearch("Michael");
+        assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
+        model.addParticipation(SECOND_EVENT, MICHAEL);
+        assertEquals(List.of(FIRST_EVENT, SECOND_EVENT), model.getFilteredEventList());
+
+        model.setPerson(MICHAEL, new PersonBuilder(MICHAEL).withName("Alex Tan").build());
+        assertEquals(List.of("P2"), resultIds());
+        assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
+        model.removeParticipation(FIRST_EVENT, MICHAELA);
+        assertTrue(model.getFilteredEventList().isEmpty());
+        model.addParticipation(SECOND_EVENT, MICHAELA);
+        assertEquals(List.of(SECOND_EVENT), model.getFilteredEventList());
+
+        model.updateEvent(SECOND_EVENT.withArchived(true));
+        assertTrue(results.isEmpty());
+        assertTrue(model.getFilteredEventList().isEmpty());
+        model.updateEvent(SECOND_EVENT);
+        assertEquals(List.of("P2"), resultIds());
+        assertEquals(List.of(SECOND_EVENT), model.getFilteredEventList());
+
+        model.deleteEvent(SECOND_EVENT_ID);
+        assertTrue(results.isEmpty());
+        assertTrue(model.getFilteredEventList().isEmpty());
+        assertEquals(Optional.of("Michael"), model.getParticipantSearchKeyword());
+        Event added = model.createEvent("New event", 10, "");
+        assertTrue(model.getFilteredEventList().isEmpty());
+        model.addParticipation(added, MICHAELA);
+        assertEquals(List.of(added), model.getFilteredEventList());
+        assertSame(results, model.getParticipantSearchResults());
+    }
+
+    @Test
+    public void scopedSearch_archivedEvent_returnsNoMatchesAndRefreshesAfterRestore() {
+        model.updateEvent(FIRST_EVENT.withArchived(true));
+        model.updateParticipantSearch(FIRST_EVENT_ID, "Michael");
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+        assertTrue(model.getFilteredEventList().isEmpty());
+        assertEquals(Optional.of("Michael"), model.getParticipantSearchKeyword());
+        model.updateEvent(FIRST_EVENT);
+        assertEquals(List.of("P1", "P2"), resultIds());
+        assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
+    }
+
+    @Test
+    public void globalSearch_invalidInput_preservesContextResultsAndEventFilter() {
+        model.updateParticipantSearch("Michael");
+        List<Participation> before = List.copyOf(model.getParticipantSearchResults());
+        assertThrows(NullPointerException.class, () -> model.updateParticipantSearch((String) null));
+        assertThrows(IllegalArgumentException.class, () -> model.updateParticipantSearch("\u2003"));
+        assertThrows(EventNotFoundException.class, () -> model.updateParticipantSearch(new EventId("E99"), "Tan"));
+        assertEquals(before, model.getParticipantSearchResults());
+        assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
+        assertTrue(model.getParticipantSearchEvent().isEmpty());
+        assertEquals(Optional.of("Michael"), model.getParticipantSearchKeyword());
+    }
+
+    @Test
+    public void clearSearch_restoresNonarchivedEventsAndStopsRefreshingResults() {
+        model.updateEvent(SECOND_EVENT.withArchived(true));
+        model.updateParticipantSearch("Missing");
+        model.clearParticipantSearch();
+        assertTrue(model.getParticipantSearchKeyword().isEmpty());
+        assertTrue(model.getParticipantSearchEvent().isEmpty());
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+        assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
+        model.addParticipation(FIRST_EVENT, JORDAN);
         assertTrue(model.getParticipantSearchResults().isEmpty());
     }
 

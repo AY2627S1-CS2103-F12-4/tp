@@ -103,6 +103,26 @@ public class ParticipantListPanel extends UiPart<Region> {
         setPlaceholder("No matching participants.");
     }
 
+    /** Displays global search results and their query across nonarchived events. */
+    public void setSearchContext(String keyword) {
+        requireAllNonNull(keyword);
+        participantListView.setItems(participantSearchResults);
+        eventHeading.setText("All nonarchived events");
+        searchHeading.setText("Matching \"" + keyword + "\"");
+        setPlaceholder("No matching participants.");
+    }
+
+    /**
+     * Displays a snapshot of matching registrations for the selected event.
+     * Call again when the observable search results change.
+     */
+    public void showSearchResultsForEvent(Event event, String keyword, Collection<Participation> matches) {
+        requireAllNonNull(event, keyword, matches);
+        showParticipantsForEvent(event, matches);
+        searchHeading.setText("Matching \"" + keyword + "\"");
+        setPlaceholder("No matching participants.");
+    }
+
     /**
      * Clears the displayed participants and restores the instructions shown
      * when no event is selected.

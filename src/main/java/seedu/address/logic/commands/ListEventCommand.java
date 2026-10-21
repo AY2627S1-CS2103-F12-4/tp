@@ -15,7 +15,7 @@ public class ListEventCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredEventList(unused -> true);
+        model.clearParticipantSearch();
         int count = model.getFilteredEventList().size();
         String message = count == 0 ? MESSAGE_NO_EVENTS
                 : String.format(Messages.MESSAGE_EVENTS_LISTED_OVERVIEW, count);

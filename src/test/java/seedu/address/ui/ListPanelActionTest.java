@@ -162,6 +162,8 @@ public class ListPanelActionTest {
                     new AtomicReference<>();
             AtomicReference<Event> editedEvent =
                     new AtomicReference<>();
+            AtomicReference<Event> archivedEvent =
+                    new AtomicReference<>();
             AtomicReference<Event> deletedEvent =
                     new AtomicReference<>();
 
@@ -170,6 +172,7 @@ public class ListPanelActionTest {
                     selectedEvent::set,
                     participantEvent::set,
                     editedEvent::set,
+                    archivedEvent::set,
                     deletedEvent::set);
 
             ListView<Event> list = eventListView(panel);
@@ -186,17 +189,22 @@ public class ListPanelActionTest {
             Button editButton =
                     (Button) cell.getGraphic()
                             .lookup("#editButton");
+            Button archiveButton =
+                    (Button) cell.getGraphic()
+                            .lookup("#archiveButton");
             Button deleteButton =
                     (Button) cell.getGraphic()
                             .lookup("#deleteButton");
 
             addParticipantButton.fire();
             editButton.fire();
+            archiveButton.fire();
             deleteButton.fire();
 
             assertSame(EVENT, selectedEvent.get());
             assertSame(EVENT, participantEvent.get());
             assertSame(EVENT, editedEvent.get());
+            assertSame(EVENT, archivedEvent.get());
             assertSame(EVENT, deletedEvent.get());
         });
     }

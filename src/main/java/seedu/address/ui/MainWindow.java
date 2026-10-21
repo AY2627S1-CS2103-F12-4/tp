@@ -17,10 +17,12 @@ import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
+import seedu.address.logic.commands.ArchiveEventCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteEventCommand;
 import seedu.address.logic.commands.DeleteParticipantCommand;
+import seedu.address.logic.commands.UnarchiveEventCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
@@ -177,6 +179,7 @@ public class MainWindow extends UiPart<Stage> {
                 this::handleEventSelection,
                 this::handleAddParticipant,
                 this::handleEditEvent,
+                this::handleToggleEventArchive,
                 this::handleDeleteEvent);
         eventListPanelPlaceholder.getChildren()
                 .add(eventListPanel.getRoot());
@@ -424,6 +427,23 @@ public class MainWindow extends UiPart<Stage> {
             executeCommand(command);
             listTabs.getSelectionModel().select(eventsTab);
         });
+    }
+
+    private void handleToggleEventArchive(Event event) {
+        try {
+            executeCommand(buildArchiveCommand(event));
+            listTabs.getSelectionModel().select(eventsTab);
+        } catch (CommandException | ParseException exception) {
+            // executeCommand already displays the error.
+        }
+    }
+
+    /** Returns the command that toggles the supplied event's archive state. */
+    static String buildArchiveCommand(Event event) {
+        String commandWord = event.isArchived()
+                ? UnarchiveEventCommand.COMMAND_WORD
+                : ArchiveEventCommand.COMMAND_WORD;
+        return commandWord + " " + event.getId();
     }
 
     private void handleDeleteEvent(Event event) {

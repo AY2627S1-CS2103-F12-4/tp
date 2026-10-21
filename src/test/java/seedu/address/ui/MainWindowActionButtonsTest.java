@@ -287,6 +287,33 @@ public class MainWindowActionButtonsTest {
     }
 
     @Test
+    public void eventRowArchiveButton_togglesArchiveState() throws Exception {
+        runOnFxThread(() -> {
+            Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
+            assertEquals("archive-event E1", MainWindow.buildArchiveCommand(event));
+            assertEquals("unarchive-event E1", MainWindow.buildArchiveCommand(event.withArchived(true)));
+            ModelManager activeModel = new ModelManager();
+            activeModel.addEvent(event);
+            MainWindow activeWindow = createWindow(activeModel);
+            try {
+                activeWindow.show();
+                ListView<Event> list = eventListView(activeWindow);
+                ListCell<Event> cell = list.getCellFactory().call(list);
+                cell.updateListView(list);
+                cell.updateIndex(0);
+                Button archiveButton = (Button) cell.getGraphic().lookup("#archiveButton");
+
+                assertEquals("Archive", archiveButton.getText());
+                archiveButton.fire();
+
+                assertTrue(activeModel.getEvents().getFirst().isArchived());
+            } finally {
+                activeWindow.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
     public void participantRowButtons_editThenDelete_updatesParticipation() throws Exception {
         runOnFxThread(() -> {
             ModelManager model = new ModelManager();

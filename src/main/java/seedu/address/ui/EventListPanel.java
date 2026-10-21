@@ -39,6 +39,8 @@ public class EventListPanel extends UiPart<Region> {
                 event -> {
                 },
                 event -> {
+                },
+                event -> {
                 });
     }
 
@@ -62,6 +64,8 @@ public class EventListPanel extends UiPart<Region> {
                 addParticipantAction,
                 event -> {
                 },
+                event -> {
+                },
                 deleteAction);
     }
 
@@ -78,11 +82,11 @@ public class EventListPanel extends UiPart<Region> {
             Consumer<Event> onEventSelected,
             Consumer<Event> addParticipantAction,
             Consumer<Event> deleteAction) {
-        this(events, onEventSelected, addParticipantAction, event -> { }, deleteAction);
+        this(events, onEventSelected, addParticipantAction, event -> { }, event -> { }, deleteAction);
     }
 
     /**
-     * Creates an event list panel with selection and all card actions.
+     * Creates an event list panel with selection, participant, edit and delete actions.
      *
      * @param events events to display
      * @param onEventSelected action performed when the selection changes
@@ -96,12 +100,33 @@ public class EventListPanel extends UiPart<Region> {
             Consumer<Event> addParticipantAction,
             Consumer<Event> editAction,
             Consumer<Event> deleteAction) {
+        this(events, onEventSelected, addParticipantAction, editAction, event -> { }, deleteAction);
+    }
+
+    /**
+     * Creates an event list panel with selection and all card actions.
+     *
+     * @param events events to display
+     * @param onEventSelected action performed when the selection changes
+     * @param addParticipantAction action performed when adding a participant
+     * @param editAction action performed when editing an event
+     * @param archiveAction action performed when toggling an event's archive state
+     * @param deleteAction action performed when deleting an event
+     */
+    public EventListPanel(
+            ObservableList<Event> events,
+            Consumer<Event> onEventSelected,
+            Consumer<Event> addParticipantAction,
+            Consumer<Event> editAction,
+            Consumer<Event> archiveAction,
+            Consumer<Event> deleteAction) {
         super(FXML);
 
         requireNonNull(events);
         requireNonNull(onEventSelected);
         requireNonNull(addParticipantAction);
         requireNonNull(editAction);
+        requireNonNull(archiveAction);
         requireNonNull(deleteAction);
 
         eventListView.setItems(events);
@@ -114,6 +139,7 @@ public class EventListPanel extends UiPart<Region> {
                 listView -> new EventListViewCell(
                         addParticipantAction,
                         editAction,
+                        archiveAction,
                         deleteAction));
 
         eventListView.getSelectionModel()
@@ -136,14 +162,17 @@ public class EventListPanel extends UiPart<Region> {
 
         private final Consumer<Event> addParticipantAction;
         private final Consumer<Event> editAction;
+        private final Consumer<Event> archiveAction;
         private final Consumer<Event> deleteAction;
 
         EventListViewCell(
                 Consumer<Event> addParticipantAction,
                 Consumer<Event> editAction,
+                Consumer<Event> archiveAction,
                 Consumer<Event> deleteAction) {
             this.addParticipantAction = addParticipantAction;
             this.editAction = editAction;
+            this.archiveAction = archiveAction;
             this.deleteAction = deleteAction;
         }
 
@@ -159,6 +188,7 @@ public class EventListPanel extends UiPart<Region> {
 
             Runnable onAddParticipant = () -> addParticipantAction.accept(event);
             Runnable onEdit = () -> editAction.accept(event);
+            Runnable onArchive = () -> archiveAction.accept(event);
             Runnable onDelete = () -> deleteAction.accept(event);
 
             EventCard eventCard = new EventCard(
@@ -166,6 +196,7 @@ public class EventListPanel extends UiPart<Region> {
                     getIndex() + 1,
                     onAddParticipant,
                     onEdit,
+                    onArchive,
                     onDelete);
 
             setGraphic(eventCard.getRoot());

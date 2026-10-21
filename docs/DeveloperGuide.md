@@ -162,6 +162,25 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Participant search
+
+`SearchParticipantCommandParser` accepts `NAME [/event EVENTID]`. `ModelManager` tracks the active
+query separately from the optional event scope: an absent query means no search, while an absent scope
+with a query means a global search. Searches use the mapper-backed `getParticipationsForEvent(event)`
+and `ParticipantNameContainsKeywordPredicate`, excluding archived events before matching. Query and
+name whitespace is normalized for case-insensitive substring matching without changing stored data.
+
+`Logic#getFilteredEventList()` exposes only events containing matching registrations.
+`Logic#getParticipantSearchResults()` exposes a live, unmodifiable list ordered by event insertion
+order and then lexicographic person ID. For grouped rendering,
+`Logic#getParticipantSearchResultsForEvent(event)` returns an immutable snapshot matched by stable
+event ID. Consumers should observe the search result list and reread per-event snapshots when it
+changes, including when the set of visible events stays the same.
+
+Model mutations refresh the active search. `list-event` and `find-event` clear it before applying their
+own event filters. Deleting the explicitly scoped event clears the search; deleting an event during a
+global search refreshes the remaining results. Search state is transient and is not saved to storage.
+
 ### Participation mapping
 
 The participation mapping feature represents the many-to-many relationship between people and events. A person can

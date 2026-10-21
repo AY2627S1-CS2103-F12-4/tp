@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.MenuItem;
@@ -23,6 +24,7 @@ import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteEventCommand;
 import seedu.address.logic.commands.DeleteParticipantCommand;
 import seedu.address.logic.commands.UnarchiveEventCommand;
+import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
@@ -63,8 +65,9 @@ public class MainWindow extends UiPart<Stage> {
     private HelpWindow helpWindow;
 
     private Event selectedEvent;
-    private ParticipantDisplayMode participantDisplayMode =
-            ParticipantDisplayMode.NONE;
+    private ParticipantDisplayMode participantDisplayMode = ParticipantDisplayMode.NONE;
+    private boolean isExecutingCommand;
+    private boolean isUpdatingParticipantPanel;
 
     @FXML
     private StackPane commandBoxPlaceholder;
@@ -103,7 +106,7 @@ public class MainWindow extends UiPart<Stage> {
      * Creates a {@code MainWindow} with the given dependencies.
      *
      * @param primaryStage primary application stage
-     * @param logic application logic
+     * @param logic        application logic
      * @param dataFilePath path shown in the status bar
      */
     public MainWindow(
@@ -135,7 +138,7 @@ public class MainWindow extends UiPart<Stage> {
     /**
      * Sets the accelerator of a MenuItem.
      *
-     * @param menuItem menu item receiving the accelerator
+     * @param menuItem       menu item receiving the accelerator
      * @param keyCombination accelerator key combination
      */
     private void setAccelerator(
@@ -184,6 +187,12 @@ public class MainWindow extends UiPart<Stage> {
         eventListPanelPlaceholder.getChildren()
                 .add(eventListPanel.getRoot());
 
+        logic.getParticipantSearchResults().addListener((ListChangeListener<Participation>) change -> {
+            if (!isExecutingCommand) {
+                updateParticipantPanel("");
+            }
+        });
+
         ActionBar actionBar = new ActionBar(
                 this::handleAddPerson,
                 this::handleAddEvent);
@@ -194,13 +203,11 @@ public class MainWindow extends UiPart<Stage> {
         resultDisplayPlaceholder.getChildren()
                 .add(resultDisplay.getRoot());
 
-        StatusBarFooter statusBarFooter =
-                new StatusBarFooter(dataFilePath);
+        StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
         statusbarPlaceholder.getChildren()
                 .add(statusBarFooter.getRoot());
 
-        CommandBox commandBox =
-                new CommandBox(this::executeCommand);
+        CommandBox commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren()
                 .add(commandBox.getRoot());
     }
@@ -211,13 +218,21 @@ public class MainWindow extends UiPart<Stage> {
      * @param event newly selected event, or {@code null} if cleared
      */
     private void handleEventSelection(Event event) {
+        if (isExecutingCommand || isUpdatingParticipantPanel) {
+            return;
+        }
+        if (logic.getParticipantSearchKeyword().isPresent()) {
+            if (event != null) {
+                selectedEvent = event;
+            }
+            updateParticipantPanel("");
+            return;
+        }
         if (event == null) {
             selectedEvent = null;
 
-            if (participantDisplayMode
-                    == ParticipantDisplayMode.EVENT) {
-                participantDisplayMode =
-                        ParticipantDisplayMode.NONE;
+            if (participantDisplayMode == ParticipantDisplayMode.EVENT) {
+                participantDisplayMode = ParticipantDisplayMode.NONE;
                 participantListPanel.clearSearchContext();
             }
 
@@ -238,19 +253,26 @@ public class MainWindow extends UiPart<Stage> {
      * @param commandText command that was executed
      */
     private void updateParticipantPanel(String commandText) {
-        if (isParticipantSearchCommand(commandText)) {
-            eventListPanel.clearSelection();
-            selectedEvent = null;
-            participantDisplayMode =
-                    ParticipantDisplayMode.SEARCH;
+        if (isUpdatingParticipantPanel) {
+            return;
         }
-
-        if (participantDisplayMode
-                == ParticipantDisplayMode.EVENT) {
-            refreshSelectedEvent();
-        } else if (participantDisplayMode
-                == ParticipantDisplayMode.SEARCH) {
-            refreshParticipantSearch();
+        isUpdatingParticipantPanel = true;
+        try {
+            boolean startsSearch = isParticipantSearchCommand(commandText);
+            if (startsSearch) {
+                selectedEvent = null;
+            }
+            if (logic.getParticipantSearchKeyword().isPresent()) {
+                participantDisplayMode = ParticipantDisplayMode.SEARCH;
+                refreshParticipantSearch();
+            } else if (startsSearch || participantDisplayMode == ParticipantDisplayMode.SEARCH) {
+                eventListPanel.clearSelection();
+                clearParticipantPanel();
+            } else if (participantDisplayMode == ParticipantDisplayMode.EVENT) {
+                refreshSelectedEvent();
+            }
+        } finally {
+            isUpdatingParticipantPanel = false;
         }
     }
 
@@ -263,11 +285,10 @@ public class MainWindow extends UiPart<Stage> {
             return;
         }
 
-        Optional<Event> currentEvent =
-                logic.getFilteredEventList().stream()
-                        .filter(event -> event.getId()
-                                .equals(selectedEvent.getId()))
-                        .findFirst();
+        Optional<Event> currentEvent = logic.getFilteredEventList().stream()
+                .filter(event -> event.getId()
+                        .equals(selectedEvent.getId()))
+                .findFirst();
 
         if (currentEvent.isEmpty()) {
             eventListPanel.clearSelection();
@@ -286,12 +307,27 @@ public class MainWindow extends UiPart<Stage> {
      * Refreshes the current participant search.
      */
     private void refreshParticipantSearch() {
-        logic.getParticipantSearchEvent().ifPresentOrElse(
-                event -> participantListPanel.setSearchContext(
-                        event,
-                        logic.getParticipantSearchKeyword()
-                                .orElseThrow()),
-                this::clearParticipantPanel);
+        String keyword = logic.getParticipantSearchKeyword().orElseThrow();
+        Optional<Event> currentEvent = logic.getFilteredEventList().stream()
+                .filter(event -> selectedEvent != null && event.isSameEvent(selectedEvent))
+                .findFirst()
+                .or(() -> logic.getFilteredEventList().stream().findFirst());
+        if (currentEvent.isPresent()) {
+            selectedEvent = currentEvent.orElseThrow();
+            eventListPanel.selectEvent(selectedEvent);
+            participantListPanel.showSearchResultsForEvent(selectedEvent, keyword,
+                    logic.getParticipantSearchResultsForEvent(selectedEvent));
+            return;
+        }
+
+        eventListPanel.clearSelection();
+        selectedEvent = null;
+        Optional<Event> scope = logic.getParticipantSearchEvent();
+        if (scope.isPresent()) {
+            participantListPanel.setSearchContext(scope.orElseThrow(), keyword);
+        } else {
+            participantListPanel.setSearchContext(keyword);
+        }
     }
 
     /**
@@ -313,8 +349,7 @@ public class MainWindow extends UiPart<Stage> {
             return false;
         }
 
-        String commandWord =
-                trimmedCommand.split("\\s+", 2)[0];
+        String commandWord = trimmedCommand.split("\\s+", 2)[0];
 
         return commandWord.equals("search-participant")
                 || commandWord.equals("search-role");
@@ -371,13 +406,12 @@ public class MainWindow extends UiPart<Stage> {
     private void handleDeletePerson(
             Person person,
             int displayedIndex) {
-        DeleteConfirmationDialog dialog =
-                new DeleteConfirmationDialog(
-                        primaryStage,
-                        "Delete person",
-                        "Delete "
-                                + person.getName().fullName
-                                + "?");
+        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(
+                primaryStage,
+                "Delete person",
+                "Delete "
+                        + person.getName().fullName
+                        + "?");
 
         if (dialog.showAndWait()) {
             executeDeleteCommand(
@@ -389,11 +423,10 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private void handleAddParticipant(Event event) {
-        AddParticipantDialog dialog =
-                new AddParticipantDialog(
-                        primaryStage,
-                        event.getId(),
-                        event.getName());
+        AddParticipantDialog dialog = new AddParticipantDialog(
+                primaryStage,
+                event.getId(),
+                event.getName());
 
         dialog.showAndWait(command -> {
             executeCommand(command);
@@ -447,15 +480,14 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private void handleDeleteEvent(Event event) {
-        DeleteConfirmationDialog dialog =
-                new DeleteConfirmationDialog(
-                        primaryStage,
-                        "Delete event",
-                        "Delete "
-                                + event.getName()
-                                + " ("
-                                + event.getId()
-                                + ")?");
+        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(
+                primaryStage,
+                "Delete event",
+                "Delete "
+                        + event.getName()
+                        + " ("
+                        + event.getId()
+                        + ")?");
 
         if (dialog.showAndWait()) {
             executeDeleteCommand(
@@ -512,16 +544,20 @@ public class MainWindow extends UiPart<Stage> {
      */
     private CommandResult executeCommand(String commandText)
             throws CommandException, ParseException {
+        // Reconcile selection after the command finishes publishing its event filter
+        // and result rows.
+        isExecutingCommand = true;
         try {
-            CommandResult commandResult =
-                    logic.execute(commandText);
+            CommandResult commandResult = logic.execute(commandText);
 
             logger.info(
                     "Result: "
                             + commandResult.getFeedbackToUser());
 
-            resultDisplay.setFeedbackToUser(
-                    CommandSuccessMessages.forCommand(commandText));
+            boolean isParticipantSearch = commandText.strip().split("\\s+", 2)[0]
+                    .equals(SearchParticipantCommand.COMMAND_WORD);
+            resultDisplay.setFeedbackToUser(isParticipantSearch ? commandResult.getFeedbackToUser()
+                    : CommandSuccessMessages.forCommand(commandText));
 
             updateParticipantPanel(commandText);
 
@@ -548,6 +584,8 @@ public class MainWindow extends UiPart<Stage> {
             resultDisplay.setFeedbackToUser(
                     exception.getMessage());
             throw exception;
+        } finally {
+            isExecutingCommand = false;
         }
     }
 }

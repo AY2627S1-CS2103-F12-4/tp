@@ -228,13 +228,33 @@ Example: `view-participant E1 P2`
 
 ### Searching participants by name: `search-participant`
 
-Finds matching people registered for a specified event; it does not search unrelated events.
+Finds matching participant registrations across nonarchived events, or within one event when `/event` is supplied.
 
-Format: `search-participant EVENT_ID /name NAME`
+Format: `search-participant NAME [/event EVENTID]`
 
-Example: `search-participant E1 /name Michael`
+Examples:
 
-![Search participant](images/searchParticipant.png)
+* `search-participant Michael` searches all nonarchived events.
+* `search-participant Michael Tan /event E1` searches only event E1.
+
+Names are matched using a case-insensitive substring. Multiword phrases must appear together in order:
+`Michael Tan` matches `Michael Tan Wei`, but not `Michael Wei Tan`. Surrounding whitespace is ignored,
+and repeated whitespace is treated as one space in both the query and the name.
+
+The command selects the Events tab and replaces its filter with events containing matching registrations.
+The matching registrations remain available in the Participants tab. Existing People-tab filters do not
+affect the search. Events retain their existing order, with matching participants ordered by person ID
+within each event. Feedback counts registrations and matching events: a person registered in two matching
+events counts as two registrations.
+
+Archived events are always excluded, including when explicitly supplied with `/event`. No matches leave
+the Events tab empty. A nonexistent event ID or invalid syntax produces an error and preserves the previous
+search. `/event EVENTID` must follow the name; repeated `/event` and unsupported prefixes are rejected.
+The old `EVENT_ID /name NAME` syntax is no longer supported.
+
+Results refresh when event, person, or participation data changes, including when events are archived or
+restored. Switching tabs preserves the search. `list-event` and `find-event` clear participant-search state;
+deleting the explicitly searched event also clears it and restores the ordinary nonarchived event list.
 
 ### Searching participants by role: `search-role`
 
@@ -342,7 +362,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **Edit participant** | `edit-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |
 | **List participants** | `list-participants EVENT_ID` |
 | **View participant** | `view-participant EVENT_ID PERSON_ID` |
-| **Search participant** | `search-participant EVENT_ID /name NAME` |
+| **Search participant** | `search-participant NAME [/event EVENTID]` |
 | **Search role** | `search-role EVENT_ID /role ROLE` |
 | **Cancel attendance** | `unmark-participant EVENT_ID PERSON_ID` |
 | **Mark attendance** | `mark-participant EVENT_ID PERSON_ID` |

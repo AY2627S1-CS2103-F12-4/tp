@@ -30,7 +30,7 @@ public final class EditParticipantDialog extends FormDialog {
 
         roles.setText(participation.getRoles().stream().map(Object::toString).sorted()
                 .collect(Collectors.joining(", ")));
-        tags.setText(participation.getTags().stream().map(Object::toString).sorted()
+        tags.setText(participation.getTags().stream().map(tag -> tag.tagName).sorted()
                 .collect(Collectors.joining(", ")));
     }
 

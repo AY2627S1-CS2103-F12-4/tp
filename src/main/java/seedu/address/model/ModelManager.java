@@ -225,6 +225,26 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public void editParticipation(EventId eventId, PersonId personId, Set<ParticipationRole> roles, Set<Tag> tags) {
+        requireAllNonNull(eventId, personId);
+        if (roles == null && tags == null) {
+            throw new IllegalArgumentException("At least one role or tag field must be provided.");
+        }
+        Event event = eventList.getEventFromId(eventId.toString());
+        Person person = addressBook.getPersonFromId(personId);
+        if (person == null) {
+            throw new PersonNotFoundException();
+        }
+        Participation current = mapper.getParticipationsForEvent(event).stream()
+                .filter(candidate -> candidate.getPerson().getId().equals(personId))
+                .findFirst()
+                .orElseThrow(() -> new ParticipationNotFoundException(eventId.toString(), personId.toString()));
+        mapper.editDetails(event, person, roles == null ? current.getRoles() : roles,
+                tags == null ? current.getTags() : tags);
+        refreshParticipantSearch();
+    }
+
+    @Override
     public void markPresent(EventId eventId, PersonId personId)
             throws ParticipationNotFoundException, ParticipationAlreadyPresentException,
             EventNotFoundException, PersonNotFoundException {

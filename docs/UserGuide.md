@@ -157,6 +157,21 @@ Examples:
 
 The person must already exist in the address book. Role information applies to that person's participation in this event, rather than all their events.
 
+### Editing a participant: `edit-participant`
+
+Updates an existing registration's roles and tags without changing the person's
+contact details or attendance. Supply at least one `/role` or `/tag` field.
+An omitted field is preserved; supplied values replace the entire corresponding set.
+Use a single empty `/role` or `/tag` to clear that set. Do not mix an empty
+value with other values for the same field. Repeated identical values are deduplicated.
+
+Format: `edit-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...`
+
+Examples:
+* `edit-participant E1 P1 /role Speaker /role Host /tag VIP`
+* `edit-participant E1 P1 /tag Guest`
+* `edit-participant E1 P1 /role /tag`
+
 ### Listing participants in an event: `list-participants`
 
 Lists the people registered for the specified event, including their IDs, names and roles.
@@ -288,6 +303,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **List events** | `list-event` |
 | **View event** | `view-event EVENT_ID` |
 | **Add participant** | `add-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |
+| **Edit participant** | `edit-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |
 | **List participants** | `list-participants EVENT_ID` |
 | **View participant** | `view-participant EVENT_ID PERSON_ID` |
 | **Search participant** | `search-participant EVENT_ID /name NAME` |

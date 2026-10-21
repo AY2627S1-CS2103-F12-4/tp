@@ -201,6 +201,16 @@ public class MapperManager implements Mapper {
     }
 
     @Override
+    public Participation editDetails(Event event, Person person, Set<ParticipationRole> roles, Set<Tag> tags) {
+        requireAllNonNull(event, person, roles, tags);
+        ParticipationKey key = createKey(event, person);
+        ParticipationState current = getState(key);
+        ParticipationState updated = new ParticipationState(current.isPresent(), tags, roles);
+        participations.put(key, updated);
+        return toParticipation(key, updated);
+    }
+
+    @Override
     public Participation setTags(
             Event event,
             Person person,

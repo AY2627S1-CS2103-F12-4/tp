@@ -80,6 +80,9 @@ public interface Mapper extends ReadOnlyParticipations {
     Participation setPresent(Event event, Person person, boolean isPresent)
             throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException;
 
+    /** Replaces both event-specific fields atomically, preserving attendance. */
+    Participation editDetails(Event event, Person person, Set<ParticipationRole> roles, Set<Tag> tags);
+
     /**
      * Replaces the event-specific tags for {@code person} at {@code event}.
      * Returns the resulting participation record.

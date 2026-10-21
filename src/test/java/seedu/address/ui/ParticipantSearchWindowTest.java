@@ -275,7 +275,8 @@ public class ParticipantSearchWindowTest {
             try {
                 enterCommand(window, "search-participant John   Doe");
                 assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
-                assertEquals("All nonarchived events", heading(window, "eventHeading"));
+                assertEquals("birthday (E1)", heading(window, "eventHeading"));
+                assertEquals("E1", events(window).getSelectionModel().getSelectedItem().getId());
                 assertEquals("Matching \"John Doe\"", heading(window, "searchHeading"));
                 assertEquals(1, participants(window).getItems().size());
                 assertEquals(1, events(window).getItems().size());

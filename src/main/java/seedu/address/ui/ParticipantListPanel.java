@@ -113,6 +113,17 @@ public class ParticipantListPanel extends UiPart<Region> {
     }
 
     /**
+     * Displays a snapshot of matching registrations for the selected event.
+     * Call again when the observable search results change.
+     */
+    public void showSearchResultsForEvent(Event event, String keyword, Collection<Participation> matches) {
+        requireAllNonNull(event, keyword, matches);
+        showParticipantsForEvent(event, matches);
+        searchHeading.setText("Matching \"" + keyword + "\"");
+        setPlaceholder("No matching participants.");
+    }
+
+    /**
      * Clears the displayed participants and restores the instructions shown
      * when no event is selected.
      */

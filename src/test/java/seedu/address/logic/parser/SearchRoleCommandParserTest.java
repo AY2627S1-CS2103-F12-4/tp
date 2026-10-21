@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
@@ -8,6 +9,7 @@ import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSucces
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.SearchRoleCommand;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.EventId;
 
 /**
@@ -56,9 +58,11 @@ public class SearchRoleCommandParserTest {
 
     @Test
     public void parse_searchTextOutsideRoleConstraints_acceptsQuery() {
-        for (String keyword : new String[] {"?", "a".repeat(51), "Assistant's (Lead)", "Host/Coordinator", "E1"}) {
+        for (String keyword : new String[] {"?", "a".repeat(51), "Assistant's (Lead)", "Host/Coordinator", "E1",
+            "Host/include-archive"}) {
             assertParseSuccess(parser, keyword + " /event E1", new SearchRoleCommand(EVENT_ID, keyword));
             assertParseSuccess(parser, keyword, new SearchRoleCommand(keyword));
+            assertParseSuccess(parser, keyword + " /include-archive", new SearchRoleCommand(keyword, true));
         }
     }
 
@@ -82,6 +86,7 @@ public class SearchRoleCommandParserTest {
     public void parse_invalidEventId_throwsIdConstraintError() {
         for (String eventId : new String[] {"1", "0", "e1", "P1", "E", "E-1", "E1x", "+1", "1.5"}) {
             assertParseFailure(parser, "Best Man /event " + eventId, EventId.MESSAGE_CONSTRAINTS);
+            assertParseFailure(parser, "Best Man /event " + eventId + " /include-archive", EventId.MESSAGE_CONSTRAINTS);
         }
     }
 
@@ -103,11 +108,44 @@ public class SearchRoleCommandParserTest {
         for (String eventId : new String[] {"E0", "E001", "E2147483648"}) {
             assertParseSuccess(parser, "Best Man /event " + eventId,
                     new SearchRoleCommand(new EventId(eventId), "Best Man"));
+            assertParseSuccess(parser, "Best Man /event " + eventId + " /include-archive",
+                    new SearchRoleCommand(new EventId(eventId), "Best Man", true));
         }
     }
 
     @Test
     public void parse_nullArguments_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> parser.parse(null));
+    }
+
+    @Test
+    public void parse_archiveFlag_normalizesWhitespaceAndPreservesScopeAndQuery() {
+        assertParseSuccess(parser, "\u2003bEsT\tMan\u00a0/include-archive\u2003",
+                new SearchRoleCommand("bEsT Man", true));
+        assertParseSuccess(parser, "\t bEsT\tMan /event\u2003E1\t/include-archive \n",
+                new SearchRoleCommand(EVENT_ID, "bEsT Man", true));
+    }
+
+    @Test
+    public void parse_malformedArchiveFlag_throwsUsageError() {
+        for (String args : new String[] {"/include-archive", "/event E1 /include-archive", "/include-archive Best Man",
+            "Best Man /include-archive /event E1", "Best Man /include-archive extra", "Best Man /include-archive true",
+            "Best Man /include-archive /include-archive", "Best Man /event E1 /include-archive /include-archive",
+            "Best Man /include-archivex", "Best Man /Include-Archive", "Best Man /include-archive=true",
+            "Best Man /event /include-archive", "Best Man /event E1 extra /include-archive",
+            "Best Man /unknown /include-archive", "Best Man /event E1 /event E2 /include-archive"}) {
+            assertParseFailure(parser, args, MESSAGE_INVALID_FORMAT);
+        }
+    }
+
+    @Test
+    public void parseCommand_archiveFlag_routesGlobalAndScopedSearches() throws Exception {
+        AddressBookParser commandParser = new AddressBookParser();
+        assertEquals(new SearchRoleCommand("Best Man", true),
+                commandParser.parseCommand("search-role Best Man /include-archive"));
+        assertEquals(new SearchRoleCommand(EVENT_ID, "Best Man", true),
+                commandParser.parseCommand("search-role Best Man /event E1 /include-archive"));
+        assertThrows(ParseException.class, () ->
+                commandParser.parseCommand("search-role Best Man /include-archive /event E1"));
     }
 }

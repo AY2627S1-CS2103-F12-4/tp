@@ -22,10 +22,12 @@ public class SearchParticipantCommandParserTest {
 
     @Test
     public void parse_validInput_preservesCaseAndLiteralCharacters() throws Exception {
-        for (String keyword : List.of("Michael", "mIcHaEl Tan", "Michael  Tan", "O'Neil", "[", "a/b")) {
+        for (String keyword : List.of("Michael", "mIcHaEl Tan", "Michael  Tan", "O'Neil", "[", "a/b",
+                "Name/include-archive")) {
             assertEquals(new SearchParticipantCommand(new EventId("E1"), keyword),
                     parser.parse(keyword + " /event E1"));
             assertEquals(new SearchParticipantCommand(keyword), parser.parse(keyword));
+            assertEquals(new SearchParticipantCommand(keyword, true), parser.parse(keyword + " /include-archive"));
         }
     }
 
@@ -63,6 +65,9 @@ public class SearchParticipantCommandParserTest {
             ParseException exception = assertThrows(ParseException.class, () ->
                     parser.parse("Michael /event " + eventId), eventId);
             assertEquals(EventId.MESSAGE_CONSTRAINTS, exception.getMessage());
+            ParseException flaggedException = assertThrows(ParseException.class, () ->
+                    parser.parse("Michael /event " + eventId + " /include-archive"), eventId);
+            assertEquals(EventId.MESSAGE_CONSTRAINTS, flaggedException.getMessage());
         }
     }
 
@@ -71,6 +76,8 @@ public class SearchParticipantCommandParserTest {
         for (String eventId : List.of("E1", "E001", "E0", "E2147483648")) {
             assertEquals(new SearchParticipantCommand(new EventId(eventId), "Michael"),
                     parser.parse("Michael /event " + eventId));
+            assertEquals(new SearchParticipantCommand(new EventId(eventId), "Michael", true),
+                    parser.parse("Michael /event " + eventId + " /include-archive"));
         }
     }
 
@@ -86,5 +93,39 @@ public class SearchParticipantCommandParserTest {
     public void parseCommand_invalidSearchParticipant_propagatesParseException() {
         assertThrows(ParseException.class, () ->
                 new AddressBookParser().parseCommand("search-participant Michael /event"));
+    }
+
+    @Test
+    public void parse_archiveFlag_normalizesWhitespaceAndPreservesScopeAndQuery() throws Exception {
+        assertEquals(new SearchParticipantCommand("mIcHaEl Tan", true),
+                parser.parse("\u2003mIcHaEl\tTan\u00a0/include-archive\u2003"));
+        assertEquals(new SearchParticipantCommand(new EventId("E2"), "mIcHaEl Tan", true),
+                parser.parse("\t mIcHaEl\tTan /event\u2003E2\t/include-archive \n"));
+    }
+
+    @Test
+    public void parse_malformedArchiveFlag_throwsUsageError() {
+        for (String args : List.of("/include-archive", "/event E1 /include-archive", "/include-archive Michael",
+                "Michael /include-archive /event E1", "Michael /include-archive extra",
+                "Michael /include-archive true", "Michael /include-archive /include-archive",
+                "Michael /event E1 /include-archive /include-archive", "Michael /include-archivex",
+                "Michael /Include-Archive", "Michael /include-archive=true", "Michael /event /include-archive",
+                "Michael /event E1 extra /include-archive", "Michael /unknown /include-archive",
+                "Michael /event E1 /event E2 /include-archive")) {
+            ParseException exception = assertThrows(ParseException.class, () -> parser.parse(args), args);
+            assertEquals(String.format(MESSAGE_INVALID_COMMAND_FORMAT, SearchParticipantCommand.MESSAGE_USAGE),
+                    exception.getMessage(), args);
+        }
+    }
+
+    @Test
+    public void parseCommand_archiveFlag_routesGlobalAndScopedSearches() throws Exception {
+        AddressBookParser commandParser = new AddressBookParser();
+        assertEquals(new SearchParticipantCommand("Michael Tan", true),
+                commandParser.parseCommand("search-participant Michael Tan /include-archive"));
+        assertEquals(new SearchParticipantCommand(new EventId("E1"), "Michael Tan", true),
+                commandParser.parseCommand("search-participant Michael Tan /event E1 /include-archive"));
+        assertThrows(ParseException.class, () ->
+                commandParser.parseCommand("search-participant Michael /include-archive /event E1"));
     }
 }

@@ -5,6 +5,9 @@ package seedu.address.logic.parser;
  */
 public class CliSyntax {
 
+    /* Standalone flag definitions */
+    public static final String FLAG_INCLUDE_ARCHIVE = "/include-archive";
+
     /* Prefix definitions */
     public static final Prefix PREFIX_CAPACITY = new Prefix("/cap");
     public static final Prefix PREFIX_DESCRIPTION = new Prefix("/desc");

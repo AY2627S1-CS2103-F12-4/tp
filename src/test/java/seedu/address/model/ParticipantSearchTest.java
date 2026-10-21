@@ -427,6 +427,141 @@ public class ParticipantSearchTest {
         assertTrue(model.getParticipantSearchResults().isEmpty());
     }
 
+    @Test
+    public void globalSearch_includingArchives_preservesEventAndPersonOrderAndDistinctRegistrations() {
+        Event archived = new Event(new EventId("E3"), "Archived", 10, "", true);
+        model.addEvent(archived);
+        model.addEvent(new Event(new EventId("E4"), "Empty", 10, "", true));
+        model.addParticipation(SECOND_EVENT, MICHAEL);
+        model.addParticipation(archived, MICHAELA);
+        model.addParticipation(archived, MICHAEL);
+        model.updateFilteredEventList(event -> false);
+        model.updateFilteredPersonList(person -> false);
+
+        model.updateParticipantSearch("  mIcHaEl  ", true);
+
+        assertEquals(List.of(FIRST_EVENT, SECOND_EVENT, archived), model.getFilteredEventList());
+        assertEquals(List.of("P1", "P2", "P1", "P1", "P2"), resultIds());
+        assertEquals(2, model.getParticipantSearchResultsForEvent(archived).size());
+        assertEquals(Optional.of("mIcHaEl"), model.getParticipantSearchKeyword());
+        assertTrue(model.getParticipantSearchEvent().isEmpty());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+    }
+
+    @Test
+    public void scopedSearch_includingArchives_retainsScopeAndVisibilityAfterEventUpdates() {
+        Event archived = FIRST_EVENT.withArchived(true);
+        model.updateEvent(archived);
+        model.addParticipation(SECOND_EVENT, MICHAEL);
+        ObservableList<Participation> results = model.getParticipantSearchResults();
+
+        model.updateParticipantSearch(FIRST_EVENT_ID, "Michael", true);
+
+        assertEquals(List.of(archived), model.getFilteredEventList());
+        assertEquals(List.of("P1", "P2"), resultIds());
+        assertEquals(Optional.of(archived), model.getParticipantSearchEvent());
+        model.updateEvent(FIRST_EVENT);
+        assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
+        model.updateEvent(archived);
+        assertEquals(List.of(archived), model.getFilteredEventList());
+        assertEquals(List.of("P1", "P2"), resultIds());
+        assertSame(results, model.getParticipantSearchResults());
+    }
+
+    @Test
+    public void globalSearch_includingArchives_mutationsRetainArchiveVisibility() {
+        model.updateParticipantSearch("Michael", true);
+        Event archived = SECOND_EVENT.withArchived(true);
+        model.updateEvent(archived);
+        model.addParticipation(archived, MICHAEL);
+        assertEquals(List.of(FIRST_EVENT, archived), model.getFilteredEventList());
+        assertEquals(List.of("P1", "P2", "P1"), resultIds());
+
+        model.setPerson(MICHAEL, new PersonBuilder(MICHAEL).withName("Alex Tan").build());
+        assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
+        assertEquals(List.of("P2"), resultIds());
+        model.addParticipation(archived, MICHAELA);
+        assertEquals(List.of(FIRST_EVENT, archived), model.getFilteredEventList());
+        model.removeParticipation(FIRST_EVENT, MICHAELA);
+        assertEquals(List.of(archived), model.getFilteredEventList());
+        assertEquals(List.of("P2"), resultIds());
+        model.deleteEvent(SECOND_EVENT_ID);
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+        assertTrue(model.getFilteredEventList().isEmpty());
+        assertEquals(Optional.of("Michael"), model.getParticipantSearchKeyword());
+    }
+
+    @Test
+    public void search_invalidInput_preservesPreviousArchiveVisibility() {
+        for (boolean includeArchived : List.of(false, true)) {
+            model = createModel();
+            model.updateEvent(FIRST_EVENT.withArchived(true));
+            model.updateParticipantSearch("Michael", includeArchived);
+            List<Participation> before = List.copyOf(model.getParticipantSearchResults());
+
+            assertThrows(EventNotFoundException.class, () ->
+                    model.updateParticipantSearch(new EventId("E99"), "Michael", !includeArchived));
+            assertThrows(IllegalArgumentException.class, () ->
+                    model.updateParticipantSearch("\u2003", !includeArchived));
+            assertThrows(IllegalArgumentException.class, () ->
+                    model.updateParticipantSearch(FIRST_EVENT_ID, " ", !includeArchived));
+            assertThrows(NullPointerException.class, () ->
+                    model.updateParticipantSearch(null, "Michael", !includeArchived));
+            assertThrows(NullPointerException.class, () ->
+                    model.updateParticipantSearch(FIRST_EVENT_ID, null, !includeArchived));
+            assertThrows(NullPointerException.class, () -> model.updateParticipantSearch(null, !includeArchived));
+            assertEquals(before, model.getParticipantSearchResults());
+            assertEquals(Optional.of("Michael"), model.getParticipantSearchKeyword());
+            assertTrue(model.getParticipantSearchEvent().isEmpty());
+
+            model.removeParticipation(FIRST_EVENT, MICHAELA);
+            assertEquals(includeArchived ? List.of("P1") : List.of(), resultIds());
+            assertEquals(includeArchived ? List.of(FIRST_EVENT.withArchived(true)) : List.of(),
+                    model.getFilteredEventList());
+        }
+    }
+
+    @Test
+    public void search_defaultOverloads_resetPreviousArchiveVisibility() {
+        model.updateEvent(FIRST_EVENT.withArchived(true));
+        model.updateParticipantSearch("Michael", true);
+        model.updateParticipantSearch("Michael");
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+        assertTrue(model.getFilteredEventList().isEmpty());
+
+        model.updateParticipantSearch(FIRST_EVENT_ID, "Michael", true);
+        model.updateParticipantSearch(FIRST_EVENT_ID, "Michael");
+        model.removeParticipation(FIRST_EVENT, MICHAELA);
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+        assertTrue(model.getFilteredEventList().isEmpty());
+    }
+
+    @Test
+    public void deleteEvent_archivedScopedSearch_restoresNonarchivedListAndClearsContext() {
+        model.updateEvent(FIRST_EVENT.withArchived(true));
+        model.updateParticipantSearch(FIRST_EVENT_ID, "Michael", true);
+
+        model.deleteEvent(FIRST_EVENT_ID);
+
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+        assertTrue(model.getParticipantSearchKeyword().isEmpty());
+        assertTrue(model.getParticipantSearchEvent().isEmpty());
+        assertEquals(List.of(SECOND_EVENT), model.getFilteredEventList());
+        model.addEvent(FIRST_EVENT.withArchived(true));
+        assertEquals(List.of(SECOND_EVENT), model.getFilteredEventList());
+    }
+
+    @Test
+    public void equals_identicalEmptySearches_comparesArchiveVisibility() {
+        ModelManager other = createModel();
+        model.updateParticipantSearch("Missing", true);
+        other.updateParticipantSearch("Missing", false);
+        assertNotEquals(model, other);
+
+        other.updateParticipantSearch("Missing", true);
+        assertEquals(model, other);
+    }
+
     private List<String> resultIds() {
         return model.getParticipantSearchResults().stream()
                 .map(participation -> participation.getPerson().getId().toString()).toList();

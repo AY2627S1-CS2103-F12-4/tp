@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.AddressBookParser;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -45,6 +47,9 @@ public class SearchRoleCommandTest {
         assertThrows(NullPointerException.class, () -> new SearchRoleCommand(null, "Best Man"));
         assertThrows(NullPointerException.class, () -> new SearchRoleCommand(EVENT_ID, null));
         assertThrows(NullPointerException.class, () -> new SearchRoleCommand((String) null));
+        assertThrows(NullPointerException.class, () -> new SearchRoleCommand(null, "Best Man", true));
+        assertThrows(NullPointerException.class, () -> new SearchRoleCommand(EVENT_ID, null, true));
+        assertThrows(NullPointerException.class, () -> new SearchRoleCommand(null, true));
     }
 
     @Test
@@ -52,6 +57,8 @@ public class SearchRoleCommandTest {
         for (String keyword : List.of("", " \t\n ", "\u2003", "\u00a0")) {
             assertThrows(IllegalArgumentException.class, () -> new SearchRoleCommand(EVENT_ID, keyword));
             assertThrows(IllegalArgumentException.class, () -> new SearchRoleCommand(keyword));
+            assertThrows(IllegalArgumentException.class, () -> new SearchRoleCommand(EVENT_ID, keyword, true));
+            assertThrows(IllegalArgumentException.class, () -> new SearchRoleCommand(keyword, true));
         }
     }
 
@@ -304,6 +311,107 @@ public class SearchRoleCommandTest {
         assertNotEquals(command, new SearchRoleCommand(EVENT_ID, "Best Man"));
         assertNotEquals(command, new SearchRoleCommand("best man"));
         assertNotEquals(command, new SearchRoleCommand("Usher"));
+    }
+
+    @Test
+    public void parseAndExecute_archiveFlag_countsArchivedMatchesAndResetsOnNextDefaultSearch() throws Exception {
+        ModelManager model = modelWithParticipations(participation(EVENT, ALICE, "Best Man", "Assistant Best Man"),
+                participation(EVENT, BOB, "Best Man"), participation(OTHER_EVENT, ALICE, "Best Man"));
+        model.updateEvent(EVENT.withArchived(true));
+        AddressBookParser parser = new AddressBookParser();
+
+        CommandResult result = parser.parseCommand("search-role Best Man /include-archive").execute(model);
+
+        assertEquals("3 registrations across 2 events with roles matching \"Best Man\".", result.getFeedbackToUser());
+        assertEquals(List.of(EVENT.withArchived(true), OTHER_EVENT), model.getFilteredEventList());
+        assertEquals(3, model.getParticipantSearchResults().size());
+        assertTrue(result.isShowEvents());
+        assertFalse(result.isShowHelp());
+        assertFalse(result.isExit());
+
+        CommandResult defaultResult = parser.parseCommand("search-role Best Man").execute(model);
+        assertEquals("1 registration across 1 event with roles matching \"Best Man\".",
+                defaultResult.getFeedbackToUser());
+        assertEquals(List.of(OTHER_EVENT), model.getFilteredEventList());
+    }
+
+    @Test
+    public void parseAndExecute_archivedScope_searchesOnlyRequestedEventAndResetsOnDefaultSearch() throws Exception {
+        ModelManager model = modelWithParticipations(participation(EVENT, ALICE, "Best Man"),
+                participation(OTHER_EVENT, BOB, "Best Man"));
+        model.updateEvent(EVENT.withArchived(true));
+        AddressBookParser parser = new AddressBookParser();
+
+        CommandResult result = parser.parseCommand("search-role Best Man /event E1 /include-archive").execute(model);
+
+        assertEquals("1 registration across 1 event with roles matching \"Best Man\".", result.getFeedbackToUser());
+        assertEquals(List.of(EVENT.withArchived(true)), model.getFilteredEventList());
+        assertEquals(Optional.of(EVENT.withArchived(true)), model.getParticipantSearchEvent());
+
+        CommandResult defaultResult = parser.parseCommand("search-role Best Man /event E1").execute(model);
+        assertEquals("No registrations with roles matching \"Best Man\" in nonarchived events.",
+                defaultResult.getFeedbackToUser());
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+        assertTrue(model.getFilteredEventList().isEmpty());
+    }
+
+    @Test
+    public void execute_archiveFlagWithoutMatches_reportsArchiveInclusion() throws CommandException {
+        ModelManager model = modelWithParticipations(participation(EVENT, ALICE, "Best Man"));
+        model.updateEvent(EVENT.withArchived(true));
+        for (SearchRoleCommand command : List.of(new SearchRoleCommand("Missing", true),
+                new SearchRoleCommand(EVENT_ID, "Missing", true))) {
+            CommandResult result = command.execute(model);
+            assertEquals("No registrations with roles matching \"Missing\" (including archived events).",
+                    result.getFeedbackToUser());
+            assertTrue(model.getParticipantSearchResults().isEmpty());
+            assertTrue(model.getFilteredEventList().isEmpty());
+            assertTrue(result.isShowEvents());
+        }
+    }
+
+    @Test
+    public void parseAndExecute_invalidSearch_preservesPreviousArchiveResultsAndContext() throws Exception {
+        ModelManager model = modelWithParticipations(participation(EVENT, ALICE, "Best Man"));
+        model.updateEvent(EVENT.withArchived(true));
+        AddressBookParser parser = new AddressBookParser();
+        parser.parseCommand("search-role Best Man /event E1 /include-archive").execute(model);
+        List<Participation> results = List.copyOf(model.getParticipantSearchResults());
+
+        assertThrows(ParseException.class, () ->
+                parser.parseCommand("search-role Best Man /include-archive /event E1").execute(model));
+        CommandException exception = assertThrows(CommandException.class, () ->
+                parser.parseCommand("search-role Best Man /event E99").execute(model));
+        assertEquals("Event E99 does not exist.", exception.getMessage());
+        assertTrue(exception.getCause() instanceof EventNotFoundException);
+        assertThrows(CommandException.class, () ->
+                parser.parseCommand("search-role Best Man /event E99 /include-archive").execute(model));
+
+        assertEquals(results, model.getParticipantSearchResults());
+        assertEquals(List.of(EVENT.withArchived(true)), model.getFilteredEventList());
+        assertEquals(Optional.of(EVENT.withArchived(true)), model.getParticipantSearchEvent());
+        assertEquals(Optional.of("Best Man"), model.getParticipantSearchKeyword());
+        model.setPresent(EVENT, ALICE, true);
+        assertEquals(1, model.getParticipantSearchResults().size());
+        assertEquals(List.of(EVENT.withArchived(true)), model.getFilteredEventList());
+    }
+
+    @Test
+    public void equalsAndHashCode_archiveVisibility_distinguishesCommandsInBothScopes() {
+        SearchRoleCommand global = new SearchRoleCommand("Best Man", true);
+        SearchRoleCommand globalCopy = new SearchRoleCommand(" Best\tMan ", true);
+        assertEquals(global, globalCopy);
+        assertEquals(global.hashCode(), globalCopy.hashCode());
+        assertNotEquals(global, new SearchRoleCommand("Best Man"));
+        assertEquals(new SearchRoleCommand("Best Man"), new SearchRoleCommand("Best Man", false));
+
+        SearchRoleCommand scoped = new SearchRoleCommand(EVENT_ID, "Best Man", true);
+        SearchRoleCommand scopedCopy = new SearchRoleCommand(EVENT_ID, " Best\tMan ", true);
+        assertEquals(scoped, scopedCopy);
+        assertEquals(scoped.hashCode(), scopedCopy.hashCode());
+        assertNotEquals(scoped, global);
+        assertNotEquals(scoped, new SearchRoleCommand(EVENT_ID, "Best Man"));
+        assertEquals(new SearchRoleCommand(EVENT_ID, "Best Man"), new SearchRoleCommand(EVENT_ID, "Best Man", false));
     }
 
     /**

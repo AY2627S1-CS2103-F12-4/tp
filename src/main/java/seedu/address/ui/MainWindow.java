@@ -22,6 +22,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteEventCommand;
 import seedu.address.logic.commands.SearchParticipantCommand;
+import seedu.address.logic.commands.SearchRoleCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
@@ -347,8 +348,8 @@ public class MainWindow extends UiPart<Stage> {
         String commandWord =
                 trimmedCommand.split("\\s+", 2)[0];
 
-        return commandWord.equals("search-participant")
-                || commandWord.equals("search-role");
+        return commandWord.equals(SearchParticipantCommand.COMMAND_WORD)
+                || commandWord.equals(SearchRoleCommand.COMMAND_WORD);
     }
 
     /**
@@ -501,9 +502,7 @@ public class MainWindow extends UiPart<Stage> {
                     "Result: "
                             + commandResult.getFeedbackToUser());
 
-            boolean isParticipantSearch = commandText.strip().split("\\s+", 2)[0]
-                    .equals(SearchParticipantCommand.COMMAND_WORD);
-            resultDisplay.setFeedbackToUser(isParticipantSearch ? commandResult.getFeedbackToUser()
+            resultDisplay.setFeedbackToUser(isParticipantSearchCommand(commandText) ? commandResult.getFeedbackToUser()
                     : CommandSuccessMessages.forCommand(commandText));
 
             updateParticipantPanel(commandText);

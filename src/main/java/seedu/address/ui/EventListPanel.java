@@ -130,10 +130,8 @@ public class EventListPanel extends UiPart<Region> {
                 return;
             }
 
-            Runnable onAddParticipant =
-                    () -> addParticipantAction.accept(event);
-            Runnable onDelete =
-                    () -> deleteAction.accept(event);
+            Runnable onAddParticipant = () -> addParticipantAction.accept(event);
+            Runnable onDelete = () -> deleteAction.accept(event);
 
             EventCard eventCard = new EventCard(
                     event,

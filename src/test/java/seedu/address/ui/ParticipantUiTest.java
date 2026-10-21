@@ -24,6 +24,7 @@ import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
 public class ParticipantUiTest {
+
     private static final Event EVENT =
             new Event(new EventId("E1"), "Wedding", 30, "Reception");
 
@@ -97,13 +98,8 @@ public class ParticipantUiTest {
     @Test
     public void constructors_nullArguments_rejectInput() throws Exception {
         runOnFxThread(() -> {
-            assertThrows(
-                    NullPointerException.class,
-                    () -> new ParticipantCard(null));
-
-            assertThrows(
-                    NullPointerException.class,
-                    () -> new ParticipantListPanel(null));
+            assertThrows(NullPointerException.class, () -> new ParticipantCard(null));
+            assertThrows(NullPointerException.class, () -> new ParticipantListPanel(null));
         });
     }
 
@@ -123,9 +119,12 @@ public class ParticipantUiTest {
                     "Use search-participant EVENT_ID /name NAME",
                     labelText(panel, "searchHeading"));
 
+            Label placeholder =
+                    (Label) listView(panel).getPlaceholder();
+
             assertEquals(
                     "Select an event to view its participants.",
-                    ((Label) listView(panel).getPlaceholder()).getText());
+                    placeholder.getText());
 
             assertTrue(listView(panel).getItems().isEmpty());
         });
@@ -150,12 +149,12 @@ public class ParticipantUiTest {
                     labelText(panel, "searchHeading"));
 
             assertThrows(
-                    NullPointerException.class,
-                    () -> panel.setSearchContext(null, "John"));
+                    NullPointerException.class, () ->
+                            panel.setSearchContext(null, "John"));
 
             assertThrows(
-                    NullPointerException.class,
-                    () -> panel.setSearchContext(EVENT, null));
+                    NullPointerException.class, () ->
+                            panel.setSearchContext(EVENT, null));
         });
     }
 

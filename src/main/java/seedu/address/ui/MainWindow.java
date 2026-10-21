@@ -28,6 +28,7 @@ import seedu.address.ui.dialogs.AddEventDialog;
 import seedu.address.ui.dialogs.AddParticipantDialog;
 import seedu.address.ui.dialogs.AddPersonDialog;
 import seedu.address.ui.dialogs.DeleteConfirmationDialog;
+import seedu.address.ui.dialogs.EditPersonDialog;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -155,6 +156,7 @@ public class MainWindow extends UiPart<Stage> {
     void fillInnerParts() {
         personListPanel = new PersonListPanel(
                 logic.getFilteredPersonList(),
+                this::handleEditPerson,
                 this::handleDeletePerson);
         personListPanelPlaceholder.getChildren()
                 .add(personListPanel.getRoot());
@@ -346,6 +348,13 @@ public class MainWindow extends UiPart<Stage> {
         new AddEventDialog(primaryStage).showAndWait(command -> {
             executeCommand(command);
             listTabs.getSelectionModel().select(eventsTab);
+        });
+    }
+
+    private void handleEditPerson(Person person, int displayedIndex) {
+        new EditPersonDialog(primaryStage, person, displayedIndex).showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(peopleTab);
         });
     }
 

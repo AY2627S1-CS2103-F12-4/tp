@@ -140,6 +140,42 @@ public class MainWindowActionButtonsTest {
     }
 
     @Test
+    public void personRowEditButton_submitValidForm_editsPerson() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            model.addPerson(ALICE);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                ListView<Person> list = personListView(window.getPersonListPanel());
+                ListCell<Person> cell = list.getCellFactory().call(list);
+                cell.updateListView(list);
+                cell.updateIndex(0);
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> submitFormAndClick(failure, "Edit",
+                        "Full name", "Alice Edited",
+                        "Phone number", "98765432",
+                        "Email address", "edited@example.com",
+                        "Home address", "2 New Street",
+                        "friend, volunteer", "colleague, organiser"));
+
+                Button editButton = (Button) cell.getGraphic().lookup("#editButton");
+                editButton.fire();
+
+                throwFailure(failure);
+                Person editedPerson = model.getFilteredPersonList().getFirst();
+                assertEquals("Alice Edited", editedPerson.getName().fullName);
+                assertEquals("98765432", editedPerson.getPhone().value);
+                assertEquals("edited@example.com", editedPerson.getEmail().value);
+                assertEquals("2 New Street", editedPerson.getAddress().value);
+                assertEquals(Set.of(new Tag("colleague"), new Tag("organiser")), editedPerson.getTags());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
     public void personRowDeleteButton_staleEntry_displaysCommandError() throws Exception {
         runOnFxThread(() -> {
             ModelManager model = new ModelManager();
@@ -224,6 +260,11 @@ public class MainWindowActionButtonsTest {
     }
 
     private void submitForm(AtomicReference<Throwable> failure, String... promptAndValues) {
+        submitFormAndClick(failure, "Add", promptAndValues);
+    }
+
+    private void submitFormAndClick(
+            AtomicReference<Throwable> failure, String buttonText, String... promptAndValues) {
         try {
             DialogPane dialogPane = showingDialogPane();
             for (int i = 0; i < promptAndValues.length; i += 2) {
@@ -236,7 +277,7 @@ public class MainWindowActionButtonsTest {
                         .orElseThrow();
                 field.setText(promptAndValues[i + 1]);
             }
-            clickButton(dialogPane, "Add");
+            clickButton(dialogPane, buttonText);
         } catch (Throwable throwable) {
             failure.set(throwable);
             closeShowingDialog();

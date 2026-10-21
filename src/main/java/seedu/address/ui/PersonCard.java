@@ -44,13 +44,16 @@ public class PersonCard extends UiPart<Region> {
     @FXML
     private FlowPane tags;
     @FXML
+    private Button editButton;
+    @FXML
     private Button deleteButton;
 
     /**
-     * Creates a person card with its displayed index and deletion action.
+     * Creates a person card with its displayed index, edit action and deletion action.
      */
-    public PersonCard(Person person, int displayedIndex, Runnable deleteAction) {
+    public PersonCard(Person person, int displayedIndex, Runnable editAction, Runnable deleteAction) {
         super(FXML);
+        requireNonNull(editAction);
         requireNonNull(deleteAction);
         this.person = person;
         id.setText(displayedIndex + ". ");
@@ -61,6 +64,7 @@ public class PersonCard extends UiPart<Region> {
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
                 .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
+        editButton.setOnAction(event -> editAction.run());
         deleteButton.setOnAction(event -> deleteAction.run());
     }
 }

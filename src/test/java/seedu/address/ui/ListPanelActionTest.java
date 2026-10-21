@@ -33,9 +33,11 @@ public class ListPanelActionTest {
                     "Learn Java");
 
     @Test
-    public void personPanel_deleteButton_forwardsPersonAndDisplayedIndex()
+    public void personPanel_actionButtons_forwardPersonAndDisplayedIndex()
             throws Exception {
         runOnFxThread(() -> {
+            AtomicReference<Person> editedPerson = new AtomicReference<>();
+            AtomicInteger editedIndex = new AtomicInteger();
             AtomicReference<Person> deletedPerson =
                     new AtomicReference<>();
             AtomicInteger deletedIndex =
@@ -45,9 +47,14 @@ public class ListPanelActionTest {
                 deletedPerson.set(person);
                 deletedIndex.set(index);
             };
+            BiConsumer<Person, Integer> editAction = (person, index) -> {
+                editedPerson.set(person);
+                editedIndex.set(index);
+            };
 
             PersonListPanel panel = new PersonListPanel(
                     FXCollections.observableArrayList(ALICE),
+                    editAction,
                     deleteAction);
 
             ListView<Person> list = personListView(panel);
@@ -57,11 +64,17 @@ public class ListPanelActionTest {
             cell.updateListView(list);
             cell.updateIndex(0);
 
+            Button editButton =
+                    (Button) cell.getGraphic()
+                            .lookup("#editButton");
             Button deleteButton =
                     (Button) cell.getGraphic()
                             .lookup("#deleteButton");
+            editButton.fire();
             deleteButton.fire();
 
+            assertSame(ALICE, editedPerson.get());
+            assertEquals(1, editedIndex.get());
             assertSame(ALICE, deletedPerson.get());
             assertEquals(1, deletedIndex.get());
 

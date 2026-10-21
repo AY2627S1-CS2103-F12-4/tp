@@ -34,17 +34,24 @@ public class EntryCardActionButtonTest {
     }
 
     @Test
-    public void personCard_deleteButton_runsConfiguredAction() throws Exception {
+    public void personCard_actionButtons_runConfiguredActionsInEditDeleteOrder() throws Exception {
         runOnFxThread(() -> {
+            AtomicInteger editActions = new AtomicInteger();
             AtomicInteger deleteActions = new AtomicInteger();
-            PersonCard card = new PersonCard(ALICE, 1, deleteActions::incrementAndGet);
+            PersonCard card = new PersonCard(
+                    ALICE, 1, editActions::incrementAndGet, deleteActions::incrementAndGet);
+            Button editButton = (Button) card.getRoot().lookup("#editButton");
             Button deleteButton = (Button) card.getRoot().lookup("#deleteButton");
 
             HBox cardPane = (HBox) card.getRoot();
+            assertEquals("Edit", editButton.getText());
+            assertSame(editButton, cardPane.getChildren().get(cardPane.getChildren().size() - 2));
             assertSame(deleteButton, cardPane.getChildren().get(cardPane.getChildren().size() - 1));
             assertRightGap(cardPane, deleteButton);
+            editButton.fire();
             deleteButton.fire();
 
+            assertEquals(1, editActions.get());
             assertEquals(1, deleteActions.get());
         });
     }

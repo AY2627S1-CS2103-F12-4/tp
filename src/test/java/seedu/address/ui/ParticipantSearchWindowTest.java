@@ -32,21 +32,36 @@ public class ParticipantSearchWindowTest {
     public Path temporaryFolder;
 
     @Test
-    public void searchThroughCommandBox_matchesAndEmptyResults_selectParticipantsTab() throws Exception {
+    public void searchThroughCommandBox_matchesAndEmptyResults_selectsEventsTab()
+            throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
+
             try {
                 enterCommand(window, "search-participant E1 /name John");
-                assertEquals("Participants", tabs(window).getSelectionModel().getSelectedItem().getText());
+
+                assertEquals("Events", selectedTabName(window));
                 assertEquals(1, participants(window).getItems().size());
-                assertEquals("birthday (E1)", heading(window, "eventHeading"));
-                assertEquals("Matching \"John\"", heading(window, "searchHeading"));
+                assertEquals(
+                        "birthday (E1)",
+                        heading(window, "eventHeading"));
+                assertEquals(
+                        "Matching \"John\"",
+                        heading(window, "searchHeading"));
+
                 enterCommand(window, "find-event birthday");
-                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
-                enterCommand(window, "search-participant E1 /name Missing");
-                assertEquals("Participants", tabs(window).getSelectionModel().getSelectedItem().getText());
+
+                assertEquals("Events", selectedTabName(window));
+
+                enterCommand(
+                        window,
+                        "search-participant E1 /name Missing");
+
+                assertEquals("Events", selectedTabName(window));
                 assertTrue(participants(window).getItems().isEmpty());
-                assertEquals("Matching \"Missing\"", heading(window, "searchHeading"));
+                assertEquals(
+                        "Matching \"Missing\"",
+                        heading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -54,18 +69,31 @@ public class ParticipantSearchWindowTest {
     }
 
     @Test
-    public void invalidSearch_preservesSelectedTabAndPreviousResults() throws Exception {
+    public void invalidSearch_preservesSelectedTabAndPreviousResults()
+            throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
+
             try {
-                enterCommand(window, "search-participant E1 /name John");
+                enterCommand(
+                        window,
+                        "search-participant E1 /name John");
                 enterCommand(window, "find-event birthday");
-                enterCommand(window, "search-participant E99 /name John");
-                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
+                enterCommand(
+                        window,
+                        "search-participant E99 /name John");
+
+                assertEquals("Events", selectedTabName(window));
                 assertEquals(1, participants(window).getItems().size());
-                assertEquals("Matching \"John\"", heading(window, "searchHeading"));
-                enterCommand(window, "search-participant E1 /name");
-                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
+                assertEquals(
+                        "Matching \"John\"",
+                        heading(window, "searchHeading"));
+
+                enterCommand(
+                        window,
+                        "search-participant E1 /name");
+
+                assertEquals("Events", selectedTabName(window));
                 assertEquals(1, participants(window).getItems().size());
             } finally {
                 window.getPrimaryStage().close();
@@ -74,13 +102,161 @@ public class ParticipantSearchWindowTest {
     }
 
     @Test
-    public void deleteMembershipThroughCommandBox_updatesDisplayedList() throws Exception {
+    public void selectingEvent_displaysItsParticipants()
+            throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
+
             try {
-                enterCommand(window, "search-participant E1 /name John");
+                events(window).getSelectionModel().select(0);
+
+                assertEquals(1, participants(window).getItems().size());
+                assertEquals(
+                        "birthday (E1)",
+                        heading(window, "eventHeading"));
+                assertEquals(
+                        "Participants",
+                        heading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void clearingEventSelection_clearsParticipantPanel()
+            throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+
+            try {
+                ListView<Event> eventList = events(window);
+
+                eventList.getSelectionModel().select(0);
+                eventList.getSelectionModel().clearSelection();
+
+                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals(
+                        "Participants",
+                        heading(window, "eventHeading"));
+                assertEquals(
+                        "Select an event to view its participants.",
+                        heading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void deleteSelectedMembership_refreshesParticipantList()
+            throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+
+            try {
+                events(window).getSelectionModel().select(0);
+
+                assertEquals(1, participants(window).getItems().size());
+
                 enterCommand(window, "del-participant E1 P1");
-                assertEquals("Participants", tabs(window).getSelectionModel().getSelectedItem().getText());
+
+                assertEquals("Events", selectedTabName(window));
+                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals(
+                        "birthday (E1)",
+                        heading(window, "eventHeading"));
+                assertEquals(
+                        "Participants",
+                        heading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void deleteSelectedEvent_clearsParticipantPanel()
+            throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+
+            try {
+                ListView<Event> eventList = events(window);
+
+                eventList.getSelectionModel().select(0);
+
+                assertEquals(1, participants(window).getItems().size());
+
+                enterCommand(window, "del-event E1");
+
+                assertEquals("Events", selectedTabName(window));
+                assertTrue(eventList.getItems().isEmpty());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals(
+                        "Participants",
+                        heading(window, "eventHeading"));
+                assertEquals(
+                        "Select an event to view its participants.",
+                        heading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void selectingEventAfterSearch_preventsOldSearchFromReturning()
+            throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+
+            try {
+                enterCommand(
+                        window,
+                        "search-participant E1 /name Missing");
+
+                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals(
+                        "Matching \"Missing\"",
+                        heading(window, "searchHeading"));
+
+                events(window).getSelectionModel().select(0);
+
+                assertEquals(1, participants(window).getItems().size());
+                assertEquals(
+                        "Participants",
+                        heading(window, "searchHeading"));
+
+                enterCommand(window, "list-event");
+
+                assertEquals("Events", selectedTabName(window));
+                assertEquals(1, participants(window).getItems().size());
+                assertEquals(
+                        "birthday (E1)",
+                        heading(window, "eventHeading"));
+                assertEquals(
+                        "Participants",
+                        heading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void deleteMembershipFromSearch_updatesDisplayedResults()
+            throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+
+            try {
+                enterCommand(
+                        window,
+                        "search-participant E1 /name John");
+                enterCommand(window, "del-participant E1 P1");
+
+                assertEquals("Events", selectedTabName(window));
                 assertTrue(participants(window).getItems().isEmpty());
             } finally {
                 window.getPrimaryStage().close();
@@ -89,18 +265,25 @@ public class ParticipantSearchWindowTest {
     }
 
     @Test
-    public void deleteSearchedEvent_resetsParticipantContextAndSelectsEvents() throws Exception {
+    public void deleteSearchedEvent_resetsParticipantContext()
+            throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
+
             try {
-                enterCommand(window, "search-participant E1 /name John");
+                enterCommand(
+                        window,
+                        "search-participant E1 /name John");
                 enterCommand(window, "del-event E1");
-                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
+
+                assertEquals("Events", selectedTabName(window));
                 assertTrue(participants(window).getItems().isEmpty());
-                assertEquals("Participant search", heading(window, "eventHeading"));
-                assertEquals("Use search-participant EVENT_ID /name NAME", heading(window, "searchHeading"));
-                enterCommand(window, "find-event birthday");
-                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
+                assertEquals(
+                        "Participants",
+                        heading(window, "eventHeading"));
+                assertEquals(
+                        "Select an event to view its participants.",
+                        heading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -109,35 +292,92 @@ public class ParticipantSearchWindowTest {
 
     private MainWindow createWindow() {
         ModelManager model = new ModelManager();
-        Event event = new Event(new EventId("E1"), "birthday", 30, "Party");
-        Person person = new PersonBuilder().withId("P1").withName("John Doe").build();
+
+        Event event = new Event(
+                new EventId("E1"),
+                "birthday",
+                30,
+                "Party");
+
+        Person person = new PersonBuilder()
+                .withId("P1")
+                .withName("John Doe")
+                .build();
+
         model.addEvent(event);
         model.addPerson(person);
         model.addParticipation(event, person);
-        Logic logic = new LogicManager(model, new StorageManager(
-                new JsonAddressBookStorage(temporaryFolder.resolve("people.json")),
-                new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json")),
-                new JsonParticipationStorage(temporaryFolder.resolve("participations.json"))));
-        MainWindow window = new MainWindow(new Stage(), logic, temporaryFolder.resolve("people.json"));
+
+        StorageManager storage = new StorageManager(
+                new JsonAddressBookStorage(
+                        temporaryFolder.resolve("people.json")),
+                new JsonUserPrefsStorage(
+                        temporaryFolder.resolve("prefs.json")),
+                new JsonParticipationStorage(
+                        temporaryFolder.resolve(
+                                "participations.json")));
+
+        Logic logic = new LogicManager(model, storage);
+
+        MainWindow window = new MainWindow(
+                new Stage(),
+                logic,
+                temporaryFolder.resolve("people.json"));
+
         window.fillInnerParts();
         return window;
     }
 
-    private void enterCommand(MainWindow window, String command) {
-        TextField input = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
+    private void enterCommand(
+            MainWindow window,
+            String command) {
+        TextField input = (TextField) window.getPrimaryStage()
+                .getScene()
+                .lookup("#commandTextField");
+
         input.setText(command);
         input.fireEvent(new ActionEvent());
     }
 
+    private String selectedTabName(MainWindow window) {
+        return tabs(window)
+                .getSelectionModel()
+                .getSelectedItem()
+                .getText();
+    }
+
     private TabPane tabs(MainWindow window) {
-        return (TabPane) window.getPrimaryStage().getScene().lookup("#listTabs");
+        return (TabPane) window.getPrimaryStage()
+                .getScene()
+                .lookup("#listTabs");
+    }
+
+    @SuppressWarnings("unchecked")
+    private ListView<Event> events(MainWindow window) {
+        TabPane tabPane = tabs(window);
+        tabPane.getSelectionModel().select(1);
+
+        window.getPrimaryStage()
+                .getScene()
+                .getRoot()
+                .applyCss();
+
+        return (ListView<Event>) window.getPrimaryStage()
+                .getScene()
+                .lookup("#eventListView");
     }
 
     private ListView<?> participants(MainWindow window) {
-        return (ListView<?>) tabs(window).getTabs().get(2).getContent().lookup("#participantListView");
+        return (ListView<?>) window.getParticipantListPanel()
+                .getRoot()
+                .lookup("#participantListView");
     }
 
     private String heading(MainWindow window, String id) {
-        return ((Label) tabs(window).getTabs().get(2).getContent().lookup("#" + id)).getText();
+        Label heading = (Label) window.getParticipantListPanel()
+                .getRoot()
+                .lookup("#" + id);
+
+        return heading.getText();
     }
 }

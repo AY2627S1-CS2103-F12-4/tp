@@ -2,21 +2,30 @@
 
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
+<?import javafx.geometry.Orientation?>
 <?import javafx.scene.Scene?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<fx:root type="javafx.stage.Stage" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-         title="Address App" minWidth="500" minHeight="600" onCloseRequest="#handleExit">
+<fx:root type="javafx.stage.Stage"
+         xmlns="http://javafx.com/javafx/17"
+         xmlns:fx="http://javafx.com/fxml/1"
+         title="Address App"
+         minWidth="500"
+         minHeight="600"
+         onCloseRequest="#handleExit">
+
   <icons>
     <Image url="@/images/address_book_32.png" />
   </icons>
+
   <scene>
     <Scene>
       <stylesheets>
@@ -27,51 +36,91 @@
       <VBox>
         <MenuBar fx:id="menuBar" VBox.vgrow="NEVER">
           <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false" onAction="#handleExit" text="Exit" />
+            <MenuItem mnemonicParsing="false"
+                      onAction="#handleExit"
+                      text="Exit" />
           </Menu>
+
           <Menu mnemonicParsing="false" text="Help">
-            <MenuItem fx:id="helpMenuItem" mnemonicParsing="false" onAction="#handleHelp" text="Help" />
+            <MenuItem fx:id="helpMenuItem"
+                      mnemonicParsing="false"
+                      onAction="#handleHelp"
+                      text="Help" />
           </Menu>
         </MenuBar>
 
-        <StackPane VBox.vgrow="NEVER" fx:id="commandBoxPlaceholder" styleClass="pane-with-border">
+        <StackPane fx:id="commandBoxPlaceholder"
+                   VBox.vgrow="NEVER"
+                   styleClass="pane-with-border">
           <padding>
             <Insets top="5" right="10" bottom="5" left="10" />
           </padding>
         </StackPane>
 
-        <StackPane VBox.vgrow="NEVER" fx:id="resultDisplayPlaceholder" styleClass="pane-with-border"
-                   minHeight="100" prefHeight="100" maxHeight="100">
+        <StackPane fx:id="resultDisplayPlaceholder"
+                   VBox.vgrow="NEVER"
+                   styleClass="pane-with-border"
+                   minHeight="100"
+                   prefHeight="100"
+                   maxHeight="100">
           <padding>
             <Insets top="5" right="10" bottom="5" left="10" />
           </padding>
         </StackPane>
 
         <StackPane VBox.vgrow="ALWAYS">
-          <TabPane fx:id="listTabs" tabClosingPolicy="UNAVAILABLE">
+          <TabPane fx:id="listTabs"
+                   tabClosingPolicy="UNAVAILABLE">
             <tabs>
               <Tab fx:id="peopleTab" text="People">
-                <StackPane fx:id="personListPanelPlaceholder" styleClass="pane-with-border">
-                  <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
+                <StackPane fx:id="personListPanelPlaceholder"
+                           styleClass="pane-with-border">
+                  <padding>
+                    <Insets top="10"
+                            right="10"
+                            bottom="10"
+                            left="10" />
+                  </padding>
                 </StackPane>
               </Tab>
+
               <Tab fx:id="eventsTab" text="Events">
-                <StackPane fx:id="eventListPanelPlaceholder" styleClass="pane-with-border">
-                  <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
-                </StackPane>
-              </Tab>
-              <Tab fx:id="participantsTab" text="Participants">
-                <StackPane fx:id="participantListPanelPlaceholder" styleClass="pane-with-border">
-                  <padding><Insets top="10" right="10" bottom="10" left="10" /></padding>
-                </StackPane>
+                <SplitPane orientation="HORIZONTAL"
+                           dividerPositions="0.38">
+                  <items>
+                    <StackPane fx:id="eventListPanelPlaceholder"
+                               styleClass="pane-with-border">
+                      <padding>
+                        <Insets top="10"
+                                right="10"
+                                bottom="10"
+                                left="10" />
+                      </padding>
+                    </StackPane>
+
+                    <StackPane fx:id="participantListPanelPlaceholder"
+                               styleClass="pane-with-border">
+                      <padding>
+                        <Insets top="10"
+                                right="10"
+                                bottom="10"
+                                left="10" />
+                      </padding>
+                    </StackPane>
+                  </items>
+                </SplitPane>
               </Tab>
             </tabs>
           </TabPane>
-          <StackPane fx:id="actionBarPlaceholder" maxHeight="36" maxWidth="-Infinity"
+
+          <StackPane fx:id="actionBarPlaceholder"
+                     maxHeight="36"
+                     maxWidth="-Infinity"
                      StackPane.alignment="TOP_RIGHT" />
         </StackPane>
 
-        <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER" />
+        <StackPane fx:id="statusbarPlaceholder"
+                   VBox.vgrow="NEVER" />
       </VBox>
     </Scene>
   </scene>

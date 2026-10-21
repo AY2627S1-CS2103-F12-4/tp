@@ -46,6 +46,7 @@ public class ParticipantSearchTest {
     @Test
     public void constructor_noSearch_returnsEmptyContextAndResults() {
         assertTrue(model.getParticipantSearchResults().isEmpty());
+        assertFalse(model.isParticipantSearchIncludingArchived());
         assertEquals(Optional.empty(), model.getParticipantSearchEvent());
         assertEquals(Optional.empty(), model.getParticipantSearchKeyword());
     }
@@ -560,6 +561,28 @@ public class ParticipantSearchTest {
 
         other.updateParticipantSearch("Missing", true);
         assertEquals(model, other);
+    }
+
+    @Test
+    public void searchObservers_archiveVisibility_isPublishedBeforeResultsAndClearedWithSearch() {
+        for (boolean includeArchived : List.of(false, true)) {
+            model = createModel();
+            AtomicInteger changes = new AtomicInteger();
+            ListChangeListener<Participation> listener = change -> {
+                changes.incrementAndGet();
+                assertEquals(includeArchived, model.isParticipantSearchIncludingArchived());
+                assertEquals(Optional.of("Michael"), model.getParticipantSearchKeyword());
+                assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
+            };
+            model.getParticipantSearchResults().addListener(listener);
+
+            model.updateParticipantSearch("Michael", includeArchived);
+
+            assertTrue(changes.get() > 0);
+            model.getParticipantSearchResults().removeListener(listener);
+            model.clearParticipantSearch();
+            assertFalse(model.isParticipantSearchIncludingArchived());
+        }
     }
 
     private List<String> resultIds() {

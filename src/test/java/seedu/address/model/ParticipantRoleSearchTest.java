@@ -416,6 +416,7 @@ public class ParticipantRoleSearchTest {
         for (boolean includeArchived : List.of(false, true)) {
             model = createModel();
             model.updateParticipantRoleSearch("Speaker", includeArchived);
+            assertEquals(includeArchived, model.isParticipantSearchIncludingArchived());
             List<Participation> before = List.copyOf(model.getParticipantSearchResults());
 
             assertThrows(EventNotFoundException.class, () ->
@@ -434,6 +435,7 @@ public class ParticipantRoleSearchTest {
             assertTrue(model.getParticipantSearchEvent().isEmpty());
 
             model.setPresent(ARCHIVED_EVENT, CHARLIE, true);
+            assertEquals(includeArchived, model.isParticipantSearchIncludingArchived());
             assertEquals(includeArchived ? 1 : 0, model.getParticipantSearchResultsForEvent(ARCHIVED_EVENT).size());
             assertEquals(includeArchived ? List.of(FIRST_EVENT, SECOND_EVENT, ARCHIVED_EVENT)
                     : List.of(FIRST_EVENT, SECOND_EVENT), model.getFilteredEventList());

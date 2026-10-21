@@ -246,6 +246,9 @@ public interface Model {
      */
     Optional<String> getParticipantSearchKeyword();
 
+    /** Returns whether the active participant search includes archived events, or false when no search is active. */
+    boolean isParticipantSearchIncludingArchived();
+
     /** Returns the participations for {@code person}. */
     Set<Participation> getParticipationsForPerson(Person person) throws PersonNotFoundException;
 

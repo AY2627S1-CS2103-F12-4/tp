@@ -68,6 +68,7 @@ public class ModelManagerEventTest {
 
         model.showEvents(true);
 
+        assertFalse(model.isParticipantSearchIncludingArchived());
         assertEquals(List.of(WORKSHOP, archived), model.getFilteredEventList());
         assertEquals(List.of(WORKSHOP, archived), model.getEvents());
         assertEquals(participations, model.getParticipations().getParticipations());

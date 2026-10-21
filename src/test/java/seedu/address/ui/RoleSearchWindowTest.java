@@ -398,6 +398,114 @@ public class RoleSearchWindowTest {
         });
     }
 
+    @Test
+    public void archiveRoleSearch_selectsArchivedMatchesAndPreservesSelectionAfterInvalidCommands() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-role Speaker /include-archive");
+                assertEquals("Events", selectedTab(window));
+                assertEquals(List.of(CONFERENCE, WORKSHOP, ARCHIVED), events(window).getItems());
+                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals("3 registrations across 3 events with roles matching \"Speaker\".", feedback(window));
+
+                events(window).getSelectionModel().select(2);
+                assertEquals(List.of("E3/P3"), resultIds(window));
+                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Cara Lim", participants(window).getItems().getFirst().getPerson().getName().fullName);
+                assertEquals(Set.of(new ParticipationRole("Speaker")),
+                        participants(window).getItems().getFirst().getRoles());
+                tabs(window).getSelectionModel().select(0);
+                enterCommand(window, "search-role Speaker /event E99");
+                assertEquals("People", selectedTab(window));
+                assertEquals(List.of("E3/P3"), resultIds(window));
+                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                tabs(window).getSelectionModel().select(1);
+                assertEquals("E3", events(window).getSelectionModel().getSelectedItem().getId());
+
+                enterCommand(window, "search-role Speaker");
+                assertEquals(List.of(CONFERENCE, WORKSHOP), events(window).getItems());
+                assertEquals(List.of("E1/P1"), resultIds(window));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void archiveRoleSearch_emptyResultsAndArchivedScopes_showRequestedContext() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-role Missing /include-archive");
+                assertTrue(events(window).getItems().isEmpty());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+                assertEquals("All events", heading(window, "eventHeading"));
+                assertEquals("Matching \"Missing\"", heading(window, "searchHeading"));
+                enterCommand(window, "search-role Missing");
+                assertEquals("All nonarchived events", heading(window, "eventHeading"));
+
+                enterCommand(window, "search-role Speaker /event E3 /include-archive");
+                assertEquals(List.of(ARCHIVED), events(window).getItems());
+                assertEquals(List.of("E3/P3"), resultIds(window));
+                enterCommand(window, "search-role Missing /event E3 /include-archive");
+                assertTrue(events(window).getItems().isEmpty());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Matching \"Missing\"", heading(window, "searchHeading"));
+
+                enterCommand(window, "list-event /include-archive");
+                assertEquals(List.of(CONFERENCE, WORKSHOP, ARCHIVED), events(window).getItems());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals("Participants", heading(window, "eventHeading"));
+                assertEquals(SELECT_EVENT_PROMPT, heading(window, "searchHeading"));
+                enterCommand(window, "list-event");
+                assertEquals(List.of(CONFERENCE, WORKSHOP), events(window).getItems());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void archiveRoleSearch_roleAndArchiveChanges_retainSelectionAndRefreshEmptyScope() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, "search-role Speaker /include-archive");
+                events(window).getSelectionModel().select(1);
+                enterCommand(window, "archive-event E2");
+                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals("E2", events(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Workshop <archived> (E2)", heading(window, "eventHeading"));
+                enterCommand(window, "unarchive-event E2");
+                assertEquals("E2", events(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Workshop (E2)", heading(window, "eventHeading"));
+
+                enterCommand(window, "edit-participant E2 P1 /role Guest");
+                assertEquals(List.of("E1/P1"), resultIds(window));
+                enterCommand(window, "edit-participant E1 P1 /role Guest");
+                assertEquals(List.of("E3/P3"), resultIds(window));
+                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                enterCommand(window, "edit-participant E3 P3 /role Guest");
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals("All events", heading(window, "eventHeading"));
+
+                model.editParticipation(new EventId("E3"), new PersonId("P3"),
+                        Set.of(new ParticipationRole("Speaker")), null);
+                assertEquals(List.of("E3/P3"), resultIds(window));
+                assertEquals("E3", events(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
     private MainWindow createWindow() {
         return createWindow(createModel());
     }

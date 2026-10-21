@@ -414,6 +414,11 @@ public class ModelManager implements Model {
         return Optional.ofNullable(participantSearchKeyword);
     }
 
+    @Override
+    public boolean isParticipantSearchIncludingArchived() {
+        return participantSearchIncludesArchived;
+    }
+
     private void refreshParticipantSearch() {
         if (participantSearchType == null) {
             return;

@@ -105,9 +105,14 @@ public class ParticipantListPanel extends UiPart<Region> {
 
     /** Displays global search results and their query across nonarchived events. */
     public void setSearchContext(String keyword) {
+        setSearchContext(keyword, false);
+    }
+
+    /** Displays global search results and their query with the requested archive visibility. */
+    public void setSearchContext(String keyword, boolean includeArchived) {
         requireAllNonNull(keyword);
         participantListView.setItems(participantSearchResults);
-        eventHeading.setText("All nonarchived events");
+        eventHeading.setText(includeArchived ? "All events" : "All nonarchived events");
         searchHeading.setText("Matching \"" + keyword + "\"");
         setPlaceholder("No matching participants.");
     }

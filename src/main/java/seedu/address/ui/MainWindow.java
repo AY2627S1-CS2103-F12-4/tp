@@ -270,7 +270,7 @@ public class MainWindow extends UiPart<Stage> {
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
-            resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+            resultDisplay.setFeedbackToUser(CommandSuccessMessages.forCommand(commandText));
 
             logic.getParticipantSearchEvent().ifPresentOrElse(
                     event -> participantListPanel.setSearchContext(

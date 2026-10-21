@@ -10,6 +10,14 @@ import org.junit.jupiter.api.Test;
 
 public class CommandSuccessMessagesTest {
     @Test
+    public void forCommand_findEvent_includesSearchPhrase() {
+        assertEquals("Showing event search results for Workshop...",
+                CommandSuccessMessages.forCommand("find-event Workshop"));
+        assertEquals("Showing event search results for Welcome Party...",
+                CommandSuccessMessages.forCommand(" \tfind-event\t Welcome Party  "));
+    }
+
+    @Test
     public void forCommand_mutations_showSpecificSuccessMessages() {
         Map<String, String> messages = Map.ofEntries(
                 Map.entry("add", "Person added successfully."),

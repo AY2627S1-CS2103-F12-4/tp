@@ -1,5 +1,6 @@
 package seedu.address.logic;
 
+import java.util.List;
 import java.util.Optional;
 
 import javafx.collections.ObservableList;
@@ -33,10 +34,16 @@ public interface Logic {
     /** Returns a live, unmodifiable list of the current participant search results. */
     ObservableList<Participation> getParticipantSearchResults();
 
-    /** Returns the selected search event, or empty before the first search. */
+    /**
+     * Returns an immutable snapshot of matching registrations for an event's stable ID.
+     * Read again when {@link #getParticipantSearchResults()} changes to refresh the displayed rows.
+     */
+    List<Participation> getParticipantSearchResultsForEvent(Event event);
+
+    /** Returns the scoped search event, or empty during a global search or when no search is active. */
     Optional<Event> getParticipantSearchEvent();
 
-    /** Returns the search phrase, or empty before the first search. */
+    /** Returns the normalized search phrase, or empty when no search is active. */
     Optional<String> getParticipantSearchKeyword();
 
     /**

@@ -12,7 +12,7 @@ import seedu.address.model.event.Event;
 import seedu.address.model.mapper.Participation;
 
 /**
- * Displays live participant search results and their selected event and search phrase.
+ * Displays live participant search results, their event scope, and their search phrase.
  */
 public class ParticipantListPanel extends UiPart<Region> {
     private static final String FXML = "ParticipantListPanel.fxml";
@@ -55,12 +55,19 @@ public class ParticipantListPanel extends UiPart<Region> {
         searchHeading.setText("Matching \"" + keyword + "\"");
     }
 
+    /** Updates the heading for a global search across nonarchived events. */
+    public void setSearchContext(String keyword) {
+        requireAllNonNull(keyword);
+        eventHeading.setText("All nonarchived events");
+        searchHeading.setText("Matching \"" + keyword + "\"");
+    }
+
     /**
-     * Restores search instructions when no event is selected, such as after deleting the searched event.
+     * Restores search instructions when no search is active, such as after deleting the scoped event.
      */
     public void clearSearchContext() {
         eventHeading.setText("Participant search");
-        searchHeading.setText("Use search-participant EVENT_ID /name NAME");
+        searchHeading.setText("Use search-participant NAME [/event EVENTID]");
     }
 
     /**

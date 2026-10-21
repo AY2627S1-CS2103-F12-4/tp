@@ -51,16 +51,25 @@ public class ParticipantNameContainsKeywordPredicateTest {
 
     @Test
     public void test_caseAndSurroundingWhitespace_ignored() {
-        for (String keyword : List.of("MICHAEL", "mIcHaEl tAn", "  michael  ", "\tMichael\n")) {
+        for (String keyword : List.of("MICHAEL", "mIcHaEl tAn", "  michael  ", "\tMichael\n",
+                "Michael  Tan", "Michael\tTan", "Michael\u2003Tan")) {
             assertTrue(new ParticipantNameContainsKeywordPredicate(keyword).test(PARTICIPATION), keyword);
         }
     }
 
     @Test
     public void test_nonmatchingAndNoncontiguousPhrases_returnsFalse() {
-        for (String keyword : List.of("Michelle", "Michael Tan Junior", "Tan Michael", "Michael an", "Michael  Tan")) {
+        for (String keyword : List.of("Michelle", "Michael Tan Junior", "Tan Michael", "Michael an")) {
             assertFalse(new ParticipantNameContainsKeywordPredicate(keyword).test(PARTICIPATION), keyword);
         }
+    }
+
+    @Test
+    public void test_repeatedWhitespaceInName_normalizedWithoutModifyingPerson() {
+        Person person = new PersonBuilder(MICHAEL).withName("Michael  Tan").build();
+        assertTrue(new ParticipantNameContainsKeywordPredicate("Michael Tan")
+                .test(new Participation(EVENT, person)));
+        assertEquals("Michael  Tan", person.getName().fullName);
     }
 
     @Test

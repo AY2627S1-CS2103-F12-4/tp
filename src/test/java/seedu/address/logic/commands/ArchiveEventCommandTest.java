@@ -50,9 +50,9 @@ public class ArchiveEventCommandTest {
 
         Event archived = event.withArchived(true);
         assertEquals(List.of(archived, other), model.getEvents());
-        assertEquals(List.of(other), model.getFilteredEventList());
+        assertTrue(model.getFilteredEventList().isEmpty());
         assertEquals(archived, model.getSelectedEvent().orElseThrow());
-        assertEquals(archived, model.getParticipantSearchResults().get(0).getEvent());
+        assertTrue(model.getParticipantSearchResults().isEmpty());
         assertEquals(Set.of(new Participation(archived, person, true, tags, roles)),
                 model.getParticipations().getParticipations());
         assertEquals("Welcome Party <archived>", archived.getDisplayName());
@@ -63,7 +63,7 @@ public class ArchiveEventCommandTest {
         parser.parseCommand("unarchive-event E1").execute(model);
         assertFalse(model.getEvents().get(0).isArchived());
         assertEquals("Renamed", model.getEvents().get(0).getDisplayName());
-        assertEquals(model.getEvents(), model.getFilteredEventList());
+        assertEquals(List.of(model.getEvents().getFirst()), model.getFilteredEventList());
         assertEquals("E3", model.createEvent("Next", 1, "").getId());
     }
 

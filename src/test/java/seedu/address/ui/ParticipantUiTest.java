@@ -72,7 +72,7 @@ public class ParticipantUiTest {
         runOnFxThread(() -> {
             ParticipantListPanel panel = new ParticipantListPanel(FXCollections.observableArrayList());
             assertEquals("Participant search", labelText(panel, "eventHeading"));
-            assertEquals("Use search-participant EVENT_ID /name NAME", labelText(panel, "searchHeading"));
+            assertEquals("Use search-participant NAME [/event EVENTID]", labelText(panel, "searchHeading"));
             assertEquals("No matching participants.", ((Label) listView(panel).getPlaceholder()).getText());
             assertTrue(listView(panel).getItems().isEmpty());
         });
@@ -87,6 +87,17 @@ public class ParticipantUiTest {
             assertEquals("Matching \"jOhN\"", labelText(panel, "searchHeading"));
             assertThrows(NullPointerException.class, () -> panel.setSearchContext(null, "John"));
             assertThrows(NullPointerException.class, () -> panel.setSearchContext(EVENT, null));
+        });
+    }
+
+    @Test
+    public void panel_globalSearchContext_displaysScopeAndPhrase() throws Exception {
+        runOnFxThread(() -> {
+            ParticipantListPanel panel = new ParticipantListPanel(FXCollections.observableArrayList());
+            panel.setSearchContext("jOhN");
+            assertEquals("All nonarchived events", labelText(panel, "eventHeading"));
+            assertEquals("Matching \"jOhN\"", labelText(panel, "searchHeading"));
+            assertThrows(NullPointerException.class, () -> panel.setSearchContext((String) null));
         });
     }
 

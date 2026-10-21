@@ -2,6 +2,7 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -77,6 +78,11 @@ public class LogicManager implements Logic {
     @Override
     public ObservableList<Participation> getParticipantSearchResults() {
         return model.getParticipantSearchResults();
+    }
+
+    @Override
+    public List<Participation> getParticipantSearchResultsForEvent(Event event) {
+        return model.getParticipantSearchResultsForEvent(event);
     }
 
     @Override

@@ -177,11 +177,12 @@ public class MainWindow extends UiPart<Stage> {
         eventListPanelPlaceholder.getChildren()
                 .add(eventListPanel.getRoot());
 
-        logic.getParticipantSearchResults().addListener((ListChangeListener<Participation>) change -> {
-            if (!isExecutingCommand) {
-                updateParticipantPanel("");
-            }
-        });
+        logic.getParticipantSearchResults().addListener(
+                (ListChangeListener<Participation>) change -> {
+                    if (!isExecutingCommand) {
+                        updateParticipantPanel("");
+                    }
+                });
 
         ActionBar actionBar = new ActionBar(
                 this::handleAddPerson,
@@ -213,13 +214,16 @@ public class MainWindow extends UiPart<Stage> {
         if (isExecutingCommand || isUpdatingParticipantPanel) {
             return;
         }
+
         if (logic.getParticipantSearchKeyword().isPresent()) {
             if (event != null) {
                 selectedEvent = event;
             }
+
             updateParticipantPanel("");
             return;
         }
+
         if (event == null) {
             selectedEvent = null;
 
@@ -250,19 +254,28 @@ public class MainWindow extends UiPart<Stage> {
         if (isUpdatingParticipantPanel) {
             return;
         }
+
         isUpdatingParticipantPanel = true;
+
         try {
-            boolean startsSearch = isParticipantSearchCommand(commandText);
+            boolean startsSearch =
+                    isParticipantSearchCommand(commandText);
+
             if (startsSearch) {
                 selectedEvent = null;
             }
+
             if (logic.getParticipantSearchKeyword().isPresent()) {
-                participantDisplayMode = ParticipantDisplayMode.SEARCH;
+                participantDisplayMode =
+                        ParticipantDisplayMode.SEARCH;
                 refreshParticipantSearch();
-            } else if (startsSearch || participantDisplayMode == ParticipantDisplayMode.SEARCH) {
+            } else if (startsSearch
+                    || participantDisplayMode
+                    == ParticipantDisplayMode.SEARCH) {
                 eventListPanel.clearSelection();
                 clearParticipantPanel();
-            } else if (participantDisplayMode == ParticipantDisplayMode.EVENT) {
+            } else if (participantDisplayMode
+                    == ParticipantDisplayMode.EVENT) {
                 refreshSelectedEvent();
             }
         } finally {
@@ -291,7 +304,7 @@ public class MainWindow extends UiPart<Stage> {
             return;
         }
 
-        selectedEvent = currentEvent.get();
+        selectedEvent = currentEvent.orElseThrow();
 
         participantListPanel.showParticipantsForEvent(
                 selectedEvent,
@@ -302,24 +315,39 @@ public class MainWindow extends UiPart<Stage> {
      * Refreshes the current participant search.
      */
     private void refreshParticipantSearch() {
-        String keyword = logic.getParticipantSearchKeyword().orElseThrow();
-        Optional<Event> currentEvent = logic.getFilteredEventList().stream()
-                .filter(event -> selectedEvent != null && event.isSameEvent(selectedEvent))
-                .findFirst()
-                .or(() -> logic.getFilteredEventList().stream().findFirst());
+        String keyword =
+                logic.getParticipantSearchKeyword().orElseThrow();
+
+        Optional<Event> currentEvent =
+                logic.getFilteredEventList().stream()
+                        .filter(event -> selectedEvent != null
+                                && event.isSameEvent(selectedEvent))
+                        .findFirst()
+                        .or(() -> logic.getFilteredEventList().stream()
+                                .findFirst());
+
         if (currentEvent.isPresent()) {
             selectedEvent = currentEvent.orElseThrow();
             eventListPanel.selectEvent(selectedEvent);
-            participantListPanel.showSearchResultsForEvent(selectedEvent, keyword,
-                    logic.getParticipantSearchResultsForEvent(selectedEvent));
+
+            participantListPanel.showSearchResultsForEvent(
+                    selectedEvent,
+                    keyword,
+                    logic.getParticipantSearchResultsForEvent(
+                            selectedEvent));
             return;
         }
 
         eventListPanel.clearSelection();
         selectedEvent = null;
-        Optional<Event> scope = logic.getParticipantSearchEvent();
+
+        Optional<Event> scope =
+                logic.getParticipantSearchEvent();
+
         if (scope.isPresent()) {
-            participantListPanel.setSearchContext(scope.orElseThrow(), keyword);
+            participantListPanel.setSearchContext(
+                    scope.orElseThrow(),
+                    keyword);
         } else {
             participantListPanel.setSearchContext(keyword);
         }
@@ -491,8 +519,8 @@ public class MainWindow extends UiPart<Stage> {
      */
     private CommandResult executeCommand(String commandText)
             throws CommandException, ParseException {
-        // Reconcile selection after the command finishes publishing its event filter and result rows.
         isExecutingCommand = true;
+
         try {
             CommandResult commandResult =
                     logic.execute(commandText);
@@ -501,14 +529,25 @@ public class MainWindow extends UiPart<Stage> {
                     "Result: "
                             + commandResult.getFeedbackToUser());
 
-            boolean isParticipantSearch = commandText.strip().split("\\s+", 2)[0]
-                    .equals(SearchParticipantCommand.COMMAND_WORD);
-            resultDisplay.setFeedbackToUser(isParticipantSearch ? commandResult.getFeedbackToUser()
-                    : CommandSuccessMessages.forCommand(commandText));
+            String commandWord =
+                    commandText.strip().split("\\s+", 2)[0];
+
+            boolean isParticipantSearch =
+                    commandWord.equals(
+                            SearchParticipantCommand.COMMAND_WORD);
+
+            resultDisplay.setFeedbackToUser(
+                    isParticipantSearch
+                            ? commandResult.getFeedbackToUser()
+                            : CommandSuccessMessages.forCommand(
+                            commandText));
 
             updateParticipantPanel(commandText);
 
-            // Participant-related commands now use the Events tab.
+            if (commandResult.isShowPeople()) {
+                listTabs.getSelectionModel().select(peopleTab);
+            }
+
             if (commandResult.isShowParticipants()
                     || commandResult.isShowEvents()) {
                 listTabs.getSelectionModel().select(eventsTab);

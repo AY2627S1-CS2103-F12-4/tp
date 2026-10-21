@@ -23,11 +23,18 @@ public class AddParticipantDialogTest {
 
     @Test
     public void buildCommand_personId_formatsExistingCliCommand() {
-        assertEquals("add-participant E1 P1", AddParticipantDialog.buildCommand("E1", " P1 "));
+        assertEquals("add-participant E1 P1", AddParticipantDialog.buildCommand("E1", " P1 ", "", ""));
     }
 
     @Test
-    public void form_containsOnlyRequiredPersonIdField() throws Exception {
+    public void buildCommand_rolesAndTags_formatsRepeatedCliArguments() {
+        assertEquals("add-participant E1 P1 /role Facilitator /role Guest Speaker /tag VIP /tag Alumni",
+                AddParticipantDialog.buildCommand(
+                        "E1", " P1 ", " Facilitator, Guest Speaker ", " VIP, Alumni "));
+    }
+
+    @Test
+    public void form_containsPersonIdRolesAndTagsFields() throws Exception {
         runOnFxThread(() -> {
             AtomicReference<Throwable> failure = new AtomicReference<>();
             Stage owner = new Stage();
@@ -53,8 +60,9 @@ public class AddParticipantDialogTest {
                     .toList();
             long textFieldCount = form.getChildren().stream().filter(TextField.class::isInstance).count();
 
-            assertEquals(List.of("Person ID *"), labels.stream().map(Label::getText).toList());
-            assertEquals(1, textFieldCount);
+            assertEquals(List.of("Person ID *", "Roles (comma-separated)", "Tags (comma-separated)"),
+                    labels.stream().map(Label::getText).toList());
+            assertEquals(3, textFieldCount);
             assertEquals("Add participant to Workshop.", dialogPane.getHeaderText());
             assertTrue(dialogPane.getStylesheets().stream().anyMatch(path -> path.endsWith("DarkTheme.css")));
         } catch (Throwable throwable) {

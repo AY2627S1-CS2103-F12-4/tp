@@ -7,6 +7,7 @@ import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,9 @@ import seedu.address.logic.Messages;
 import seedu.address.model.ModelManager;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
+import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonParticipationStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -183,12 +186,19 @@ public class MainWindowActionButtonsTest {
                 cell.updateIndex(0);
 
                 AtomicReference<Throwable> failure = new AtomicReference<>();
-                Platform.runLater(() -> submitForm(failure, "e.g. P1", "P1"));
+                Platform.runLater(() -> submitForm(failure,
+                        "e.g. P1", "P1",
+                        "Facilitator, Guest Speaker", "Facilitator, Guest Speaker",
+                        "VIP, Alumni", "VIP, Alumni"));
                 Button addParticipantButton = (Button) cell.getGraphic().lookup("#addParticipantButton");
                 addParticipantButton.fire();
 
                 throwFailure(failure);
                 assertEquals(1, model.getParticipationsForEvent(event).size());
+                assertEquals(Set.of(new ParticipationRole("Facilitator"), new ParticipationRole("Guest Speaker")),
+                        model.getParticipationsForEvent(event).iterator().next().getRoles());
+                assertEquals(Set.of(new Tag("VIP"), new Tag("Alumni")),
+                        model.getParticipationsForEvent(event).iterator().next().getTags());
 
                 Platform.runLater(() -> clickDialogButton(failure, "Delete"));
                 Button deleteButton = (Button) cell.getGraphic().lookup("#deleteButton");

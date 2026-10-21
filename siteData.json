@@ -123,6 +123,7 @@
         "deleting-a-person-delete": "Deleting a person: delete",
         "creating-an-event-add-event": "Creating an event: add-event",
         "editing-an-event-edit-event": "Editing an event: edit-event",
+        "archiving-and-restoring-events": "Archiving and restoring events",
         "listing-events-list-event": "Listing events: list-event",
         "viewing-event-details-view-event": "Viewing event details: view-event",
         "adding-a-participant-add-participant": "Adding a participant: add-participant",

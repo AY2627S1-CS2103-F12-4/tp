@@ -17,6 +17,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
+import seedu.address.model.mapper.Participation;
 
 public class EntryCardActionButtonTest {
 
@@ -45,6 +46,30 @@ public class EntryCardActionButtonTest {
 
             HBox cardPane = (HBox) card.getRoot();
             assertEquals("Edit", editButton.getText());
+            assertSame(editButton, cardPane.getChildren().get(cardPane.getChildren().size() - 2));
+            assertSame(deleteButton, cardPane.getChildren().get(cardPane.getChildren().size() - 1));
+            assertRightGap(cardPane, deleteButton);
+            editButton.fire();
+            deleteButton.fire();
+
+            assertEquals(1, editActions.get());
+            assertEquals(1, deleteActions.get());
+        });
+    }
+
+    @Test
+    public void participantCard_actionButtons_runConfiguredActionsInEditDeleteOrder() throws Exception {
+        runOnFxThread(() -> {
+            AtomicInteger editActions = new AtomicInteger();
+            AtomicInteger deleteActions = new AtomicInteger();
+            Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
+            ParticipantCard card = new ParticipantCard(new Participation(event, ALICE),
+                    editActions::incrementAndGet, deleteActions::incrementAndGet);
+            Button editButton = (Button) card.getRoot().lookup("#editButton");
+            Button deleteButton = (Button) card.getRoot().lookup("#deleteButton");
+
+            HBox cardPane = (HBox) card.getRoot();
+            assertEquals("Edit participation", editButton.getText());
             assertSame(editButton, cardPane.getChildren().get(cardPane.getChildren().size() - 2));
             assertSame(deleteButton, cardPane.getChildren().get(cardPane.getChildren().size() - 1));
             assertRightGap(cardPane, deleteButton);

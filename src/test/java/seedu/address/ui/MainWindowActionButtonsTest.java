@@ -30,6 +30,7 @@ import seedu.address.logic.Messages;
 import seedu.address.model.ModelManager;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
+import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
@@ -285,6 +286,50 @@ public class MainWindowActionButtonsTest {
         });
     }
 
+    @Test
+    public void participantRowButtons_editThenDelete_updatesParticipation() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
+            model.addPerson(ALICE);
+            model.addEvent(event);
+            model.addParticipation(event, ALICE);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                Participation participation = model.getParticipationsForEvent(event).iterator().next();
+                window.getParticipantListPanel().showParticipantsForEvent(event, Set.of(participation));
+                ListView<Participation> list = participantListView(window);
+                ListCell<Participation> cell = list.getCellFactory().call(list);
+                cell.updateListView(list);
+                cell.updateIndex(0);
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> submitFormAndClick(failure, "Edit",
+                        "Facilitator, Guest Speaker", "Speaker, Host",
+                        "VIP, Alumni", "VIP"));
+
+                Button editButton = (Button) cell.getGraphic().lookup("#editButton");
+                editButton.fire();
+
+                throwFailure(failure);
+                Participation edited = model.getParticipationsForEvent(event).iterator().next();
+                assertEquals(Set.of(new ParticipationRole("Speaker"), new ParticipationRole("Host")),
+                        edited.getRoles());
+                assertEquals(Set.of(new Tag("VIP")), edited.getTags());
+
+                Platform.runLater(() -> clickDialogButton(failure, "Delete"));
+                Button deleteButton = (Button) cell.getGraphic().lookup("#deleteButton");
+                deleteButton.fire();
+
+                throwFailure(failure);
+                assertTrue(model.getParticipationsForEvent(event).isEmpty());
+                assertEquals(1, model.getFilteredPersonList().size());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
     private MainWindow createWindow(ModelManager model) {
         Logic logic = new LogicManager(model, new StorageManager(
                 new JsonAddressBookStorage(temporaryFolder.resolve("people.json")),
@@ -372,5 +417,10 @@ public class MainWindowActionButtonsTest {
     @SuppressWarnings("unchecked")
     private ListView<Event> eventListView(MainWindow window) {
         return (ListView<Event>) window.getPrimaryStage().getScene().lookup("#eventListView");
+    }
+
+    @SuppressWarnings("unchecked")
+    private ListView<Participation> participantListView(MainWindow window) {
+        return (ListView<Participation>) window.getPrimaryStage().getScene().lookup("#participantListView");
     }
 }

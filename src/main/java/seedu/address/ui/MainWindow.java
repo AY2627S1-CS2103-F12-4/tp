@@ -20,15 +20,18 @@ import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteEventCommand;
+import seedu.address.logic.commands.DeleteParticipantCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
+import seedu.address.model.mapper.Participation;
 import seedu.address.model.person.Person;
 import seedu.address.ui.dialogs.AddEventDialog;
 import seedu.address.ui.dialogs.AddParticipantDialog;
 import seedu.address.ui.dialogs.AddPersonDialog;
 import seedu.address.ui.dialogs.DeleteConfirmationDialog;
 import seedu.address.ui.dialogs.EditEventDialog;
+import seedu.address.ui.dialogs.EditParticipantDialog;
 import seedu.address.ui.dialogs.EditPersonDialog;
 
 /**
@@ -163,7 +166,9 @@ public class MainWindow extends UiPart<Stage> {
                 .add(personListPanel.getRoot());
 
         participantListPanel = new ParticipantListPanel(
-                logic.getParticipantSearchResults());
+                logic.getParticipantSearchResults(),
+                this::handleEditParticipant,
+                this::handleDeleteParticipant);
         participantListPanelPlaceholder.getChildren()
                 .add(participantListPanel.getRoot());
 
@@ -391,6 +396,27 @@ public class MainWindow extends UiPart<Stage> {
             executeCommand(command);
             listTabs.getSelectionModel().select(eventsTab);
         });
+    }
+
+    private void handleEditParticipant(Participation participation) {
+        new EditParticipantDialog(primaryStage, participation).showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(eventsTab);
+        });
+    }
+
+    private void handleDeleteParticipant(Participation participation) {
+        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(
+                primaryStage,
+                "Delete participant",
+                "Remove " + participation.getPerson().getName().fullName
+                        + " from " + participation.getEvent().getName() + "?");
+
+        if (dialog.showAndWait()) {
+            executeDeleteCommand(DeleteParticipantCommand.COMMAND_WORD + " "
+                    + participation.getEvent().getId() + " "
+                    + participation.getPerson().getId(), eventsTab);
+        }
     }
 
     private void handleEditEvent(Event event) {

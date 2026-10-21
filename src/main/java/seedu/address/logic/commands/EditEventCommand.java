@@ -48,7 +48,7 @@ public class EditEventCommand extends Command {
                 .orElseThrow(() -> new CommandException(String.format(MESSAGE_NOT_FOUND, eventId)));
         Event event = new Event(eventId, name == null ? current.getName() : name,
                 capacity == null ? current.getCapacity() : capacity,
-                description == null ? current.getDescription() : description);
+                description == null ? current.getDescription() : description, current.isArchived());
         model.updateEvent(event);
         return new CommandResult(String.format(MESSAGE_SUCCESS, event.getName(), event.getId()), false, false, true);
     }

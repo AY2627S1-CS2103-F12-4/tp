@@ -37,7 +37,7 @@ public class EventCard extends UiPart<Region> {
         requireNonNull(addParticipantAction);
         requireNonNull(deleteAction);
         index.setText(displayedIndex + ". ");
-        name.setText(event.getName());
+        name.setText(event.getDisplayName());
         eventId.setText("Event ID: " + event.getId());
         capacity.setText("Capacity: " + event.getCapacity());
         description.setText(event.getDescription());

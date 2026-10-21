@@ -227,12 +227,12 @@ public interface Model {
     Optional<Event> getSelectedEvent();
 
     /**
-     * Returns a live, unmodifiable view of the filtered events in insertion order.
+     * Returns a live, unmodifiable view of active events matching the filter, in insertion order.
      */
     ObservableList<Event> getFilteredEventList();
 
     /**
-     * Replaces the event filter with the given non-null predicate.
+     * Replaces the event filter with the given non-null predicate. Archived events remain hidden.
      */
     void updateFilteredEventList(Predicate<Event> predicate);
 

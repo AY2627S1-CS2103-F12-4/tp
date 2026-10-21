@@ -130,6 +130,25 @@ Examples:
 * `edit-event E1 /desc`
 * `edit-event E1 Wedding Reception /cap 80 /desc Updated venue`
 
+### Archiving and restoring events
+
+Format: `archive-event EVENT_ID` or `unarchive-event EVENT_ID`
+
+Use the stable Event ID, such as `E1`. This identifies the event even when multiple
+events share a name. Missing or invalid IDs produce an error. Archiving an already
+archived event, or restoring an active event, also produces an error.
+
+Archived events are hidden from the event list and `find-event` results, including
+after restarting the app. Restore an event by ID to show it again (subject to the
+current search filter). Direct viewing by ID remains available and shows
+`<archived>` after the event name. Their IDs,
+registrations and attendance are preserved. Archive state is saved between sessions.
+For this initial version, all other event operations remain available.
+
+Examples:
+* `archive-event E1`
+* `unarchive-event E1`
+
 ### Listing events: `list-event`
 
 Displays the events in the application.
@@ -285,6 +304,8 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **Delete person** | `delete INDEX` |
 | **Add event** | `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION` |
 | **Edit event** | `edit-event EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]` |
+| **Archive event** | `archive-event EVENT_ID` |
+| **Restore event** | `unarchive-event EVENT_ID` |
 | **List events** | `list-event` |
 | **View event** | `view-event EVENT_ID` |
 | **Add participant** | `add-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |

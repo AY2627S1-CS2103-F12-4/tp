@@ -92,7 +92,7 @@ public class ModelManager implements Model {
         this.userPrefs = new UserPrefs(userPrefs);
         filteredPersons = new FilteredList<>(this.addressBook.getPersonList());
         observableEvents = FXCollections.observableArrayList(this.eventList.getEvents());
-        filteredEvents = new FilteredList<>(observableEvents);
+        filteredEvents = new FilteredList<>(observableEvents, event -> !event.isArchived());
         unmodifiableFilteredEvents = FXCollections.unmodifiableObservableList(filteredEvents);
     }
 
@@ -416,7 +416,8 @@ public class ModelManager implements Model {
 
     @Override
     public void updateFilteredEventList(Predicate<Event> predicate) {
-        filteredEvents.setPredicate(requireNonNull(predicate));
+        requireNonNull(predicate);
+        filteredEvents.setPredicate(event -> !event.isArchived() && predicate.test(event));
     }
 
     @Override

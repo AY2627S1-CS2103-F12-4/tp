@@ -13,20 +13,23 @@ class JsonAdaptedEvent {
     private final String name;
     private final Integer capacity;
     private final String description;
+    private final Boolean archived;
 
     /** Constructs an adapted event from JSON fields. */
     @JsonCreator
     public JsonAdaptedEvent(@JsonProperty("id") String id, @JsonProperty("name") String name,
-            @JsonProperty("capacity") Integer capacity, @JsonProperty("description") String description) {
+            @JsonProperty("capacity") Integer capacity, @JsonProperty("description") String description,
+            @JsonProperty("archived") Boolean archived) {
         this.id = id;
         this.name = name;
         this.capacity = capacity;
         this.description = description;
+        this.archived = archived;
     }
 
     /** Copies all persisted fields from the supplied event. */
     public JsonAdaptedEvent(Event source) {
-        this(source.getId(), source.getName(), source.getCapacity(), source.getDescription());
+        this(source.getId(), source.getName(), source.getCapacity(), source.getDescription(), source.isArchived());
     }
 
     /** Restores an event, reporting invalid or missing fields as a data loading error. */
@@ -35,7 +38,7 @@ class JsonAdaptedEvent {
             throw new IllegalValueException("Event fields id, name, capacity and description must be present.");
         }
         try {
-            return new Event(new EventId(id), name, capacity, description);
+            return new Event(new EventId(id), name, capacity, description, Boolean.TRUE.equals(archived));
         } catch (IllegalArgumentException e) {
             throw new IllegalValueException(e.getMessage());
         }

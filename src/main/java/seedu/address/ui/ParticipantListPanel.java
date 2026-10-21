@@ -51,7 +51,7 @@ public class ParticipantListPanel extends UiPart<Region> {
      */
     public void setSearchContext(Event event, String keyword) {
         requireAllNonNull(event, keyword);
-        eventHeading.setText(event.getName() + " (" + event.getId() + ")");
+        eventHeading.setText(event.getDisplayName() + " (" + event.getId() + ")");
         searchHeading.setText("Matching \"" + keyword + "\"");
     }
 

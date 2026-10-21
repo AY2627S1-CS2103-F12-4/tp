@@ -12,6 +12,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddEventCommand;
 import seedu.address.logic.commands.AddParticipantCommand;
+import seedu.address.logic.commands.ArchiveEventCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.DeleteCommand;
@@ -29,6 +30,7 @@ import seedu.address.logic.commands.ListParticipantsCommand;
 import seedu.address.logic.commands.MarkParticipantCommand;
 import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.commands.SearchRoleCommand;
+import seedu.address.logic.commands.UnarchiveEventCommand;
 import seedu.address.logic.commands.UnmarkParticipantCommand;
 import seedu.address.logic.commands.ViewEventCommand;
 import seedu.address.logic.commands.ViewParticipantCommand;
@@ -70,6 +72,8 @@ public class AddressBookParser {
         logger.fine("Command word: " + commandWord + "; Arguments: " + arguments);
 
         return switch (commandWord) {
+            case ArchiveEventCommand.COMMAND_WORD -> new ArchiveEventCommandParser().parse(arguments);
+            case UnarchiveEventCommand.COMMAND_WORD -> new UnarchiveEventCommandParser().parse(arguments);
             case AddCommand.COMMAND_WORD -> new AddCommandParser().parse(arguments);
             case AddEventCommand.COMMAND_WORD -> new AddEventCommandParser().parse(arguments);
             case AddParticipantCommand.COMMAND_WORD -> new AddParticipantCommandParser().parse(arguments);

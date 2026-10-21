@@ -18,7 +18,7 @@
          xmlns="http://javafx.com/javafx/17"
          xmlns:fx="http://javafx.com/fxml/1"
          title="Address App"
-         minWidth="450"
+         minWidth="500"
          minHeight="600"
          onCloseRequest="#handleExit">
 
@@ -68,47 +68,56 @@
           </padding>
         </StackPane>
 
-        <TabPane fx:id="listTabs"
-                 tabClosingPolicy="UNAVAILABLE"
-                 VBox.vgrow="ALWAYS">
-          <tabs>
-            <Tab text="People">
-              <StackPane fx:id="personListPanelPlaceholder"
-                         styleClass="pane-with-border">
-                <padding>
-                  <Insets top="10" right="10" bottom="10" left="10" />
-                </padding>
-              </StackPane>
-            </Tab>
+        <StackPane VBox.vgrow="ALWAYS">
+          <TabPane fx:id="listTabs"
+                   tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+              <Tab fx:id="peopleTab" text="People">
+                <StackPane fx:id="personListPanelPlaceholder"
+                           styleClass="pane-with-border">
+                  <padding>
+                    <Insets top="10"
+                            right="10"
+                            bottom="10"
+                            left="10" />
+                  </padding>
+                </StackPane>
+              </Tab>
 
-            <Tab fx:id="eventsTab" text="Events">
-              <SplitPane orientation="HORIZONTAL"
-                         dividerPositions="0.38">
-                <items>
-                  <StackPane fx:id="eventListPanelPlaceholder"
-                             styleClass="pane-with-border">
-                    <padding>
-                      <Insets top="10"
-                              right="10"
-                              bottom="10"
-                              left="10" />
-                    </padding>
-                  </StackPane>
+              <Tab fx:id="eventsTab" text="Events">
+                <SplitPane orientation="HORIZONTAL"
+                           dividerPositions="0.38">
+                  <items>
+                    <StackPane fx:id="eventListPanelPlaceholder"
+                               styleClass="pane-with-border">
+                      <padding>
+                        <Insets top="10"
+                                right="10"
+                                bottom="10"
+                                left="10" />
+                      </padding>
+                    </StackPane>
 
-                  <StackPane fx:id="participantListPanelPlaceholder"
-                             styleClass="pane-with-border">
-                    <padding>
-                      <Insets top="10"
-                              right="10"
-                              bottom="10"
-                              left="10" />
-                    </padding>
-                  </StackPane>
-                </items>
-              </SplitPane>
-            </Tab>
-          </tabs>
-        </TabPane>
+                    <StackPane fx:id="participantListPanelPlaceholder"
+                               styleClass="pane-with-border">
+                      <padding>
+                        <Insets top="10"
+                                right="10"
+                                bottom="10"
+                                left="10" />
+                      </padding>
+                    </StackPane>
+                  </items>
+                </SplitPane>
+              </Tab>
+            </tabs>
+          </TabPane>
+
+          <StackPane fx:id="actionBarPlaceholder"
+                     maxHeight="36"
+                     maxWidth="-Infinity"
+                     StackPane.alignment="TOP_RIGHT" />
+        </StackPane>
 
         <StackPane fx:id="statusbarPlaceholder"
                    VBox.vgrow="NEVER" />

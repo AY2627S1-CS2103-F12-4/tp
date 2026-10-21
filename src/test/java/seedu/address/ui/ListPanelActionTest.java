@@ -1,0 +1,88 @@
+package seedu.address.ui;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static seedu.address.testutil.FxTestUtil.runOnFxThread;
+import static seedu.address.testutil.TypicalPersons.ALICE;
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
+
+import org.junit.jupiter.api.Test;
+
+import javafx.collections.FXCollections;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import seedu.address.model.event.Event;
+import seedu.address.model.event.EventId;
+import seedu.address.model.person.Person;
+
+public class ListPanelActionTest {
+    private static final Event EVENT = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
+
+    @Test
+    public void personPanel_deleteButton_forwardsPersonAndDisplayedIndex() throws Exception {
+        runOnFxThread(() -> {
+            AtomicReference<Person> deletedPerson = new AtomicReference<>();
+            AtomicInteger deletedIndex = new AtomicInteger();
+            BiConsumer<Person, Integer> deleteAction = (person, index) -> {
+                deletedPerson.set(person);
+                deletedIndex.set(index);
+            };
+            PersonListPanel panel = new PersonListPanel(FXCollections.observableArrayList(ALICE), deleteAction);
+            ListView<Person> list = personListView(panel);
+            ListCell<Person> cell = list.getCellFactory().call(list);
+
+            cell.updateListView(list);
+            cell.updateIndex(0);
+            Button deleteButton = (Button) cell.getGraphic().lookup("#deleteButton");
+            deleteButton.fire();
+
+            assertSame(ALICE, deletedPerson.get());
+            assertEquals(1, deletedIndex.get());
+            cell.updateIndex(1);
+            assertNull(cell.getGraphic());
+            assertNull(cell.getText());
+        });
+    }
+
+    @Test
+    public void eventPanel_actionButtons_forwardEvent() throws Exception {
+        runOnFxThread(() -> {
+            AtomicReference<Event> participantEvent = new AtomicReference<>();
+            AtomicReference<Event> deletedEvent = new AtomicReference<>();
+            EventListPanel panel = new EventListPanel(FXCollections.observableArrayList(EVENT),
+                    participantEvent::set, deletedEvent::set);
+            ListView<Event> list = eventListView(panel);
+            ListCell<Event> cell = list.getCellFactory().call(list);
+
+            cell.updateListView(list);
+            cell.updateIndex(0);
+            assertNotNull(cell.getGraphic());
+            Button addParticipantButton = (Button) cell.getGraphic().lookup("#addParticipantButton");
+            Button deleteButton = (Button) cell.getGraphic().lookup("#deleteButton");
+            addParticipantButton.fire();
+            deleteButton.fire();
+
+            assertSame(EVENT, participantEvent.get());
+            assertSame(EVENT, deletedEvent.get());
+            cell.updateIndex(1);
+            assertNull(cell.getGraphic());
+            assertNull(cell.getText());
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private ListView<Person> personListView(PersonListPanel panel) {
+        return (ListView<Person>) panel.getRoot().lookup("#personListView");
+    }
+
+    @SuppressWarnings("unchecked")
+    private ListView<Event> eventListView(EventListPanel panel) {
+        return (ListView<Event>) panel.getRoot().lookup("#eventListView");
+    }
+}

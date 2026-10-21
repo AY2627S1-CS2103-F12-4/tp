@@ -30,7 +30,7 @@ public class ViewEventCommand extends Command {
         String participants = new ListParticipantsCommand(eventId).execute(model).getFeedbackToUser();
         String details = "Event Details\n"
                 + "Event ID: " + event.getId() + "\n"
-                + "Name: " + event.getName() + "\n"
+                + "Name: " + event.getDisplayName() + "\n"
                 + "Capacity: " + event.getCapacity() + "\n"
                 + "Description: " + event.getDescription() + "\n\n"
                 + participants;

@@ -24,6 +24,8 @@ public class ParticipantListPanel extends UiPart<Region> {
     private static final String FXML = "ParticipantListPanel.fxml";
 
     private final ObservableList<Participation> participantSearchResults;
+    private final ObservableList<Participation> eventParticipants =
+            FXCollections.observableArrayList();
 
     @FXML
     private Label eventHeading;
@@ -34,12 +36,11 @@ public class ParticipantListPanel extends UiPart<Region> {
     @FXML
     private ListView<Participation> participantListView;
 
-    private final ObservableList<Participation> eventParticipants =
-            FXCollections.observableArrayList();
-
     /**
      * Creates a participant panel bound initially to participant search
      * results.
+     *
+     * @param participantSearchResults observable participant search results
      */
     public ParticipantListPanel(
             ObservableList<Participation> participantSearchResults) {
@@ -49,11 +50,7 @@ public class ParticipantListPanel extends UiPart<Region> {
 
         this.participantSearchResults = participantSearchResults;
         participantListView.setItems(participantSearchResults);
-
-        Label emptyMessage =
-                new Label("Select an event to view its participants.");
-        emptyMessage.getStyleClass().add("label-bright");
-        participantListView.setPlaceholder(emptyMessage);
+        setPlaceholder("Select an event to view its participants.");
 
         participantListView.setCellFactory(
                 listView -> new ParticipantListViewCell());
@@ -61,6 +58,9 @@ public class ParticipantListPanel extends UiPart<Region> {
 
     /**
      * Displays all participants belonging to the selected event.
+     *
+     * @param event selected event
+     * @param participants participants belonging to the event
      */
     public void showParticipantsForEvent(
             Event event,
@@ -79,17 +79,17 @@ public class ParticipantListPanel extends UiPart<Region> {
         participantListView.setItems(eventParticipants);
 
         eventHeading.setText(
-                event.getName() + " (" + event.getId() + ")");
+                event.getDisplayName() + " (" + event.getId() + ")");
         searchHeading.setText("Participants");
 
-        Label emptyMessage =
-                new Label("No participants found for this event.");
-        emptyMessage.getStyleClass().add("label-bright");
-        participantListView.setPlaceholder(emptyMessage);
+        setPlaceholder("No participants found for this event.");
     }
 
     /**
-     * Displays participant name-search results.
+     * Displays participant search results.
+     *
+     * @param event event associated with the search
+     * @param keyword original search keyword
      */
     public void setSearchContext(Event event, String keyword) {
         requireAllNonNull(event, keyword);
@@ -97,16 +97,15 @@ public class ParticipantListPanel extends UiPart<Region> {
         participantListView.setItems(participantSearchResults);
 
         eventHeading.setText(
-                event.getName() + " (" + event.getId() + ")");
+                event.getDisplayName() + " (" + event.getId() + ")");
         searchHeading.setText("Matching \"" + keyword + "\"");
 
-        Label emptyMessage = new Label("No matching participants.");
-        emptyMessage.getStyleClass().add("label-bright");
-        participantListView.setPlaceholder(emptyMessage);
+        setPlaceholder("No matching participants.");
     }
 
     /**
-     * Restores the instructions shown when no event has been selected.
+     * Clears the displayed participants and restores the instructions shown
+     * when no event is selected.
      */
     public void clearSearchContext() {
         eventParticipants.clear();
@@ -116,11 +115,15 @@ public class ParticipantListPanel extends UiPart<Region> {
         searchHeading.setText(
                 "Select an event to view its participants.");
 
-        Label emptyMessage =
-                new Label("Select an event to view its participants.");
+        setPlaceholder("Select an event to view its participants.");
+    }
+
+    private void setPlaceholder(String message) {
+        Label emptyMessage = new Label(message);
         emptyMessage.getStyleClass().add("label-bright");
         participantListView.setPlaceholder(emptyMessage);
     }
+
     /**
      * Renders participant cards.
      */
@@ -139,5 +142,4 @@ public class ParticipantListPanel extends UiPart<Region> {
                     : new ParticipantCard(participation).getRoot());
         }
     }
-
 }

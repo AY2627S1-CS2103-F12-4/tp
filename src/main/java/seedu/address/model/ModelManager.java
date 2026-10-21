@@ -27,6 +27,7 @@ import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.ParticipationAlreadyAbsentException;
 import seedu.address.model.mapper.exceptions.ParticipationAlreadyPresentException;
 import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
@@ -91,7 +92,7 @@ public class ModelManager implements Model {
         this.userPrefs = new UserPrefs(userPrefs);
         filteredPersons = new FilteredList<>(this.addressBook.getPersonList());
         observableEvents = FXCollections.observableArrayList(this.eventList.getEvents());
-        filteredEvents = new FilteredList<>(observableEvents);
+        filteredEvents = new FilteredList<>(observableEvents, event -> !event.isArchived());
         unmodifiableFilteredEvents = FXCollections.unmodifiableObservableList(filteredEvents);
     }
 
@@ -224,6 +225,26 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public void editParticipation(EventId eventId, PersonId personId, Set<ParticipationRole> roles, Set<Tag> tags) {
+        requireAllNonNull(eventId, personId);
+        if (roles == null && tags == null) {
+            throw new IllegalArgumentException("At least one role or tag field must be provided.");
+        }
+        Event event = eventList.getEventFromId(eventId.toString());
+        Person person = addressBook.getPersonFromId(personId);
+        if (person == null) {
+            throw new PersonNotFoundException();
+        }
+        Participation current = mapper.getParticipationsForEvent(event).stream()
+                .filter(candidate -> candidate.getPerson().getId().equals(personId))
+                .findFirst()
+                .orElseThrow(() -> new ParticipationNotFoundException(eventId.toString(), personId.toString()));
+        mapper.editDetails(event, person, roles == null ? current.getRoles() : roles,
+                tags == null ? current.getTags() : tags);
+        refreshParticipantSearch();
+    }
+
+    @Override
     public void markPresent(EventId eventId, PersonId personId)
             throws ParticipationNotFoundException, ParticipationAlreadyPresentException,
             EventNotFoundException, PersonNotFoundException {
@@ -242,6 +263,28 @@ public class ModelManager implements Model {
             throw new ParticipationAlreadyPresentException(eventId.toString(), personId.toString());
         }
         mapper.setPresent(event, person, true);
+        refreshParticipantSearch();
+    }
+
+    @Override
+    public void unmarkPresent(EventId eventId, PersonId personId)
+            throws ParticipationNotFoundException, ParticipationAlreadyAbsentException,
+            EventNotFoundException, PersonNotFoundException {
+        requireAllNonNull(eventId, personId);
+        Event event = eventList.getEventFromId(eventId.toString());
+        Person person = addressBook.getPersonFromId(personId);
+        if (person == null) {
+            throw new PersonNotFoundException();
+        }
+
+        Participation participation = mapper.getParticipationsForEvent(event).stream()
+                .filter(candidate -> candidate.getPerson().getId().equals(personId))
+                .findFirst()
+                .orElseThrow(() -> new ParticipationNotFoundException(eventId.toString(), personId.toString()));
+        if (!participation.isPresent()) {
+            throw new ParticipationAlreadyAbsentException(eventId.toString(), personId.toString());
+        }
+        mapper.setPresent(event, person, false);
         refreshParticipantSearch();
     }
 
@@ -345,6 +388,16 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public void updateEvent(Event event) {
+        eventList.updateEvent(requireNonNull(event));
+        if (selectedEvent != null && selectedEvent.isSameEvent(event)) {
+            selectedEvent = event;
+        }
+        observableEvents.setAll(eventList.getEvents());
+        refreshParticipantSearch();
+    }
+
+    @Override
     public List<Event> getEvents() {
         return eventList.getEvents();
     }
@@ -383,7 +436,8 @@ public class ModelManager implements Model {
 
     @Override
     public void updateFilteredEventList(Predicate<Event> predicate) {
-        filteredEvents.setPredicate(requireNonNull(predicate));
+        requireNonNull(predicate);
+        filteredEvents.setPredicate(event -> !event.isArchived() && predicate.test(event));
     }
 
     @Override

@@ -30,6 +30,10 @@ AttendPlusPlus is a **desktop application for managing events and their particip
 
 ## Features
 
+Successful commands show a short status message in the output panel, such as
+`Event added successfully.` or `Viewing event...`. View lists and details in the GUI panels.
+Failed commands continue to show the specific error and usage guidance where applicable.
+
 <box type="info" seamless>
 
 **Command format conventions:**
@@ -108,6 +112,43 @@ Format: `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION`
 
 Example: `add-event Wedding /cap 50 /desc Wedding Ceremony`
 
+### Editing an event: `edit-event`
+
+Updates an event identified by its stable Event ID. Supply at least one of a new name,
+capacity or description. Omitted fields retain their existing values; an empty
+`/desc` clears the description. The optional name appears directly after the ID,
+before any prefixed fields. Names may contain spaces and may match another event's name.
+
+The Event ID, registrations, roles, tags and attendance are preserved. Reducing
+capacity below the registration count does not remove existing participants.
+
+Format: `edit-event EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]`
+
+Examples:
+* `edit-event E1 Wedding Reception`
+* `edit-event E1 /cap 80`
+* `edit-event E1 /desc`
+* `edit-event E1 Wedding Reception /cap 80 /desc Updated venue`
+
+### Archiving and restoring events
+
+Format: `archive-event EVENT_ID` or `unarchive-event EVENT_ID`
+
+Use the stable Event ID, such as `E1`. This identifies the event even when multiple
+events share a name. Missing or invalid IDs produce an error. Archiving an already
+archived event, or restoring an active event, also produces an error.
+
+Archived events are hidden from the event list and `find-event` results, including
+after restarting the app. Restore an event by ID to show it again (subject to the
+current search filter). Direct viewing by ID remains available and shows
+`<archived>` after the event name. Their IDs,
+registrations and attendance are preserved. Archive state is saved between sessions.
+For this initial version, all other event operations remain available.
+
+Examples:
+* `archive-event E1`
+* `unarchive-event E1`
+
 ### Listing events: `list-event`
 
 Displays the events in the application.
@@ -134,6 +175,21 @@ Examples:
 * `add-participant E1 P3 /role Bridesmaid /tag VIP`
 
 The person must already exist in the address book. Role information applies to that person's participation in this event, rather than all their events.
+
+### Editing a participant: `edit-participant`
+
+Updates an existing registration's roles and tags without changing the person's
+contact details or attendance. Supply at least one `/role` or `/tag` field.
+An omitted field is preserved; supplied values replace the entire corresponding set.
+Use a single empty `/role` or `/tag` to clear that set. Do not mix an empty
+value with other values for the same field. Repeated identical values are deduplicated.
+
+Format: `edit-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...`
+
+Examples:
+* `edit-participant E1 P1 /role Speaker /role Host /tag VIP`
+* `edit-participant E1 P1 /tag Guest`
+* `edit-participant E1 P1 /role /tag`
 
 ### Listing participants in an event: `list-participants`
 
@@ -184,6 +240,15 @@ Format: `mark-participant EVENT_ID PERSON_ID`
 Example: `mark-participant E1 P2`
 
 ![Mark participant](images/markParticipant.png)
+
+### Cancelling attendance: `unmark-participant`
+
+Marks a registered participant as absent without removing their registration, roles or tags.
+The participant must currently be marked as present; otherwise, an error is shown.
+
+Format: `unmark-participant EVENT_ID PERSON_ID`
+
+Example: `unmark-participant E1 P2`
 
 ### Removing a participant: `del-participant`
 
@@ -253,13 +318,18 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **Find people** | `find KEYWORD [MORE_KEYWORDS]` |
 | **Delete person** | `delete INDEX` |
 | **Add event** | `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION` |
+| **Edit event** | `edit-event EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]` |
+| **Archive event** | `archive-event EVENT_ID` |
+| **Restore event** | `unarchive-event EVENT_ID` |
 | **List events** | `list-event` |
 | **View event** | `view-event EVENT_ID` |
 | **Add participant** | `add-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |
+| **Edit participant** | `edit-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |
 | **List participants** | `list-participants EVENT_ID` |
 | **View participant** | `view-participant EVENT_ID PERSON_ID` |
 | **Search participant** | `search-participant EVENT_ID /name NAME` |
 | **Search role** | `search-role EVENT_ID /role ROLE` |
+| **Cancel attendance** | `unmark-participant EVENT_ID PERSON_ID` |
 | **Mark attendance** | `mark-participant EVENT_ID PERSON_ID` |
 | **Remove participant** | `del-participant EVENT_ID PERSON_ID` |
 | **Clear people** | `clear` |

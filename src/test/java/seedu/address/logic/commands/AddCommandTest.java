@@ -160,6 +160,11 @@ public class AddCommandTest {
         }
 
         @Override
+        public void updateEvent(Event event) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public Event createEvent(String name, int capacity, String description) {
             throw new AssertionError("This method should not be called.");
         }
@@ -258,6 +263,17 @@ public class AddCommandTest {
 
         @Override
         public void removeParticipation(EventId eventId, PersonId personId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void unmarkPresent(EventId eventId, PersonId personId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void editParticipation(EventId eventId, PersonId personId,
+                Set<ParticipationRole> roles, Set<Tag> tags) {
             throw new AssertionError("This method should not be called.");
         }
 

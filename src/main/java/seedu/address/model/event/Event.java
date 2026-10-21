@@ -16,12 +16,18 @@ public final class Event {
     private final String name;
     private final int capacity;
     private final String description;
+    private final boolean archived;
 
     /**
      * Constructs an event with the supplied identity and name.
      * Reuses the identity when reconstructing or updating an existing event.
      */
     public Event(EventId id, String name, int capacity, String description) {
+        this(id, name, capacity, description, false);
+    }
+
+    /** Constructs an event with its persisted archive state. */
+    public Event(EventId id, String name, int capacity, String description, boolean archived) {
         requireAllNonNull(id, name, description);
         checkArgument(!name.isBlank(), "Event names should not be blank");
         checkArgument(capacity > 0, "Event capacity must be a positive integer");
@@ -29,6 +35,7 @@ public final class Event {
         this.name = name;
         this.capacity = capacity;
         this.description = description;
+        this.archived = archived;
     }
 
     public String getId() {
@@ -41,6 +48,20 @@ public final class Event {
 
     public String getDescription() {
         return description;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    /** Returns a display label; the stored name remains unchanged for matching and searching. */
+    public String getDisplayName() {
+        return name + (archived ? " <archived>" : "");
+    }
+
+    /** Returns a copy preserving all details except archive state. */
+    public Event withArchived(boolean archived) {
+        return new Event(id, name, capacity, description, archived);
     }
 
     public String getName() {
@@ -65,13 +86,14 @@ public final class Event {
         return other instanceof Event otherEvent
                 && id.equals(otherEvent.id)
                 && name.equals(otherEvent.name)
+                && archived == otherEvent.archived
                 && capacity == otherEvent.capacity
                 && description.equals(otherEvent.description);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, capacity, description);
+        return Objects.hash(id, name, capacity, description, archived);
     }
 
     @Override
@@ -81,6 +103,7 @@ public final class Event {
                 .add("name", name)
                 .add("capacity", capacity)
                 .add("description", description)
+                .add("archived", archived)
                 .toString();
     }
 }

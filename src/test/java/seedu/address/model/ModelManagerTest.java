@@ -20,11 +20,20 @@ import seedu.address.model.event.EventList;
 import seedu.address.model.mapper.MapperManager;
 import seedu.address.model.mapper.Participation;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.PersonId;
 import seedu.address.testutil.AddressBookBuilder;
 
 public class ModelManagerTest {
 
     private ModelManager modelManager = new ModelManager();
+
+    @Test
+    public void unmarkPresent_nullIds_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () ->
+                modelManager.unmarkPresent(null, new PersonId("P1")));
+        assertThrows(NullPointerException.class, () ->
+                modelManager.unmarkPresent(new EventId("E1"), null));
+    }
 
     @Test
     public void constructor() {

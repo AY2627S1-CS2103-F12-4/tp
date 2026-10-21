@@ -18,9 +18,16 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteEventCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
+import seedu.address.model.person.Person;
+import seedu.address.ui.dialogs.AddEventDialog;
+import seedu.address.ui.dialogs.AddParticipantDialog;
+import seedu.address.ui.dialogs.AddPersonDialog;
+import seedu.address.ui.dialogs.DeleteConfirmationDialog;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -56,6 +63,9 @@ public class MainWindow extends UiPart<Stage> {
     private StackPane commandBoxPlaceholder;
 
     @FXML
+    private StackPane actionBarPlaceholder;
+
+    @FXML
     private MenuItem helpMenuItem;
 
     @FXML
@@ -66,6 +76,9 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private TabPane listTabs;
+
+    @FXML
+    private Tab peopleTab;
 
     @FXML
     private Tab eventsTab;
@@ -80,8 +93,11 @@ public class MainWindow extends UiPart<Stage> {
     private StackPane statusbarPlaceholder;
 
     /**
-     * Creates a {@code MainWindow} with the given {@code Stage}, {@code Logic},
-     * and the data file path to show in the status bar.
+     * Creates a {@code MainWindow} with the given dependencies.
+     *
+     * @param primaryStage primary application stage
+     * @param logic application logic
+     * @param dataFilePath path shown in the status bar
      */
     public MainWindow(
             Stage primaryStage,
@@ -112,7 +128,8 @@ public class MainWindow extends UiPart<Stage> {
     /**
      * Sets the accelerator of a MenuItem.
      *
-     * @param keyCombination the KeyCombination value of the accelerator
+     * @param menuItem menu item receiving the accelerator
+     * @param keyCombination accelerator key combination
      */
     private void setAccelerator(
             MenuItem menuItem,
@@ -120,9 +137,8 @@ public class MainWindow extends UiPart<Stage> {
         menuItem.setAccelerator(keyCombination);
 
         /*
-         * TODO: the code below can be removed once the bug reported here
-         * https://bugs.openjdk.java.net/browse/JDK-8131666
-         * is fixed in a later version of the SDK.
+         * TODO: This event filter can be removed after JDK-8131666
+         * is fixed in the JavaFX SDK used by the application.
          */
         getRoot().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getTarget() instanceof TextInputControl
@@ -134,26 +150,33 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Fills up all the placeholders of this window.
+     * Fills all placeholders in this window.
      */
     void fillInnerParts() {
-        personListPanel =
-                new PersonListPanel(logic.getFilteredPersonList());
+        personListPanel = new PersonListPanel(
+                logic.getFilteredPersonList(),
+                this::handleDeletePerson);
         personListPanelPlaceholder.getChildren()
                 .add(personListPanel.getRoot());
 
-        participantListPanel =
-                new ParticipantListPanel(
-                        logic.getParticipantSearchResults());
+        participantListPanel = new ParticipantListPanel(
+                logic.getParticipantSearchResults());
         participantListPanelPlaceholder.getChildren()
                 .add(participantListPanel.getRoot());
 
-        eventListPanel =
-                new EventListPanel(
-                        logic.getFilteredEventList(),
-                        this::handleEventSelection);
+        eventListPanel = new EventListPanel(
+                logic.getFilteredEventList(),
+                this::handleEventSelection,
+                this::handleAddParticipant,
+                this::handleDeleteEvent);
         eventListPanelPlaceholder.getChildren()
                 .add(eventListPanel.getRoot());
+
+        ActionBar actionBar = new ActionBar(
+                this::handleAddPerson,
+                this::handleAddEvent);
+        actionBarPlaceholder.getChildren()
+                .add(actionBar.getRoot());
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren()
@@ -172,6 +195,8 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Displays participants belonging to the selected event.
+     *
+     * @param event newly selected event, or {@code null} if cleared
      */
     private void handleEventSelection(Event event) {
         if (event == null) {
@@ -197,12 +222,15 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Updates the participant panel after a successful command.
+     *
+     * @param commandText command that was executed
      */
     private void updateParticipantPanel(String commandText) {
         if (isParticipantSearchCommand(commandText)) {
             eventListPanel.clearSelection();
             selectedEvent = null;
-            participantDisplayMode = ParticipantDisplayMode.SEARCH;
+            participantDisplayMode =
+                    ParticipantDisplayMode.SEARCH;
         }
 
         if (participantDisplayMode
@@ -230,6 +258,7 @@ public class MainWindow extends UiPart<Stage> {
                         .findFirst();
 
         if (currentEvent.isEmpty()) {
+            eventListPanel.clearSelection();
             clearParticipantPanel();
             return;
         }
@@ -280,7 +309,7 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Sets the default size based on {@code guiSettings}.
+     * Sets the default size based on the supplied GUI settings.
      */
     private void setWindowDefaultSize(GuiSettings guiSettings) {
         primaryStage.setHeight(guiSettings.getWindowHeight());
@@ -295,7 +324,7 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Opens the help window or focuses on it if it is already opened.
+     * Opens the help window or focuses it if it is already open.
      */
     @FXML
     public void handleHelp() {
@@ -303,6 +332,84 @@ public class MainWindow extends UiPart<Stage> {
             helpWindow.show();
         } else {
             helpWindow.focus();
+        }
+    }
+
+    private void handleAddPerson() {
+        new AddPersonDialog(primaryStage).showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(peopleTab);
+        });
+    }
+
+    private void handleAddEvent() {
+        new AddEventDialog(primaryStage).showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(eventsTab);
+        });
+    }
+
+    private void handleDeletePerson(
+            Person person,
+            int displayedIndex) {
+        DeleteConfirmationDialog dialog =
+                new DeleteConfirmationDialog(
+                        primaryStage,
+                        "Delete person",
+                        "Delete "
+                                + person.getName().fullName
+                                + "?");
+
+        if (dialog.showAndWait()) {
+            executeDeleteCommand(
+                    DeleteCommand.COMMAND_WORD
+                            + " "
+                            + displayedIndex,
+                    peopleTab);
+        }
+    }
+
+    private void handleAddParticipant(Event event) {
+        AddParticipantDialog dialog =
+                new AddParticipantDialog(
+                        primaryStage,
+                        event.getId(),
+                        event.getName());
+
+        dialog.showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(eventsTab);
+        });
+    }
+
+    private void handleDeleteEvent(Event event) {
+        DeleteConfirmationDialog dialog =
+                new DeleteConfirmationDialog(
+                        primaryStage,
+                        "Delete event",
+                        "Delete "
+                                + event.getName()
+                                + " ("
+                                + event.getId()
+                                + ")?");
+
+        if (dialog.showAndWait()) {
+            executeDeleteCommand(
+                    DeleteEventCommand.COMMAND_WORD
+                            + " "
+                            + event.getId(),
+                    eventsTab);
+        }
+    }
+
+    private void executeDeleteCommand(
+            String command,
+            Tab targetTab) {
+        try {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(targetTab);
+        } catch (CommandException | ParseException exception) {
+            // executeCommand already displays the error.
         }
     }
 
@@ -350,11 +457,11 @@ public class MainWindow extends UiPart<Stage> {
                             + commandResult.getFeedbackToUser());
 
             resultDisplay.setFeedbackToUser(
-                    commandResult.getFeedbackToUser());
+                    CommandSuccessMessages.forCommand(commandText));
 
             updateParticipantPanel(commandText);
 
-            // Participants are displayed inside the Events tab.
+            // Participant-related commands now use the Events tab.
             if (commandResult.isShowParticipants()
                     || commandResult.isShowEvents()) {
                 listTabs.getSelectionModel().select(eventsTab);
@@ -369,13 +476,14 @@ public class MainWindow extends UiPart<Stage> {
             }
 
             return commandResult;
-        } catch (CommandException | ParseException e) {
+        } catch (CommandException | ParseException exception) {
             logger.info(
                     "An error occurred while executing command: "
                             + commandText);
 
-            resultDisplay.setFeedbackToUser(e.getMessage());
-            throw e;
+            resultDisplay.setFeedbackToUser(
+                    exception.getMessage());
+            throw exception;
         }
     }
 }

@@ -23,18 +23,63 @@ public class EventListPanel extends UiPart<Region> {
     private ListView<Event> eventListView;
 
     /**
-     * Creates a panel bound to the supplied event list.
+     * Creates an event list panel that reports selection changes.
      *
      * @param events events to display
-     * @param onEventSelected action performed when the event selection changes
+     * @param onEventSelected action performed when the selection changes
      */
     public EventListPanel(
             ObservableList<Event> events,
             Consumer<Event> onEventSelected) {
+        this(
+                events,
+                onEventSelected,
+                event -> {
+                },
+                event -> {
+                });
+    }
+
+    /**
+     * Creates an event list panel whose cards invoke the supplied actions.
+     *
+     * <p>This constructor is retained for compatibility with existing callers.
+     *
+     * @param events events to display
+     * @param addParticipantAction action performed when adding a participant
+     * @param deleteAction action performed when deleting an event
+     */
+    public EventListPanel(
+            ObservableList<Event> events,
+            Consumer<Event> addParticipantAction,
+            Consumer<Event> deleteAction) {
+        this(
+                events,
+                event -> {
+                },
+                addParticipantAction,
+                deleteAction);
+    }
+
+    /**
+     * Creates an event list panel with selection and card actions.
+     *
+     * @param events events to display
+     * @param onEventSelected action performed when the selection changes
+     * @param addParticipantAction action performed when adding a participant
+     * @param deleteAction action performed when deleting an event
+     */
+    public EventListPanel(
+            ObservableList<Event> events,
+            Consumer<Event> onEventSelected,
+            Consumer<Event> addParticipantAction,
+            Consumer<Event> deleteAction) {
         super(FXML);
 
         requireNonNull(events);
         requireNonNull(onEventSelected);
+        requireNonNull(addParticipantAction);
+        requireNonNull(deleteAction);
 
         eventListView.setItems(events);
 
@@ -43,7 +88,9 @@ public class EventListPanel extends UiPart<Region> {
         eventListView.setPlaceholder(emptyMessage);
 
         eventListView.setCellFactory(
-                listView -> new EventListViewCell());
+                listView -> new EventListViewCell(
+                        addParticipantAction,
+                        deleteAction));
 
         eventListView.getSelectionModel()
                 .selectedItemProperty()
@@ -63,14 +110,38 @@ public class EventListPanel extends UiPart<Region> {
      */
     private class EventListViewCell extends ListCell<Event> {
 
+        private final Consumer<Event> addParticipantAction;
+        private final Consumer<Event> deleteAction;
+
+        EventListViewCell(
+                Consumer<Event> addParticipantAction,
+                Consumer<Event> deleteAction) {
+            this.addParticipantAction = addParticipantAction;
+            this.deleteAction = deleteAction;
+        }
+
         @Override
         protected void updateItem(Event event, boolean empty) {
             super.updateItem(event, empty);
             setText(null);
 
-            setGraphic(empty || event == null
-                    ? null
-                    : new EventCard(event, getIndex() + 1).getRoot());
+            if (empty || event == null) {
+                setGraphic(null);
+                return;
+            }
+
+            Runnable onAddParticipant =
+                    () -> addParticipantAction.accept(event);
+            Runnable onDelete =
+                    () -> deleteAction.accept(event);
+
+            EventCard eventCard = new EventCard(
+                    event,
+                    getIndex() + 1,
+                    onAddParticipant,
+                    onDelete);
+
+            setGraphic(eventCard.getRoot());
         }
     }
 }

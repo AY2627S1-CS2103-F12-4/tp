@@ -14,6 +14,7 @@ import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.ParticipationAlreadyAbsentException;
 import seedu.address.model.mapper.exceptions.ParticipationAlreadyPresentException;
 import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
@@ -118,11 +119,21 @@ public interface Model {
     void removeParticipation(EventId eventId, PersonId personId)
             throws ParticipationNotFoundException, EventNotFoundException, PersonNotFoundException;
 
+    /** Edits event-specific fields; null preserves a field and an empty set clears it. */
+    void editParticipation(EventId eventId, PersonId personId, Set<ParticipationRole> roles, Set<Tag> tags);
+
     /**
      * Marks the participation identified by {@code eventId} and {@code personId} as present.
      */
     void markPresent(EventId eventId, PersonId personId)
             throws ParticipationNotFoundException, ParticipationAlreadyPresentException,
+            EventNotFoundException, PersonNotFoundException;
+
+    /**
+     * Marks the participation identified by {@code eventId} and {@code personId} as absent.
+     */
+    void unmarkPresent(EventId eventId, PersonId personId)
+            throws ParticipationNotFoundException, ParticipationAlreadyAbsentException,
             EventNotFoundException, PersonNotFoundException;
 
     /** Returns the participations for {@code event}. */
@@ -200,6 +211,9 @@ public interface Model {
     /** Creates an event with an automatically assigned ID. */
     Event createEvent(String name, int capacity, String description);
 
+    /** Updates an existing event, preserving its ID, participations and active filter. */
+    void updateEvent(Event event);
+
     /**
      * Deletes an event and its participations, preserving people and the active event filter.
      * Clears participant search context and results if the deleted event is selected for search.
@@ -216,12 +230,12 @@ public interface Model {
     Optional<Event> getSelectedEvent();
 
     /**
-     * Returns a live, unmodifiable view of the filtered events in insertion order.
+     * Returns a live, unmodifiable view of active events matching the filter, in insertion order.
      */
     ObservableList<Event> getFilteredEventList();
 
     /**
-     * Replaces the event filter with the given non-null predicate.
+     * Replaces the event filter with the given non-null predicate. Archived events remain hidden.
      */
     void updateFilteredEventList(Predicate<Event> predicate);
 

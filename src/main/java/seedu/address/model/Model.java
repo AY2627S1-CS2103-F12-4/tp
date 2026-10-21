@@ -159,6 +159,29 @@ public interface Model {
      */
     void updateParticipantSearch(String keyword);
 
+    /**
+     * Searches roles across all nonarchived events and filters events to those with matching registrations.
+     * Matches a case-insensitive substring within a single role, with normalized query whitespace.
+     * Each registration appears once even when several of its roles match. Invalid input preserves search state.
+     *
+     * @param keyword Nonblank role phrase, which need not satisfy assigned-role constraints.
+     * @throws NullPointerException if the keyword is null.
+     * @throws IllegalArgumentException if the keyword is blank.
+     */
+    void updateParticipantRoleSearch(String keyword);
+
+    /**
+     * Searches roles within the event identified by its stable ID, independently of existing display filters.
+     * An archived event produces no results. A nonexistent event or invalid input preserves search state.
+     *
+     * @param eventId Stable ID of the event whose memberships are searched.
+     * @param keyword Nonblank role phrase, with surrounding and repeated internal whitespace ignored.
+     * @throws NullPointerException if either argument is null.
+     * @throws IllegalArgumentException if the keyword is blank.
+     * @throws EventNotFoundException if no event has the supplied ID.
+     */
+    void updateParticipantRoleSearch(EventId eventId, String keyword);
+
     /** Clears search context and results and restores the ordinary nonarchived event list. */
     void clearParticipantSearch();
 

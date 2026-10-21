@@ -27,6 +27,7 @@ import seedu.address.model.mapper.MapperManager;
 import seedu.address.model.mapper.ParticipantNameContainsKeywordPredicate;
 import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ParticipationRole;
+import seedu.address.model.mapper.ParticipationRoleContainsKeywordPredicate;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
 import seedu.address.model.mapper.exceptions.ParticipationAlreadyAbsentException;
@@ -42,6 +43,11 @@ import seedu.address.model.tag.Tag;
  * The mapper resolves records from the same collections that this model owns.
  */
 public class ModelManager implements Model {
+
+    private enum ParticipantSearchType {
+        NAME,
+        ROLE
+    }
 
     private static final Logger logger = LogsCenter.getLogger(ModelManager.class);
     private static final ReadOnlyParticipations EMPTY_PARTICIPATIONS = Set::of;
@@ -60,6 +66,7 @@ public class ModelManager implements Model {
             FXCollections.unmodifiableObservableList(participantSearchResults);
     private EventId participantSearchEventId;
     private String participantSearchKeyword;
+    private ParticipantSearchType participantSearchType;
 
     /**
      * Initializes a ModelManager with the given addressBook and userPrefs,
@@ -297,19 +304,38 @@ public class ModelManager implements Model {
 
     @Override
     public void updateParticipantSearch(EventId eventId, String keyword) {
-        requireAllNonNull(eventId, keyword);
-        // Resolve the scope even when archived so nonexistent IDs still fail without changing search state.
-        Event event = eventList.getEventFromId(eventId.toString());
-        updateParticipantSearch(List.of(event), eventId, keyword);
+        applyParticipantSearch(eventId, keyword, ParticipantSearchType.NAME);
     }
 
     @Override
     public void updateParticipantSearch(String keyword) {
-        updateParticipantSearch(eventList.getEvents(), null, keyword);
+        applyParticipantSearch(eventList.getEvents(), null, keyword, ParticipantSearchType.NAME);
     }
 
-    private void updateParticipantSearch(List<Event> events, EventId eventId, String keyword) {
-        ParticipantNameContainsKeywordPredicate predicate = new ParticipantNameContainsKeywordPredicate(keyword);
+    @Override
+    public void updateParticipantRoleSearch(EventId eventId, String keyword) {
+        applyParticipantSearch(eventId, keyword, ParticipantSearchType.ROLE);
+    }
+
+    @Override
+    public void updateParticipantRoleSearch(String keyword) {
+        applyParticipantSearch(eventList.getEvents(), null, keyword, ParticipantSearchType.ROLE);
+    }
+
+    private void applyParticipantSearch(EventId eventId, String keyword, ParticipantSearchType searchType) {
+        requireAllNonNull(eventId, keyword);
+        // Resolve archived scopes too, so nonexistent IDs fail before changing the previous search.
+        Event event = eventList.getEventFromId(eventId.toString());
+        applyParticipantSearch(List.of(event), eventId, keyword, searchType);
+    }
+
+    private void applyParticipantSearch(List<Event> events, EventId eventId, String keyword,
+            ParticipantSearchType searchType) {
+        String normalizedKeyword = StringUtil.normalizeWhitespace(keyword);
+        Predicate<Participation> predicate = switch (searchType) {
+            case NAME -> new ParticipantNameContainsKeywordPredicate(normalizedKeyword);
+            case ROLE -> new ParticipationRoleContainsKeywordPredicate(normalizedKeyword);
+        };
         List<Participation> matches = events.stream()
                 .filter(event -> !event.isArchived())
                 .flatMap(event -> getParticipationsForEvent(event).stream()
@@ -318,15 +344,18 @@ public class ModelManager implements Model {
                 .toList();
         Set<String> matchingEventIds = matches.stream()
                 .map(participation -> participation.getEvent().getId()).collect(Collectors.toSet());
+
+        participantSearchType = searchType;
         participantSearchEventId = eventId;
-        participantSearchKeyword = StringUtil.normalizeWhitespace(keyword);
-        // Publish the context and matching events before notifying observers of the new result rows.
+        participantSearchKeyword = normalizedKeyword;
+        // Publish the search type, scope, query, and event filter before notifying result observers.
         updateFilteredEventList(event -> matchingEventIds.contains(event.getId()));
         participantSearchResults.setAll(matches);
     }
 
     @Override
     public void clearParticipantSearch() {
+        participantSearchType = null;
         participantSearchEventId = null;
         participantSearchKeyword = null;
         updateFilteredEventList(event -> true);
@@ -357,12 +386,13 @@ public class ModelManager implements Model {
     }
 
     private void refreshParticipantSearch() {
-        if (participantSearchKeyword != null) {
-            if (participantSearchEventId == null) {
-                updateParticipantSearch(participantSearchKeyword);
-            } else {
-                updateParticipantSearch(participantSearchEventId, participantSearchKeyword);
-            }
+        if (participantSearchType == null) {
+            return;
+        }
+        if (participantSearchEventId == null) {
+            applyParticipantSearch(eventList.getEvents(), null, participantSearchKeyword, participantSearchType);
+        } else {
+            applyParticipantSearch(participantSearchEventId, participantSearchKeyword, participantSearchType);
         }
     }
 
@@ -495,6 +525,7 @@ public class ModelManager implements Model {
                 && filteredEvents.equals(otherModelManager.filteredEvents)
                 && Objects.equals(participantSearchEventId, otherModelManager.participantSearchEventId)
                 && Objects.equals(participantSearchKeyword, otherModelManager.participantSearchKeyword)
+                && participantSearchType == otherModelManager.participantSearchType
                 && participantSearchResults.equals(otherModelManager.participantSearchResults)
                 && eventList.getEvents().stream().allMatch(event -> mapper.getParticipationsForEvent(event)
                         .equals(otherModelManager.mapper.getParticipationsForEvent(event)));

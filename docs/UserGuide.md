@@ -235,36 +235,76 @@ Format: `search-participant NAME [/event EVENTID]`
 Examples:
 
 * `search-participant Michael` searches all nonarchived events.
-* `search-participant Michael Tan /event E1` searches only event E1.
+* `search-participant Michael Tan /event E1` searches only event `E1`.
 
 Names are matched using a case-insensitive substring. Multiword phrases must appear together in order:
 `Michael Tan` matches `Michael Tan Wei`, but not `Michael Wei Tan`. Surrounding whitespace is ignored,
 and repeated whitespace is treated as one space in both the query and the name.
 
-The command selects the Events tab and replaces its filter with events containing matching registrations.
-The matching registrations remain available in the Participants tab. Existing People-tab filters do not
-affect the search. Events retain their existing order, with matching participants ordered by person ID
-within each event. Feedback counts registrations and matching events: a person registered in two matching
-events counts as two registrations.
-
-Archived events are always excluded, including when explicitly supplied with `/event`. No matches leave
-the Events tab empty. A nonexistent event ID or invalid syntax produces an error and preserves the previous
-search. `/event EVENTID` must follow the name; repeated `/event` and unsupported prefixes are rejected.
-The old `EVENT_ID /name NAME` syntax is no longer supported.
-
-Results refresh when event, person, or participation data changes, including when events are archived or
-restored. Switching tabs preserves the search. `list-event` and `find-event` clear participant-search state;
-deleting the explicitly searched event also clears it and restores the ordinary nonarchived event list.
+See [Viewing and clearing participant search results](#viewing-and-clearing-participant-search-results)
+for result display, event selection, and search resets.
 
 ### Searching participants by role: `search-role`
 
-Finds participants in an event by their event-specific role.
+Finds registrations with matching event-specific roles across nonarchived events,
+or within one event when `/event EVENTID` is supplied.
 
-Format: `search-role EVENT_ID /role ROLE`
+Format: `search-role ROLE [/event EVENTID]`
 
-Example: `search-role E1 /role Best Man`
+Examples:
 
-![Search by role](images/searchRole.png)
+* `search-role Best Man` searches all nonarchived events.
+* `search-role Best Man /event E1` searches only event `E1`.
+* `search-role man` matches roles such as `Best Man` and `Manager`.
+
+Matching is case-insensitive and uses the complete search phrase as a substring of
+an individual role. Leading and trailing whitespace is ignored, and consecutive
+whitespace in the query is treated as one space. A registration matches if any of
+its roles matches; text from separate roles is not combined. Registrations without
+roles do not match. All assigned roles remain visible on a matching registration.
+
+See [Viewing and clearing participant search results](#viewing-and-clearing-participant-search-results)
+for the behavior shared with name searches.
+
+### Viewing and clearing participant search results
+
+The following applies to both `search-participant` and `search-role`.
+
+The optional `/event EVENTID` must follow the search phrase. Duplicate `/event`
+arguments and unsupported command prefixes produce an error. An unknown event ID
+or invalid syntax preserves the previous search results, event selection, and
+selected tab.
+
+A successful search selects the **Events** tab. The left pane shows only events
+containing matching registrations, and the first matching event is selected. The
+right pane shows only that event's matching registrations, headed by the event's
+name and ID and the search phrase. Click another matching event to see its matches
+while keeping the search active. Existing People-tab and event-list filters do not
+limit the search. Switching between the People and Events tabs preserves it.
+
+Events follow their stored order. Matching registrations within each event are
+ordered lexicographically by Person ID (for example, `P1`, `P10`, `P2`). Search
+feedback counts registrations across all matching events. Each registration counts
+once even when several roles match; the same person matching in two events counts
+as two registrations.
+
+Archived events are excluded even when explicitly scoped. With no matches, the
+event list and participant rows are empty and no event is selected. The search
+phrase remains visible, together with **All nonarchived events** for a global
+search or the scoped event's name and ID.
+
+Results refresh after person, registration, role, or event changes, including
+archiving and restoring events. The selected event is retained if it still has
+matches; otherwise, the first remaining matching event is selected. If no matches
+remain, the lists become empty while the search stays active. Deleting an event
+during a global search refreshes the remaining results. Deleting the scoped event
+clears the search and restores the ordinary nonarchived event list.
+
+Starting another name or role search replaces the previous query and event filter
+and selects its first matching event. Use `list-event` to clear either search and
+show all nonarchived events, or `find-event` to replace it with an event-name
+filter. Both commands clear the participant rows and search context. Selecting an
+event after clearing the search shows all its registrations.
 
 ### Marking attendance: `mark-participant`
 
@@ -363,7 +403,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **List participants** | `list-participants EVENT_ID` |
 | **View participant** | `view-participant EVENT_ID PERSON_ID` |
 | **Search participant** | `search-participant NAME [/event EVENTID]` |
-| **Search role** | `search-role EVENT_ID /role ROLE` |
+| **Search role** | `search-role ROLE [/event EVENTID]` |
 | **Cancel attendance** | `unmark-participant EVENT_ID PERSON_ID` |
 | **Mark attendance** | `mark-participant EVENT_ID PERSON_ID` |
 | **Remove participant** | `del-participant EVENT_ID PERSON_ID` |

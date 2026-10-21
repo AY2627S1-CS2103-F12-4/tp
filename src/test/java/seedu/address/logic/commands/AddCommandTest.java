@@ -140,6 +140,16 @@ public class AddCommandTest {
         }
 
         @Override
+        public void updateParticipantRoleSearch(String keyword) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void updateParticipantRoleSearch(EventId eventId, String keyword) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public void clearParticipantSearch() {
             throw new AssertionError("This method should not be called.");
         }

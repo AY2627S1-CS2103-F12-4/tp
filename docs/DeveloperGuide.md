@@ -164,22 +164,67 @@ This section describes some noteworthy details on how certain features are imple
 
 ### Participant search
 
-`SearchParticipantCommandParser` accepts `NAME [/event EVENTID]`. `ModelManager` tracks the active
-query separately from the optional event scope: an absent query means no search, while an absent scope
-with a query means a global search. Searches use the mapper-backed `getParticipationsForEvent(event)`
-and `ParticipantNameContainsKeywordPredicate`, excluding archived events before matching. Query and
-name whitespace is normalized for case-insensitive substring matching without changing stored data.
+Name and role searches share model state and the combined Events view:
 
-`Logic#getFilteredEventList()` exposes only events containing matching registrations.
-`Logic#getParticipantSearchResults()` exposes a live, unmodifiable list ordered by event insertion
-order and then lexicographic person ID. For grouped rendering,
-`Logic#getParticipantSearchResultsForEvent(event)` returns an immutable snapshot matched by stable
-event ID. Consumers should observe the search result list and reread per-event snapshots when it
-changes, including when the set of visible events stays the same.
+| Command | Search type | Predicate |
+| --- | --- | --- |
+| `search-participant NAME [/event EVENTID]` | `NAME` | `ParticipantNameContainsKeywordPredicate` |
+| `search-role ROLE [/event EVENTID]` | `ROLE` | `ParticipationRoleContainsKeywordPredicate` |
 
-Model mutations refresh the active search. `list-event` and `find-event` clear it before applying their
-own event filters. Deleting the explicitly scoped event clears the search; deleting an event during a
-global search refreshes the remaining results. Search state is transient and is not saved to storage.
+Each parser normalizes query whitespace and validates the optional event ID, which
+must follow the search phrase. Duplicate or unsupported command prefixes are
+rejected. `SearchParticipantCommand` calls the global or scoped
+`Model#updateParticipantSearch` overload; `SearchRoleCommand` calls the
+corresponding `Model#updateParticipantRoleSearch` overload. Both commands report
+registration and event counts and request the Events tab through `CommandResult`.
+
+`ModelManager` stores a transient `ParticipantSearchType`, normalized query, and
+optional event ID. An absent query means no active search. A present query with no
+event scope represents a global search, including when it has zero results. This
+state is independent of the selected event and is not persisted in storage.
+Starting either search type replaces the previous type, query, scope, and filter.
+
+The shared `applyParticipantSearch` overloads resolve the scope, exclude archived
+events, and retrieve registrations through the mapper-backed
+`Model#getParticipationsForEvent`. Existing people and event display filters do
+not limit the search candidates. A nonexistent scoped event fails before changing
+search state; an archived scoped event yields no matches. Name matching normalizes
+whitespace in both the query and full name. Role matching uses a substring within
+any single assigned role. Both predicates ignore case. Each registration appears
+once, retaining all its roles, in event insertion order and then lexicographic
+Person ID order within each event.
+
+The model publishes the search type, scope, query, and matching-event filter before
+notifying observers of the result rows. `getParticipantSearchResults()` exposes a
+live, unmodifiable observable list through `Model` and `Logic`.
+`getParticipantSearchResultsForEvent(event)` returns an immutable snapshot matched
+by stable event ID. Consumers must reread it when the observable results change,
+even if the matching event IDs remain the same.
+
+`MainWindow` displays detailed feedback for both search commands and selects the
+Events tab. For a new search it selects the first matching event. Event selection
+uses `getParticipantSearchResultsForEvent` while a query is active, so the right
+pane contains only that event's matches. `ParticipantListPanel#showSearchResultsForEvent`
+displays those rows with the selected event's name, ID, and search phrase. Without
+an active query, ordinary event selection uses `Logic#getParticipationsForEvent`
+and displays all registrations for that event.
+
+`MainWindow` observes the result list to refresh per-event snapshots. During
+command execution, `isExecutingCommand` defers selection reconciliation until the
+model has finished publishing its filter and rows. `isUpdatingParticipantPanel`
+prevents programmatic selection changes from reentering that update. Refreshes
+retain the selected event by stable ID if it still matches; otherwise, they select
+the first remaining match. With no matches, selection and rows are empty while
+the panel retains the global or scoped query context.
+
+Relevant model mutations refresh the active search using its stored type and
+scope, including person updates, registration and role changes, event edits, and
+archive changes. Deleting an event during a global search refreshes the remaining
+matches. Deleting the scoped event calls `clearParticipantSearch()`, which clears
+either search type and restores the ordinary nonarchived event list.
+`ListEventCommand` and `FindEventCommand` use the same reset before applying their
+own event filter. The UI clears the previous search rows and context after these
+resets, preventing a later command from reviving stale results.
 
 ### Participation mapping
 

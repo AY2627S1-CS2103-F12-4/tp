@@ -110,4 +110,9 @@ public class LogicManager implements Logic {
     public Set<Participation> getParticipationsForEvent(Event event) {
         return model.getParticipationsForEvent(event);
     }
+
+    @Override
+    public Optional<Event> getSelectedEvent() {
+        return model.getSelectedEvent();
+    }
 }

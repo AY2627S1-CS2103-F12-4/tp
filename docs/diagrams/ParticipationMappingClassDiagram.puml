@@ -1,0 +1,39 @@
+@startuml
+!include style.puml
+skinparam arrowThickness 1.1
+skinparam arrowColor MODEL_COLOR
+skinparam classBackgroundColor MODEL_COLOR
+
+package Model as ModelPackage <<Rectangle>> {
+Class "<<interface>>\nReadOnlyParticipations" as ReadOnlyParticipations
+Class "<<interface>>\nMapper" as Mapper
+Class ModelManager
+Class MapperManager
+Class Participation
+Class ParticipationRole
+Class EventList
+Class Event
+Class AddressBook
+Class Person
+Class Tag
+}
+
+ModelManager --> "1" Mapper : uses
+Mapper .up.|> ReadOnlyParticipations
+MapperManager .up.|> Mapper
+MapperManager --> "1" EventList : resolves IDs
+MapperManager --> "1" AddressBook : resolves IDs
+MapperManager ..> Participation : creates snapshots
+
+EventList *--> "*" Event
+AddressBook *--> "*" Person
+Participation --> "1" Event
+Participation --> "1" Person
+Participation *--> "*" Tag
+Participation *--> "*" ParticipationRole
+
+note right of MapperManager
+  Stores each participation as
+  (EventId, PersonId) -> immutable state
+end note
+@enduml

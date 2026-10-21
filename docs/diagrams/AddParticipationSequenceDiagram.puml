@@ -1,0 +1,43 @@
+@startuml
+!include style.puml
+
+actor User
+participant ":AddParticipantCommand" as Command LOGIC_COLOR
+participant ":ModelManager" as ModelManager MODEL_COLOR
+participant ":EventList" as EventList MODEL_COLOR
+participant ":AddressBook" as AddressBook MODEL_COLOR
+participant ":MapperManager" as MapperManager MODEL_COLOR
+
+User -> Command : execute(model)
+activate Command
+Command -> ModelManager : addParticipation(eventId, personId, roles, tags)
+activate ModelManager
+ModelManager -> EventList : getEventFromId(eventId)
+EventList --> ModelManager : event
+ModelManager -> AddressBook : getPersonFromId(personId)
+AddressBook --> ModelManager : person
+ModelManager -> MapperManager : addParticipation(event, person, roles, tags)
+activate MapperManager
+MapperManager -> EventList : getEventFromId(eventId)
+EventList --> MapperManager : event
+MapperManager -> AddressBook : getPersonFromId(personId)
+AddressBook --> MapperManager : person
+
+alt participation already exists
+    MapperManager --> ModelManager : DuplicateParticipationException
+    ModelManager --> Command : DuplicateParticipationException
+    Command --> User : CommandException
+else new participation
+    MapperManager -> MapperManager : store (eventId, personId) and state
+    activate MapperManager
+    MapperManager --> MapperManager
+    deactivate MapperManager
+    MapperManager --> ModelManager
+    ModelManager --> Command
+    Command --> User : success result
+end
+
+deactivate MapperManager
+deactivate ModelManager
+deactivate Command
+@enduml

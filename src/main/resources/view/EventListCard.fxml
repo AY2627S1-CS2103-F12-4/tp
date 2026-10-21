@@ -22,5 +22,6 @@
   </VBox>
   <Button fx:id="addParticipantButton" mnemonicParsing="false" styleClass="button, card-action-button"
           text="Add participant" />
+  <Button fx:id="editButton" mnemonicParsing="false" styleClass="button, card-action-button" text="Edit event" />
   <Button fx:id="deleteButton" mnemonicParsing="false" styleClass="button, card-delete-button" text="Delete" />
 </HBox>

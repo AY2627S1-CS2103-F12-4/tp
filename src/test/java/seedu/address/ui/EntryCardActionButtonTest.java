@@ -57,18 +57,31 @@ public class EntryCardActionButtonTest {
     }
 
     @Test
-    public void eventCard_deleteButton_runsConfiguredAction() throws Exception {
+    public void eventCard_actionButtons_runConfiguredActionsInRequestedOrder() throws Exception {
         runOnFxThread(() -> {
+            AtomicInteger addParticipantActions = new AtomicInteger();
+            AtomicInteger editActions = new AtomicInteger();
             AtomicInteger deleteActions = new AtomicInteger();
             Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
-            EventCard card = new EventCard(event, 1, () -> { }, deleteActions::incrementAndGet);
+            EventCard card = new EventCard(event, 1, addParticipantActions::incrementAndGet,
+                    editActions::incrementAndGet, deleteActions::incrementAndGet);
+            Button addParticipantButton = (Button) card.getRoot().lookup("#addParticipantButton");
+            Button editButton = (Button) card.getRoot().lookup("#editButton");
             Button deleteButton = (Button) card.getRoot().lookup("#deleteButton");
 
             HBox cardPane = (HBox) card.getRoot();
+            int actionStartIndex = cardPane.getChildren().size() - 3;
+            assertEquals("Edit event", editButton.getText());
+            assertSame(addParticipantButton, cardPane.getChildren().get(actionStartIndex));
+            assertSame(editButton, cardPane.getChildren().get(actionStartIndex + 1));
             assertSame(deleteButton, cardPane.getChildren().get(cardPane.getChildren().size() - 1));
             assertRightGap(cardPane, deleteButton);
+            addParticipantButton.fire();
+            editButton.fire();
             deleteButton.fire();
 
+            assertEquals(1, addParticipantActions.get());
+            assertEquals(1, editActions.get());
             assertEquals(1, deleteActions.get());
         });
     }

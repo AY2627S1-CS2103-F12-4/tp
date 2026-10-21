@@ -160,6 +160,8 @@ public class ListPanelActionTest {
                     new AtomicReference<>();
             AtomicReference<Event> participantEvent =
                     new AtomicReference<>();
+            AtomicReference<Event> editedEvent =
+                    new AtomicReference<>();
             AtomicReference<Event> deletedEvent =
                     new AtomicReference<>();
 
@@ -167,6 +169,7 @@ public class ListPanelActionTest {
                     FXCollections.observableArrayList(EVENT),
                     selectedEvent::set,
                     participantEvent::set,
+                    editedEvent::set,
                     deletedEvent::set);
 
             ListView<Event> list = eventListView(panel);
@@ -180,15 +183,20 @@ public class ListPanelActionTest {
             Button addParticipantButton =
                     (Button) cell.getGraphic()
                             .lookup("#addParticipantButton");
+            Button editButton =
+                    (Button) cell.getGraphic()
+                            .lookup("#editButton");
             Button deleteButton =
                     (Button) cell.getGraphic()
                             .lookup("#deleteButton");
 
             addParticipantButton.fire();
+            editButton.fire();
             deleteButton.fire();
 
             assertSame(EVENT, selectedEvent.get());
             assertSame(EVENT, participantEvent.get());
+            assertSame(EVENT, editedEvent.get());
             assertSame(EVENT, deletedEvent.get());
         });
     }
@@ -233,6 +241,15 @@ public class ListPanelActionTest {
                                     action::set,
                                     action::set,
                                     null));
+
+            assertThrows(
+                    NullPointerException.class, () ->
+                            new EventListPanel(
+                                    events,
+                                    action::set,
+                                    action::set,
+                                    null,
+                                    action::set));
         });
     }
 

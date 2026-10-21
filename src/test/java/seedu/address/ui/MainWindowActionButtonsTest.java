@@ -249,6 +249,42 @@ public class MainWindowActionButtonsTest {
         });
     }
 
+    @Test
+    public void eventRowEditButton_submitValidForm_editsEvent() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
+            model.addEvent(event);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                TabPane listTabs = (TabPane) window.getPrimaryStage().getScene().lookup("#listTabs");
+                listTabs.getSelectionModel().select(1);
+                ListView<Event> list = eventListView(window);
+                ListCell<Event> cell = list.getCellFactory().call(list);
+                cell.updateListView(list);
+                cell.updateIndex(0);
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> submitFormAndClick(failure, "Edit",
+                        "Event name", "Advanced Workshop",
+                        "Maximum participants", "40",
+                        "Event description", "Advanced Java"));
+
+                Button editButton = (Button) cell.getGraphic().lookup("#editButton");
+                editButton.fire();
+
+                throwFailure(failure);
+                Event editedEvent = model.getFilteredEventList().getFirst();
+                assertEquals("E1", editedEvent.getId());
+                assertEquals("Advanced Workshop", editedEvent.getName());
+                assertEquals(40, editedEvent.getCapacity());
+                assertEquals("Advanced Java", editedEvent.getDescription());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
     private MainWindow createWindow(ModelManager model) {
         Logic logic = new LogicManager(model, new StorageManager(
                 new JsonAddressBookStorage(temporaryFolder.resolve("people.json")),

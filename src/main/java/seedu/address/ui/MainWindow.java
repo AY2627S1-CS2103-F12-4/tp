@@ -28,6 +28,7 @@ import seedu.address.ui.dialogs.AddEventDialog;
 import seedu.address.ui.dialogs.AddParticipantDialog;
 import seedu.address.ui.dialogs.AddPersonDialog;
 import seedu.address.ui.dialogs.DeleteConfirmationDialog;
+import seedu.address.ui.dialogs.EditEventDialog;
 import seedu.address.ui.dialogs.EditPersonDialog;
 
 /**
@@ -170,6 +171,7 @@ public class MainWindow extends UiPart<Stage> {
                 logic.getFilteredEventList(),
                 this::handleEventSelection,
                 this::handleAddParticipant,
+                this::handleEditEvent,
                 this::handleDeleteEvent);
         eventListPanelPlaceholder.getChildren()
                 .add(eventListPanel.getRoot());
@@ -386,6 +388,13 @@ public class MainWindow extends UiPart<Stage> {
                         event.getName());
 
         dialog.showAndWait(command -> {
+            executeCommand(command);
+            listTabs.getSelectionModel().select(eventsTab);
+        });
+    }
+
+    private void handleEditEvent(Event event) {
+        new EditEventDialog(primaryStage, event).showAndWait(command -> {
             executeCommand(command);
             listTabs.getSelectionModel().select(eventsTab);
         });

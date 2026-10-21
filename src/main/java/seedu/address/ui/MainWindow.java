@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.MenuItem;
@@ -20,10 +21,11 @@ import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteEventCommand;
-import seedu.address.logic.commands.SearchRoleCommand;
+import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
+import seedu.address.model.mapper.Participation;
 import seedu.address.model.person.Person;
 import seedu.address.ui.dialogs.AddEventDialog;
 import seedu.address.ui.dialogs.AddParticipantDialog;
@@ -38,18 +40,29 @@ public class MainWindow extends UiPart<Stage> {
 
     private static final String FXML = "MainWindow.fxml";
 
+    private enum ParticipantDisplayMode {
+        NONE,
+        EVENT,
+        SEARCH
+    }
+
     private final Logger logger = LogsCenter.getLogger(getClass());
 
     private Stage primaryStage;
     private Logic logic;
     private Path dataFilePath;
 
-    // Independent Ui parts residing in this Ui container
     private PersonListPanel personListPanel;
     private EventListPanel eventListPanel;
     private ParticipantListPanel participantListPanel;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
+
+    private Event selectedEvent;
+    private ParticipantDisplayMode participantDisplayMode =
+            ParticipantDisplayMode.NONE;
+    private boolean isExecutingCommand;
+    private boolean isUpdatingParticipantPanel;
 
     @FXML
     private StackPane commandBoxPlaceholder;
@@ -76,9 +89,6 @@ public class MainWindow extends UiPart<Stage> {
     private Tab eventsTab;
 
     @FXML
-    private Tab participantsTab;
-
-    @FXML
     private StackPane participantListPanelPlaceholder;
 
     @FXML
@@ -88,20 +98,23 @@ public class MainWindow extends UiPart<Stage> {
     private StackPane statusbarPlaceholder;
 
     /**
-     * Creates a {@code MainWindow} with the given {@code Stage}, {@code Logic},
-     * and the data file path to show in the status bar.
+     * Creates a {@code MainWindow} with the given dependencies.
+     *
+     * @param primaryStage primary application stage
+     * @param logic application logic
+     * @param dataFilePath path shown in the status bar
      */
-    public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath) {
+    public MainWindow(
+            Stage primaryStage,
+            Logic logic,
+            Path dataFilePath) {
         super(FXML, primaryStage);
 
-        // Set dependencies
         this.primaryStage = primaryStage;
         this.logic = logic;
         this.dataFilePath = dataFilePath;
 
-        // Configure the UI
         setWindowDefaultSize(logic.getGuiSettings());
-
         setAccelerators();
 
         helpWindow = new HelpWindow();
@@ -112,33 +125,29 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private void setAccelerators() {
-        setAccelerator(helpMenuItem, KeyCombination.valueOf("F1"));
+        setAccelerator(
+                helpMenuItem,
+                KeyCombination.valueOf("F1"));
     }
 
     /**
      * Sets the accelerator of a MenuItem.
-     * @param keyCombination the KeyCombination value of the accelerator
+     *
+     * @param menuItem menu item receiving the accelerator
+     * @param keyCombination accelerator key combination
      */
-    private void setAccelerator(MenuItem menuItem, KeyCombination keyCombination) {
+    private void setAccelerator(
+            MenuItem menuItem,
+            KeyCombination keyCombination) {
         menuItem.setAccelerator(keyCombination);
 
         /*
-         * TODO: the code below can be removed once the bug reported here
-         * https://bugs.openjdk.java.net/browse/JDK-8131666
-         * is fixed in a later version of the SDK.
-         *
-         * According to the bug report, TextInputControl (TextField, TextArea) will
-         * consume function-key events. Because CommandBox contains a TextField and
-         * ResultDisplay contains a TextArea, some accelerators (e.g., F1) will
-         * not work when the focus is in them because the key event is consumed by
-         * the TextInputControl(s).
-         *
-         * For now, we add the following event filter to capture such key events and open
-         * the help window purposely so as to support accelerators even when focus is
-         * in CommandBox or ResultDisplay.
+         * TODO: This event filter can be removed after JDK-8131666
+         * is fixed in the JavaFX SDK used by the application.
          */
         getRoot().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getTarget() instanceof TextInputControl && keyCombination.match(event)) {
+            if (event.getTarget() instanceof TextInputControl
+                    && keyCombination.match(event)) {
                 menuItem.getOnAction().handle(new ActionEvent());
                 event.consume();
             }
@@ -146,46 +155,219 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Fills up all the placeholders of this window.
+     * Fills all placeholders in this window.
      */
     void fillInnerParts() {
-        personListPanel = new PersonListPanel(logic.getFilteredPersonList(), this::handleDeletePerson);
-        personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
+        personListPanel = new PersonListPanel(
+                logic.getFilteredPersonList(),
+                this::handleDeletePerson);
+        personListPanelPlaceholder.getChildren()
+                .add(personListPanel.getRoot());
 
-        eventListPanel = new EventListPanel(logic.getFilteredEventList(),
-                this::handleAddParticipant, this::handleDeleteEvent);
-        eventListPanelPlaceholder.getChildren().add(eventListPanel.getRoot());
+        participantListPanel = new ParticipantListPanel(
+                logic.getParticipantSearchResults());
+        participantListPanelPlaceholder.getChildren()
+                .add(participantListPanel.getRoot());
 
-        participantListPanel = new ParticipantListPanel(logic.getParticipantSearchResults());
-        participantListPanelPlaceholder.getChildren().add(participantListPanel.getRoot());
+        eventListPanel = new EventListPanel(
+                logic.getFilteredEventList(),
+                this::handleEventSelection,
+                this::handleAddParticipant,
+                this::handleDeleteEvent);
+        eventListPanelPlaceholder.getChildren()
+                .add(eventListPanel.getRoot());
 
-        ActionBar actionBar = new ActionBar(this::handleAddPerson, this::handleAddEvent);
-        actionBarPlaceholder.getChildren().add(actionBar.getRoot());
+        logic.getParticipantSearchResults().addListener((ListChangeListener<Participation>) change -> {
+            if (!isExecutingCommand) {
+                updateParticipantPanel("");
+            }
+        });
+
+        ActionBar actionBar = new ActionBar(
+                this::handleAddPerson,
+                this::handleAddEvent);
+        actionBarPlaceholder.getChildren()
+                .add(actionBar.getRoot());
 
         resultDisplay = new ResultDisplay();
-        resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
+        resultDisplayPlaceholder.getChildren()
+                .add(resultDisplay.getRoot());
 
-        StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
-        statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
+        StatusBarFooter statusBarFooter =
+                new StatusBarFooter(dataFilePath);
+        statusbarPlaceholder.getChildren()
+                .add(statusBarFooter.getRoot());
 
-        CommandBox commandBox = new CommandBox(this::executeCommand);
-        commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+        CommandBox commandBox =
+                new CommandBox(this::executeCommand);
+        commandBoxPlaceholder.getChildren()
+                .add(commandBox.getRoot());
     }
 
     /**
-     * Sets the default size based on {@code guiSettings}.
+     * Displays participants belonging to the selected event.
+     *
+     * @param event newly selected event, or {@code null} if cleared
      */
-    private void setWindowDefaultSize(GuiSettings guiSettings) {
-        primaryStage.setHeight(guiSettings.getWindowHeight());
-        primaryStage.setWidth(guiSettings.getWindowWidth());
-        if (guiSettings.getWindowCoordinates() != null) {
-            primaryStage.setX(guiSettings.getWindowCoordinates().getX());
-            primaryStage.setY(guiSettings.getWindowCoordinates().getY());
+    private void handleEventSelection(Event event) {
+        if (isExecutingCommand || isUpdatingParticipantPanel) {
+            return;
+        }
+        if (logic.getParticipantSearchKeyword().isPresent()) {
+            if (event != null) {
+                selectedEvent = event;
+            }
+            updateParticipantPanel("");
+            return;
+        }
+        if (event == null) {
+            selectedEvent = null;
+
+            if (participantDisplayMode
+                    == ParticipantDisplayMode.EVENT) {
+                participantDisplayMode =
+                        ParticipantDisplayMode.NONE;
+                participantListPanel.clearSearchContext();
+            }
+
+            return;
+        }
+
+        selectedEvent = event;
+        participantDisplayMode = ParticipantDisplayMode.EVENT;
+
+        participantListPanel.showParticipantsForEvent(
+                event,
+                logic.getParticipationsForEvent(event));
+    }
+
+    /**
+     * Updates the participant panel after a successful command.
+     *
+     * @param commandText command that was executed
+     */
+    private void updateParticipantPanel(String commandText) {
+        if (isUpdatingParticipantPanel) {
+            return;
+        }
+        isUpdatingParticipantPanel = true;
+        try {
+            boolean startsSearch = isParticipantSearchCommand(commandText);
+            if (startsSearch) {
+                selectedEvent = null;
+            }
+            if (logic.getParticipantSearchKeyword().isPresent()) {
+                participantDisplayMode = ParticipantDisplayMode.SEARCH;
+                refreshParticipantSearch();
+            } else if (startsSearch || participantDisplayMode == ParticipantDisplayMode.SEARCH) {
+                eventListPanel.clearSelection();
+                clearParticipantPanel();
+            } else if (participantDisplayMode == ParticipantDisplayMode.EVENT) {
+                refreshSelectedEvent();
+            }
+        } finally {
+            isUpdatingParticipantPanel = false;
         }
     }
 
     /**
-     * Opens the help window or focuses on it if it's already opened.
+     * Refreshes participants belonging to the selected event.
+     */
+    private void refreshSelectedEvent() {
+        if (selectedEvent == null) {
+            clearParticipantPanel();
+            return;
+        }
+
+        Optional<Event> currentEvent =
+                logic.getFilteredEventList().stream()
+                        .filter(event -> event.getId()
+                                .equals(selectedEvent.getId()))
+                        .findFirst();
+
+        if (currentEvent.isEmpty()) {
+            eventListPanel.clearSelection();
+            clearParticipantPanel();
+            return;
+        }
+
+        selectedEvent = currentEvent.get();
+
+        participantListPanel.showParticipantsForEvent(
+                selectedEvent,
+                logic.getParticipationsForEvent(selectedEvent));
+    }
+
+    /**
+     * Refreshes the current participant search.
+     */
+    private void refreshParticipantSearch() {
+        String keyword = logic.getParticipantSearchKeyword().orElseThrow();
+        Optional<Event> currentEvent = logic.getFilteredEventList().stream()
+                .filter(event -> selectedEvent != null && event.isSameEvent(selectedEvent))
+                .findFirst()
+                .or(() -> logic.getFilteredEventList().stream().findFirst());
+        if (currentEvent.isPresent()) {
+            selectedEvent = currentEvent.orElseThrow();
+            eventListPanel.selectEvent(selectedEvent);
+            participantListPanel.showSearchResultsForEvent(selectedEvent, keyword,
+                    logic.getParticipantSearchResultsForEvent(selectedEvent));
+            return;
+        }
+
+        eventListPanel.clearSelection();
+        selectedEvent = null;
+        Optional<Event> scope = logic.getParticipantSearchEvent();
+        if (scope.isPresent()) {
+            participantListPanel.setSearchContext(scope.orElseThrow(), keyword);
+        } else {
+            participantListPanel.setSearchContext(keyword);
+        }
+    }
+
+    /**
+     * Clears the selected event and participant panel.
+     */
+    private void clearParticipantPanel() {
+        selectedEvent = null;
+        participantDisplayMode = ParticipantDisplayMode.NONE;
+        participantListPanel.clearSearchContext();
+    }
+
+    /**
+     * Returns whether the command displays participant search results.
+     */
+    private boolean isParticipantSearchCommand(String commandText) {
+        String trimmedCommand = commandText.trim();
+
+        if (trimmedCommand.isEmpty()) {
+            return false;
+        }
+
+        String commandWord =
+                trimmedCommand.split("\\s+", 2)[0];
+
+        return commandWord.equals("search-participant")
+                || commandWord.equals("search-role");
+    }
+
+    /**
+     * Sets the default size based on the supplied GUI settings.
+     */
+    private void setWindowDefaultSize(GuiSettings guiSettings) {
+        primaryStage.setHeight(guiSettings.getWindowHeight());
+        primaryStage.setWidth(guiSettings.getWindowWidth());
+
+        if (guiSettings.getWindowCoordinates() != null) {
+            primaryStage.setX(
+                    guiSettings.getWindowCoordinates().getX());
+            primaryStage.setY(
+                    guiSettings.getWindowCoordinates().getY());
+        }
+    }
+
+    /**
+     * Opens the help window or focuses it if it is already open.
      */
     @FXML
     public void handleHelp() {
@@ -210,16 +392,33 @@ public class MainWindow extends UiPart<Stage> {
         });
     }
 
-    private void handleDeletePerson(Person person, int displayedIndex) {
-        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(
-                primaryStage, "Delete person", "Delete " + person.getName().fullName + "?");
+    private void handleDeletePerson(
+            Person person,
+            int displayedIndex) {
+        DeleteConfirmationDialog dialog =
+                new DeleteConfirmationDialog(
+                        primaryStage,
+                        "Delete person",
+                        "Delete "
+                                + person.getName().fullName
+                                + "?");
+
         if (dialog.showAndWait()) {
-            executeDeleteCommand(DeleteCommand.COMMAND_WORD + " " + displayedIndex, peopleTab);
+            executeDeleteCommand(
+                    DeleteCommand.COMMAND_WORD
+                            + " "
+                            + displayedIndex,
+                    peopleTab);
         }
     }
 
     private void handleAddParticipant(Event event) {
-        AddParticipantDialog dialog = new AddParticipantDialog(primaryStage, event.getId(), event.getName());
+        AddParticipantDialog dialog =
+                new AddParticipantDialog(
+                        primaryStage,
+                        event.getId(),
+                        event.getName());
+
         dialog.showAndWait(command -> {
             executeCommand(command);
             listTabs.getSelectionModel().select(eventsTab);
@@ -227,19 +426,33 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private void handleDeleteEvent(Event event) {
-        DeleteConfirmationDialog dialog = new DeleteConfirmationDialog(primaryStage, "Delete event",
-                "Delete " + event.getName() + " (" + event.getId() + ")?");
+        DeleteConfirmationDialog dialog =
+                new DeleteConfirmationDialog(
+                        primaryStage,
+                        "Delete event",
+                        "Delete "
+                                + event.getName()
+                                + " ("
+                                + event.getId()
+                                + ")?");
+
         if (dialog.showAndWait()) {
-            executeDeleteCommand(DeleteEventCommand.COMMAND_WORD + " " + event.getId(), eventsTab);
+            executeDeleteCommand(
+                    DeleteEventCommand.COMMAND_WORD
+                            + " "
+                            + event.getId(),
+                    eventsTab);
         }
     }
 
-    private void executeDeleteCommand(String command, Tab targetTab) {
+    private void executeDeleteCommand(
+            String command,
+            Tab targetTab) {
         try {
             executeCommand(command);
             listTabs.getSelectionModel().select(targetTab);
         } catch (CommandException | ParseException exception) {
-            // executeCommand already displays the error in the result panel.
+            // executeCommand already displays the error.
         }
     }
 
@@ -252,8 +465,12 @@ public class MainWindow extends UiPart<Stage> {
      */
     @FXML
     private void handleExit() {
-        GuiSettings guiSettings = new GuiSettings(primaryStage.getWidth(), primaryStage.getHeight(),
-                (int) primaryStage.getX(), (int) primaryStage.getY());
+        GuiSettings guiSettings = new GuiSettings(
+                primaryStage.getWidth(),
+                primaryStage.getHeight(),
+                (int) primaryStage.getX(),
+                (int) primaryStage.getY());
+
         logic.setGuiSettings(guiSettings);
         helpWindow.hide();
         primaryStage.hide();
@@ -263,33 +480,37 @@ public class MainWindow extends UiPart<Stage> {
         return personListPanel;
     }
 
+    ParticipantListPanel getParticipantListPanel() {
+        return participantListPanel;
+    }
+
     /**
      * Executes the command and returns the result.
      *
      * @see seedu.address.logic.Logic#execute(String)
      */
-    private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
+    private CommandResult executeCommand(String commandText)
+            throws CommandException, ParseException {
+        // Reconcile selection after the command finishes publishing its event filter and result rows.
+        isExecutingCommand = true;
         try {
-            CommandResult commandResult = logic.execute(commandText);
-            logger.info("Result: " + commandResult.getFeedbackToUser());
-            boolean isRoleSearch = commandText.strip().split("\\s+", 2)[0].equals(SearchRoleCommand.COMMAND_WORD);
-            resultDisplay.setFeedbackToUser(isRoleSearch ? commandResult.getFeedbackToUser()
+            CommandResult commandResult =
+                    logic.execute(commandText);
+
+            logger.info(
+                    "Result: "
+                            + commandResult.getFeedbackToUser());
+
+            boolean isParticipantSearch = commandText.strip().split("\\s+", 2)[0]
+                    .equals(SearchParticipantCommand.COMMAND_WORD);
+            resultDisplay.setFeedbackToUser(isParticipantSearch ? commandResult.getFeedbackToUser()
                     : CommandSuccessMessages.forCommand(commandText));
 
-            Optional<String> searchKeyword = logic.getParticipantSearchKeyword();
-            Optional<Event> searchEvent = logic.getParticipantSearchEvent();
-            if (searchKeyword.isEmpty()) {
-                participantListPanel.clearSearchContext();
-            } else if (searchEvent.isPresent()) {
-                participantListPanel.setSearchContext(searchEvent.orElseThrow(), searchKeyword.orElseThrow());
-            } else {
-                participantListPanel.setSearchContext(searchKeyword.orElseThrow());
-            }
-            if (commandResult.isShowParticipants()) {
-                listTabs.getSelectionModel().select(participantsTab);
-            }
+            updateParticipantPanel(commandText);
 
-            if (commandResult.isShowEvents()) {
+            // Participant-related commands now use the Events tab.
+            if (commandResult.isShowParticipants()
+                    || commandResult.isShowEvents()) {
                 listTabs.getSelectionModel().select(eventsTab);
             }
 
@@ -302,10 +523,16 @@ public class MainWindow extends UiPart<Stage> {
             }
 
             return commandResult;
-        } catch (CommandException | ParseException e) {
-            logger.info("An error occurred while executing command: " + commandText);
-            resultDisplay.setFeedbackToUser(e.getMessage());
-            throw e;
+        } catch (CommandException | ParseException exception) {
+            logger.info(
+                    "An error occurred while executing command: "
+                            + commandText);
+
+            resultDisplay.setFeedbackToUser(
+                    exception.getMessage());
+            throw exception;
+        } finally {
+            isExecutingCommand = false;
         }
     }
 }

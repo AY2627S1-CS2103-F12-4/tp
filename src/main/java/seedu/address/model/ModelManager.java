@@ -304,73 +304,61 @@ public class ModelManager implements Model {
 
     @Override
     public void updateParticipantSearch(EventId eventId, String keyword) {
-        requireAllNonNull(eventId, keyword);
-        ParticipantNameContainsKeywordPredicate predicate = new ParticipantNameContainsKeywordPredicate(keyword);
-        Event event = eventList.getEventFromId(eventId.toString());
-        List<Participation> matches = findMatchingParticipations(List.of(event), predicate);
-        boolean replacesRoleSearch = participantSearchType == ParticipantSearchType.ROLE;
-        participantSearchEventId = eventId;
-        participantSearchKeyword = keyword.strip();
-        participantSearchType = ParticipantSearchType.NAME;
-        if (replacesRoleSearch) {
-            updateFilteredEventList(unused -> true);
-        }
-        // Publish the context before notifying observers of the new results.
-        participantSearchResults.setAll(matches);
+        applyParticipantSearch(eventId, keyword, ParticipantSearchType.NAME);
     }
 
     @Override
-    public void updateParticipantRoleSearch(String keyword) {
-        updateParticipantRoleSearch(eventList.getEvents(), null, keyword);
+    public void updateParticipantSearch(String keyword) {
+        applyParticipantSearch(eventList.getEvents(), null, keyword, ParticipantSearchType.NAME);
     }
 
     @Override
     public void updateParticipantRoleSearch(EventId eventId, String keyword) {
+        applyParticipantSearch(eventId, keyword, ParticipantSearchType.ROLE);
+    }
+
+    @Override
+    public void updateParticipantRoleSearch(String keyword) {
+        applyParticipantSearch(eventList.getEvents(), null, keyword, ParticipantSearchType.ROLE);
+    }
+
+    private void applyParticipantSearch(EventId eventId, String keyword, ParticipantSearchType searchType) {
         requireAllNonNull(eventId, keyword);
+        // Resolve archived scopes too, so nonexistent IDs fail before changing the previous search.
         Event event = eventList.getEventFromId(eventId.toString());
-        updateParticipantRoleSearch(List.of(event), eventId, keyword);
+        applyParticipantSearch(List.of(event), eventId, keyword, searchType);
     }
 
-    private void updateParticipantRoleSearch(List<Event> events, EventId eventId, String keyword) {
+    private void applyParticipantSearch(List<Event> events, EventId eventId, String keyword,
+            ParticipantSearchType searchType) {
         String normalizedKeyword = StringUtil.normalizeWhitespace(keyword);
-        ParticipationRoleContainsKeywordPredicate predicate =
-                new ParticipationRoleContainsKeywordPredicate(normalizedKeyword);
-        List<Event> eligibleEvents = events.stream().filter(event -> !event.isArchived()).toList();
-        List<Participation> matches = findMatchingParticipations(eligibleEvents, predicate);
-        Set<String> matchingEventIds = matches.stream()
-                .map(participation -> participation.getEvent().getId()).collect(Collectors.toSet());
-
-        participantSearchEventId = eventId;
-        participantSearchKeyword = normalizedKeyword;
-        participantSearchType = ParticipantSearchType.ROLE;
-        // Publish the context and event filter before notifying observers of the new result rows.
-        updateFilteredEventList(event -> matchingEventIds.contains(event.getId()));
-        participantSearchResults.setAll(matches);
-    }
-
-    private List<Participation> findMatchingParticipations(List<Event> events, Predicate<Participation> predicate) {
-        return events.stream()
+        Predicate<Participation> predicate = switch (searchType) {
+            case NAME -> new ParticipantNameContainsKeywordPredicate(normalizedKeyword);
+            case ROLE -> new ParticipationRoleContainsKeywordPredicate(normalizedKeyword);
+        };
+        List<Participation> matches = events.stream()
+                .filter(event -> !event.isArchived())
                 .flatMap(event -> getParticipationsForEvent(event).stream()
                         .filter(predicate)
                         .sorted(Comparator.comparing(participation -> participation.getPerson().getId().toString())))
                 .toList();
+        Set<String> matchingEventIds = matches.stream()
+                .map(participation -> participation.getEvent().getId()).collect(Collectors.toSet());
+
+        participantSearchType = searchType;
+        participantSearchEventId = eventId;
+        participantSearchKeyword = normalizedKeyword;
+        // Publish the search type, scope, query, and event filter before notifying result observers.
+        updateFilteredEventList(event -> matchingEventIds.contains(event.getId()));
+        participantSearchResults.setAll(matches);
     }
 
     @Override
-    public void clearParticipantRoleSearch() {
-        if (participantSearchType == ParticipantSearchType.ROLE) {
-            clearParticipantSearch();
-        }
-    }
-
-    private void clearParticipantSearch() {
-        boolean clearsRoleSearch = participantSearchType == ParticipantSearchType.ROLE;
+    public void clearParticipantSearch() {
+        participantSearchType = null;
         participantSearchEventId = null;
         participantSearchKeyword = null;
-        participantSearchType = null;
-        if (clearsRoleSearch) {
-            updateFilteredEventList(unused -> true);
-        }
+        updateFilteredEventList(event -> true);
         participantSearchResults.clear();
     }
 
@@ -398,14 +386,13 @@ public class ModelManager implements Model {
     }
 
     private void refreshParticipantSearch() {
-        if (participantSearchType == ParticipantSearchType.ROLE) {
-            if (participantSearchEventId == null) {
-                updateParticipantRoleSearch(participantSearchKeyword);
-            } else {
-                updateParticipantRoleSearch(participantSearchEventId, participantSearchKeyword);
-            }
-        } else if (participantSearchType == ParticipantSearchType.NAME) {
-            updateParticipantSearch(participantSearchEventId, participantSearchKeyword);
+        if (participantSearchType == null) {
+            return;
+        }
+        if (participantSearchEventId == null) {
+            applyParticipantSearch(eventList.getEvents(), null, participantSearchKeyword, participantSearchType);
+        } else {
+            applyParticipantSearch(participantSearchEventId, participantSearchKeyword, participantSearchType);
         }
     }
 
@@ -457,12 +444,14 @@ public class ModelManager implements Model {
         // EventList is the source of truth; refresh the observable view after a
         // successful addition.
         observableEvents.setAll(eventList.getEvents());
+        refreshParticipantSearch();
     }
 
     @Override
     public Event createEvent(String name, int capacity, String description) {
         Event event = eventList.createEvent(name, capacity, description);
         observableEvents.setAll(eventList.getEvents());
+        refreshParticipantSearch();
         return event;
     }
 
@@ -503,9 +492,7 @@ public class ModelManager implements Model {
             selectedEvent = null;
         }
         observableEvents.setAll(eventList.getEvents());
-        if (participantSearchType == ParticipantSearchType.ROLE) {
-            refreshParticipantSearch();
-        }
+        refreshParticipantSearch();
         return event;
     }
 

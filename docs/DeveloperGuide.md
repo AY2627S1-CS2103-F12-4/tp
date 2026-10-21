@@ -125,6 +125,8 @@ How the parsing works:
 The `Model` component,
 
 * stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
+* delegates participation management to the `Mapper` API. `ModelManager` owns a `MapperManager`, which links events and
+  people using their stable IDs and exposes participation data through `ReadOnlyParticipations`.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
@@ -142,11 +144,12 @@ The `Model` component,
 
 **API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
 
-<puml src="diagrams/StorageClassDiagram.puml" width="550" />
+<puml src="diagrams/StorageClassDiagram.puml" width="700" />
 
 The `Storage` component,
-* can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
-* is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
+* can save address book data, user preferences, and participations in JSON format, and read them back into corresponding objects.
+* is implemented by `StorageManager`, which delegates participation data access to `JsonParticipationStorage`.
+* reconstructs a `MapperManager` by resolving the event and person IDs stored in each `JsonAdaptedParticipation`.
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
 ### Common classes
@@ -172,7 +175,7 @@ and requests the Events tab through `CommandResult`.
 type, a query, and an optional event ID. An absent event scope with a present query
 represents a global role search; it does not mean that no search is active. This
 state is separate from the selected event and is not persisted in storage. The
-existing name-search syntax and matching behavior are retained.
+name and role searches share event filtering and result publication.
 
 For role searches, the model obtains candidate events from the event list, excludes
 archived events, and retrieves each event's registrations through
@@ -195,11 +198,10 @@ IDs remain the same.
 Relevant model mutations refresh the active search, including role edits,
 registration changes, person updates, event edits, and archive changes. Deleting a
 globally searched event refreshes the remaining results; deleting the scoped event
-clears the search. `clearParticipantRoleSearch()` clears only role-search state and
+clears the search. `clearParticipantSearch()` clears either search type and
 restores the ordinary nonarchived event list. `ListEventCommand` and
-`FindEventCommand` call it before applying their own event filter, preserving an
-active legacy name search. Starting a name search replaces role-search state and
-restores the ordinary event list.
+`FindEventCommand` call it before applying their own event filter. Starting a new
+name or role search replaces the previous search and its event filter.
 
 `MainWindow` displays the command's detailed role-search feedback and selects the
 Events tab. The existing Participants tab remains bound to the shared observable
@@ -207,6 +209,100 @@ results. `ParticipantListPanel` displays a global or event-specific heading usin
 the query and optional scope, including when there are no matches. The per-event
 snapshot API supports integration with the combined Events view; that GUI layout
 change is handled separately.
+
+### Participant search
+
+`SearchParticipantCommandParser` accepts `NAME [/event EVENTID]`. `ModelManager` tracks the active
+query separately from the optional event scope: an absent query means no search, while an absent scope
+with a query means a global search. Searches use the mapper-backed `getParticipationsForEvent(event)`
+and `ParticipantNameContainsKeywordPredicate`, excluding archived events before matching. Query and
+name whitespace is normalized for case-insensitive substring matching without changing stored data.
+
+`Logic#getFilteredEventList()` exposes only events containing matching registrations.
+`Logic#getParticipantSearchResults()` exposes a live, unmodifiable list ordered by event insertion
+order and then lexicographic person ID. For grouped rendering,
+`Logic#getParticipantSearchResultsForEvent(event)` returns an immutable snapshot matched by stable
+event ID. Consumers should observe the search result list and reread per-event snapshots when it
+changes, including when the set of visible events stays the same.
+
+Model mutations refresh the active search. `list-event` and `find-event` clear it before applying their
+own event filters. Deleting the explicitly scoped event clears the search; deleting an event during a
+global search refreshes the remaining results. Search state is transient and is not saved to storage.
+
+### Participation mapping
+
+The participation mapping feature represents the many-to-many relationship between people and events. A person can
+participate in multiple events, while an event can have multiple participants. Each event-person pair has at most one
+`Participation` record.
+
+#### Model
+
+<puml src="diagrams/ParticipationMappingClassDiagram.puml" width="650" />
+
+`Mapper` defines the API for adding, removing, querying and updating participations. `MapperManager` implements this API
+and is owned by `ModelManager`. Read-only access is exposed through `ReadOnlyParticipations`, which is also the boundary
+used by the storage component.
+
+A `Participation` is an immutable snapshot containing:
+
+* the associated `Event` and `Person`;
+* whether the person has been marked present;
+* event-specific `Tag` objects; and
+* event-specific `ParticipationRole` objects.
+
+Internally, `MapperManager` does not use mutable domain objects as map keys. It stores each record using the stable pair
+`(EventId, PersonId)` and keeps the attendance state, tags and roles as the value. When a query is made, it resolves the
+current `Event` and `Person` from `EventList` and `AddressBook` before returning an immutable `Participation` snapshot.
+This allows a participation to remain linked to a person after that person's details are edited.
+
+The mapper enforces the following invariants:
+
+* an event-person pair cannot be added twice;
+* both referenced entities must exist when a participation is added;
+* query results are unmodifiable snapshots; and
+* records whose event or person can no longer be resolved are not returned.
+
+`ModelManager` additionally removes all related participations when a person or event is deleted. Updates such as
+marking attendance or replacing event-specific tags create a new immutable state value rather than mutating an existing
+`Participation`.
+
+#### Adding a participation
+
+The sequence below shows the main interactions when `add-participant E1 P1 /role Facilitator /tag VIP` is executed.
+
+<puml src="diagrams/AddParticipationSequenceDiagram.puml" width="720" />
+
+The parser converts each role and participant tag into its model type before constructing `AddParticipantCommand`.
+During execution, `ModelManager` resolves the supplied IDs. `MapperManager` validates the references again, rejects a
+duplicate event-person pair, and stores an initially absent participation with the supplied roles and tags. Failures are
+translated by the command into user-facing `CommandException` messages.
+
+The same mapper API supports the other participation operations. `mark-participant` replaces the stored state with one
+whose `isPresent` value is `true`, while `del-participant` removes the event-person pair.
+
+#### Persistence
+
+Participations are stored separately in `data/participations.json`. Each `JsonAdaptedParticipation` stores only the event
+ID, person ID, attendance state, tags and roles; it does not duplicate the full event or person.
+
+At startup, people and events are loaded before participations. `JsonParticipationStorage` then resolves the stored IDs
+against the loaded `AddressBook` and `EventList` and constructs a `MapperManager`. Entries with invalid or unknown IDs
+are omitted, duplicate event-person pairs cause the participation file to be rejected, and invalid role or tag values
+are reported as data-loading errors. After a command executes successfully, `LogicManager` saves the current
+participations through the `ReadOnlyParticipations` interface.
+
+#### Design considerations
+
+**Aspect: How the event-person relationship is represented**
+
+* **Alternative 1 (current choice):** Store a composite `(EventId, PersonId)` key and resolve the domain objects when
+  returning results.
+  * Pros: Preserves the relationship when person details change; enforces one record per event-person pair; persistence
+    stores compact, stable identifiers.
+  * Cons: Queries require lookups in both source collections, and dangling references must be handled.
+* **Alternative 2:** Store `Event` and `Person` objects directly as map keys.
+  * Pros: Simpler retrieval because no ID resolution is required.
+  * Cons: Replacing or editing domain objects can leave stale references or make key equality unreliable.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -518,6 +614,12 @@ Use case ends.
 ### Glossary
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
+* **Mapper**: The part of the Model that manages participations between people and events
+* **Participant**: A person registered for an event
+* **Participant role**: A responsibility assigned to a participant for a specific event
+* **Participant tag**: A label assigned to a participant for a specific event
+* **Participation**: The event-specific relationship between a person and an event, including attendance status, roles,
+  and tags
 * **Private contact detail**: A contact detail that is not meant to be shared with others
 
 --------------------------------------------------------------------------------------------------------------------

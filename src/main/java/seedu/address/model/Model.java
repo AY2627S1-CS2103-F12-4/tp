@@ -141,18 +141,23 @@ public interface Model {
 
     /**
      * Searches the event identified by {@code eventId} for a nonblank name phrase.
-     * Replaces transient search state; invalid input preserves the previous search.
-     * Preserves the event filter unless replacing a role search, which restores the ordinary event list.
-     * Matches names using case-insensitive substring comparison and preserves distinct person IDs.
-     * Results refresh after person and participation changes made through this model.
+     * Replaces transient search state and filters events to those with matching registrations.
+     * Archived events are excluded, including when explicitly scoped. Invalid input preserves the previous search.
+     * Matches case-insensitive substrings with normalized whitespace and preserves distinct person IDs.
      *
      * @param eventId Stable ID of the event whose memberships are searched.
-     * @param keyword Name phrase, with surrounding whitespace ignored.
+     * @param keyword Name phrase, with surrounding and repeated internal whitespace ignored.
      * @throws NullPointerException if either argument is null.
      * @throws IllegalArgumentException if the keyword is blank.
      * @throws EventNotFoundException if no event has the supplied ID.
      */
     void updateParticipantSearch(EventId eventId, String keyword);
+
+    /**
+     * Searches all nonarchived events for a nonblank name phrase, replacing previous display filters.
+     * Invalid input preserves the previous search. Results refresh after model changes.
+     */
+    void updateParticipantSearch(String keyword);
 
     /**
      * Searches roles across all nonarchived events and filters events to those with matching registrations.
@@ -177,16 +182,11 @@ public interface Model {
      */
     void updateParticipantRoleSearch(EventId eventId, String keyword);
 
-    /**
-     * Clears an active role search and restores the ordinary nonarchived event list.
-     * Leaves an active name search, selected event, and person filter unchanged.
-     */
-    void clearParticipantRoleSearch();
+    /** Clears search context and results and restores the ordinary nonarchived event list. */
+    void clearParticipantSearch();
 
     /**
-     * Returns live, unmodifiable results for the active name or role search.
-     * Global role results follow event insertion order, then lexicographic person-ID order within each event.
-     * Scoped results are ordered lexicographically by person ID.
+     * Returns live, unmodifiable results in event insertion order, then lexicographic person-ID order.
      *
      * @return The same observable view across searches and subsequent model changes.
      */
@@ -199,16 +199,16 @@ public interface Model {
     List<Participation> getParticipantSearchResultsForEvent(Event event);
 
     /**
-     * Returns the scoped search event, or empty during a global role search or when no search is active.
+     * Returns the scoped search event, or empty during a global search or when no search is active.
      *
      * @return The event resolved from the selected stable ID.
      */
     Optional<Event> getParticipantSearchEvent();
 
     /**
-     * Returns the search phrase, or empty when no search is active.
+     * Returns the normalized search phrase, or empty when no search is active.
      *
-     * @return The original case with surrounding whitespace removed; role queries also collapse internal whitespace.
+     * @return The original case with surrounding and repeated internal whitespace removed.
      */
     Optional<String> getParticipantSearchKeyword();
 
@@ -253,8 +253,8 @@ public interface Model {
     void updateEvent(Event event);
 
     /**
-     * Deletes an event and its participations, preserving people and refreshing any active role search.
-     * Clears search context if the scoped event is deleted; a role scope also restores the ordinary event list.
+     * Deletes an event and its participations, preserving people and refreshing any global search.
+     * Deleting the scoped search event clears the search and restores the ordinary event list.
      */
     Event deleteEvent(EventId eventId);
 

@@ -242,25 +242,32 @@ public class SearchRoleCommandIntegrationTest {
     }
 
     @Test
-    public void execute_listAndFindEvents_preserveLegacyNameSearchBehavior() throws Exception {
-        for (String command : List.of("list-event", "find-event Workshop")) {
-            logic.execute("search-participant E1 /name Alice");
-            logic.execute(command);
-            assertEquals(List.of("P1"), logic.getParticipantSearchResults().stream()
-                    .map(participation -> participation.getPerson().getId().toString()).toList());
-            assertEquals("Alice", logic.getParticipantSearchKeyword().orElseThrow());
-            assertEquals(WEDDING, logic.getParticipantSearchEvent().orElseThrow());
+    public void execute_listAndFindEvents_clearNameSearchAndPreventLaterReactivation() throws Exception {
+        for (String scope : List.of("", " /event E1")) {
+            for (String command : List.of("list-event", "find-event Workshop")) {
+                logic.execute("search-participant Alice" + scope);
+                logic.execute(command);
+                assertTrue(logic.getParticipantSearchResults().isEmpty());
+                assertTrue(logic.getParticipantSearchKeyword().isEmpty());
+                assertTrue(logic.getParticipantSearchEvent().isEmpty());
+                List<Event> expected = command.equals("list-event")
+                        ? List.of(WEDDING, WORKSHOP, EMPTY_EVENT) : List.of(WORKSHOP);
+                assertEquals(expected, logic.getFilteredEventList());
+                logic.execute("edit-participant E1 P1 /tag refreshed");
+                assertTrue(logic.getParticipantSearchResults().isEmpty());
+                assertEquals(expected, logic.getFilteredEventList());
+            }
         }
     }
 
     @Test
     public void execute_switchingSearchTypesAndFailedSearches_preserveTheActivePredicate() throws Exception {
         logic.execute("search-role Best Man");
-        logic.execute("search-participant E1 /name Alice");
+        logic.execute("search-participant Alice /event E1");
         logic.execute("edit-participant E1 P2 /role Best Man");
         assertEquals(List.of("P1"), logic.getParticipantSearchResults().stream()
                 .map(participation -> participation.getPerson().getId().toString()).toList());
-        assertEquals(List.of(WEDDING, WORKSHOP, EMPTY_EVENT), logic.getFilteredEventList());
+        assertEquals(List.of(WEDDING), logic.getFilteredEventList());
 
         logic.execute("search-role Speaker");
         assertTrue(logic.getParticipantSearchResults().isEmpty());
@@ -268,7 +275,7 @@ public class SearchRoleCommandIntegrationTest {
         assertEquals(List.of("P1"), logic.getParticipantSearchResults().stream()
                 .map(participation -> participation.getPerson().getId().toString()).toList());
 
-        logic.execute("search-participant E1 /name Speaker");
+        logic.execute("search-participant Speaker /event E1");
         logic.execute("edit-participant E1 P2 /role Speaker");
         assertTrue(logic.getParticipantSearchResults().isEmpty());
         assertThrows(CommandException.class, "Event E99 does not exist.", () ->
@@ -280,7 +287,7 @@ public class SearchRoleCommandIntegrationTest {
         List<Participation> results = List.copyOf(logic.getParticipantSearchResults());
         assertEquals(2, results.size());
         assertThrows(CommandException.class, "Event E99 does not exist.", () ->
-                logic.execute("search-participant E99 /name Alice"));
+                logic.execute("search-participant Alice /event E99"));
         String usageError = String.format(MESSAGE_INVALID_COMMAND_FORMAT, SearchRoleCommand.MESSAGE_USAGE);
         assertThrows(ParseException.class, usageError, () -> logic.execute("search-role /event E1"));
         assertEquals(results, logic.getParticipantSearchResults());

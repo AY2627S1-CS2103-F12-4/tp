@@ -63,7 +63,7 @@ public class LogicParticipantSearchTest {
     @Test
     public void execute_searchAndMutation_exposesLiveUnmodifiableView() throws Exception {
         ObservableList<Participation> results = logic.getParticipantSearchResults();
-        logic.execute("search-participant E1 /name Michael");
+        logic.execute("search-participant Michael /event E1");
         assertSame(model.getParticipantSearchResults(), results);
         assertEquals(1, results.size());
         assertEquals(Optional.of(event), logic.getParticipantSearchEvent());
@@ -78,12 +78,41 @@ public class LogicParticipantSearchTest {
 
     @Test
     public void execute_invalidSearch_preservesExistingView() throws Exception {
-        logic.execute("search-participant E1 /name Michael");
+        logic.execute("search-participant Michael /event E1");
         List<Participation> before = List.copyOf(logic.getParticipantSearchResults());
-        assertThrows(ParseException.class, () -> logic.execute("search-participant E1 /name"));
+        assertThrows(ParseException.class, () -> logic.execute("search-participant Michael /event"));
         assertEquals(before, logic.getParticipantSearchResults());
         assertEquals(Optional.of(event), logic.getParticipantSearchEvent());
         assertEquals(Optional.of("Michael"), logic.getParticipantSearchKeyword());
+    }
+
+    @Test
+    public void execute_globalSearch_exposesPerEventResultsAndNormalizedContext() throws Exception {
+        logic.execute("search-participant Michael   Tan");
+        assertEquals(List.of(event), logic.getFilteredEventList());
+        assertEquals(logic.getParticipantSearchResults(), logic.getParticipantSearchResultsForEvent(event));
+        assertTrue(logic.getParticipantSearchEvent().isEmpty());
+        assertEquals(Optional.of("Michael Tan"), logic.getParticipantSearchKeyword());
+    }
+
+    @Test
+    public void execute_listAndFindEvents_clearParticipantSearchAndKeepTheirFilters() throws Exception {
+        Event other = model.createEvent("Other", 10, "");
+        logic.execute("search-participant Missing");
+        assertTrue(logic.getFilteredEventList().isEmpty());
+        logic.execute("list-event");
+        assertEquals(List.of(event, other), logic.getFilteredEventList());
+        assertTrue(logic.getParticipantSearchKeyword().isEmpty());
+
+        logic.execute("search-participant Michael /event E1");
+        logic.execute("find-event Other");
+        assertEquals(List.of(other), logic.getFilteredEventList());
+        assertTrue(logic.getParticipantSearchResults().isEmpty());
+        assertTrue(logic.getParticipantSearchEvent().isEmpty());
+        assertTrue(logic.getParticipantSearchKeyword().isEmpty());
+        model.addParticipation(other, person);
+        assertEquals(List.of(other), logic.getFilteredEventList());
+        assertTrue(logic.getParticipantSearchResults().isEmpty());
     }
 
     @Test
@@ -112,7 +141,7 @@ public class LogicParticipantSearchTest {
 
     @Test
     public void execute_search_savedDataPreservedAndSearchStateNotPersisted() throws Exception {
-        logic.execute("search-participant E1 /name Missing");
+        logic.execute("search-participant Missing /event E1");
         JsonAddressBookStorage peopleStorage = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         JsonEventStorage eventStorage = new JsonEventStorage(temporaryFolder.resolve("events.json"));
         JsonParticipationStorage participationStorage =

@@ -7,9 +7,10 @@ public final class CommandSuccessMessages {
     private CommandSuccessMessages() {
     }
 
-    /** Returns a concise status without including command results or personal details. */
+    /** Returns a concise status, including the event search phrase for find-event. */
     public static String forCommand(String commandText) {
-        String commandWord = requireNonNull(commandText).strip().split("\\s+", 2)[0];
+        String[] commandParts = requireNonNull(commandText).strip().split("\\s+", 2);
+        String commandWord = commandParts[0];
         return switch (commandWord) {
             case "add" -> "Person added successfully.";
             case "edit" -> "Person updated successfully.";
@@ -23,7 +24,9 @@ public final class CommandSuccessMessages {
             case "edit-event" -> "Event updated successfully.";
             case "del-event" -> "Event deleted successfully.";
             case "list-event" -> "Listing events...";
-            case "find-event" -> "Showing event search results...";
+            case "find-event" -> commandParts.length > 1
+                    ? "Showing event search results for " + commandParts[1] + "..."
+                    : "Showing event search results...";
             case "view-event" -> "Viewing event...";
             case "add-participant" -> "Participant added successfully.";
             case "edit-participant" -> "Participant updated successfully.";

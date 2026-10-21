@@ -2,6 +2,7 @@ package seedu.address.logic;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
@@ -40,10 +41,10 @@ public interface Logic {
      */
     List<Participation> getParticipantSearchResultsForEvent(Event event);
 
-    /** Returns the scoped search event, or empty during a global role search or when no search is active. */
+    /** Returns the scoped search event, or empty during a global search or when no search is active. */
     Optional<Event> getParticipantSearchEvent();
 
-    /** Returns the search phrase, or empty when no search is active. Role queries have normalized whitespace. */
+    /** Returns the normalized search phrase, or empty when no search is active. */
     Optional<String> getParticipantSearchKeyword();
 
     /**
@@ -55,4 +56,8 @@ public interface Logic {
      * Set the user prefs' GUI settings.
      */
     void setGuiSettings(GuiSettings guiSettings);
+    /**
+     * Returns all participants registered for the given event.
+     */
+    Set<Participation> getParticipationsForEvent(Event event);
 }

@@ -1,4 +1,3 @@
-
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,7 +24,6 @@ public class ViewParticipantCommandTest {
     private static final EventId EVENT_ID = new EventId("E1");
     private static final EventId OTHER_EVENT_ID = new EventId("E2");
     private static final PersonId PERSON_ID = new PersonId("P1");
-    private static final PersonId OTHER_PERSON_ID = new PersonId("P2");
 
     private static final Event EVENT =
             new Event(EVENT_ID, "Workshop", 10, "Learn Java");
@@ -51,20 +49,20 @@ public class ViewParticipantCommandTest {
 
         model.addEvent(EVENT);
         model.addEvent(OTHER_EVENT);
-
         model.addPerson(ALICE);
         model.addPerson(BOB);
     }
 
     @Test
-    public void execute_validParticipant_displaysDetails()
+    public void execute_validParticipant_displaysDetailsAndSelectsEvent()
             throws CommandException {
         model.addParticipation(EVENT, ALICE);
 
         ViewParticipantCommand command =
                 new ViewParticipantCommand(EVENT_ID, PERSON_ID);
 
-        String feedback = command.execute(model).getFeedbackToUser();
+        CommandResult result = command.execute(model);
+        String feedback = result.getFeedbackToUser();
 
         assertTrue(feedback.contains("Workshop"));
         assertTrue(feedback.contains("P1"));
@@ -73,6 +71,12 @@ public class ViewParticipantCommandTest {
         assertTrue(feedback.contains(ALICE.getEmail().toString()));
         assertTrue(feedback.contains(ALICE.getAddress().toString()));
         assertTrue(feedback.contains("Present: No"));
+
+        assertTrue(result.isShowParticipants());
+        assertFalse(result.isShowEvents());
+        assertEquals(
+                EVENT_ID.toString(),
+                model.getSelectedEvent().orElseThrow().getId());
     }
 
     @Test
@@ -90,6 +94,7 @@ public class ViewParticipantCommandTest {
                 missingEventId);
 
         assertEquals(expectedMessage, exception.getMessage());
+        assertTrue(model.getSelectedEvent().isEmpty());
     }
 
     @Test
@@ -102,9 +107,11 @@ public class ViewParticipantCommandTest {
 
         String expectedMessage = String.format(
                 ViewParticipantCommand.MESSAGE_PARTICIPANT_NOT_FOUND,
-                EVENT_ID, PERSON_ID);
+                EVENT_ID,
+                PERSON_ID);
 
         assertEquals(expectedMessage, exception.getMessage());
+        assertTrue(model.getSelectedEvent().isEmpty());
     }
 
     @Test
@@ -114,7 +121,9 @@ public class ViewParticipantCommandTest {
         ViewParticipantCommand command =
                 new ViewParticipantCommand(EVENT_ID, PERSON_ID);
 
-        assertThrows(CommandException.class, () -> command.execute(model));
+        assertThrows(
+                CommandException.class, () -> command.execute(model));
+        assertTrue(model.getSelectedEvent().isEmpty());
     }
 
     @Test
@@ -147,7 +156,8 @@ public class ViewParticipantCommandTest {
     }
 
     @Test
-    public void execute_doesNotModifyData() throws CommandException {
+    public void execute_doesNotModifyParticipationData()
+            throws CommandException {
         model.addParticipation(EVENT, ALICE);
 
         int before = model.getParticipations()

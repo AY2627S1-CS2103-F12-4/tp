@@ -1,4 +1,3 @@
-
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,66 +49,6 @@ public class ListParticipantsCommandTest {
 
     private ModelManager model;
 
-    @Test
-    public void execute_attendanceRolesAndTags_formatsEveryCombination() throws Exception {
-        for (boolean present : new boolean[] {false, true}) {
-            for (boolean hasRoles : new boolean[] {false, true}) {
-                for (boolean hasTags : new boolean[] {false, true}) {
-                    AddressBook people = new AddressBook();
-                    people.addPerson(ALICE);
-                    EventList events = new EventList();
-                    events.addEvent(EVENT);
-                    Set<ParticipationRole> roles = hasRoles
-                            ? Set.of(new ParticipationRole("Host"), new ParticipationRole("Best Man")) : Set.of();
-                    Set<Tag> tags = hasTags ? Set.of(new Tag("vip"), new Tag("friend")) : Set.of();
-                    Participation participation = new Participation(EVENT, ALICE, present, tags, roles);
-                    ModelManager testModel = new ModelManager(people, new UserPrefs(), events, () ->
-                            Set.of(participation));
-                    String row = (present ? "[Y]" : "[N]") + "P1-Alice Tan-roles:"
-                            + (hasRoles ? "Best Man, Host" : "No role")
-                            + "（Tags:" + (hasTags ? "friend, vip" : "None") + "）";
-                    String expected = "1 participants found in Workshop.\n" + row;
-                    assertEquals(expected, new ListParticipantsCommand(EVENT_ID)
-                            .execute(testModel).getFeedbackToUser());
-                    assertEquals("Event Details\nEvent ID: E1\nName: Workshop\nCapacity: 10\n"
-                            + "Description: Learn Java\n\n" + expected,
-                            new ViewEventCommand(EVENT_ID).execute(testModel).getFeedbackToUser());
-                    assertEquals(Set.of(participation), testModel.getParticipations().getParticipations());
-                }
-            }
-        }
-    }
-
-    @Test
-    public void execute_personTags_areNotUsedAsEventTags() throws Exception {
-        var person = new PersonBuilder().withId("P3").withName("Carol").withTags("personal").build();
-        model.addPerson(person);
-        model.addParticipation(EVENT, person);
-        model.setTags(EVENT, person, Set.of(new Tag("eventOnly")));
-        assertEquals("1 participants found in Workshop.\n[N]P3-Carol-roles:No role（Tags:eventOnly）",
-                new ListParticipantsCommand(EVENT_ID).execute(model).getFeedbackToUser());
-    }
-
-    @Test
-    public void execute_hiddenEvents_preservesFiltersAndAttendance() throws Exception {
-        model.addParticipation(EVENT, BOB);
-        model.addParticipation(EVENT, ALICE);
-        model.markPresent(EVENT_ID, ALICE.getId());
-        model.updateFilteredEventList(unused -> false);
-        model.updateFilteredPersonList(unused -> false);
-        assertEquals("2 participants found in Workshop.\n[Y]P1-Alice Tan-roles:No role（Tags:None）\n"
-                + "[N]P2-Bob Lim-roles:No role（Tags:None）",
-                new ListParticipantsCommand(EVENT_ID).execute(model).getFeedbackToUser());
-        assertTrue(model.getFilteredEventList().isEmpty());
-        assertTrue(model.getFilteredPersonList().isEmpty());
-    }
-
-    @Test
-    public void nullArguments_throwNullPointerException() {
-        assertThrows(NullPointerException.class, () -> new ListParticipantsCommand(null));
-        assertThrows(NullPointerException.class, () -> new ListParticipantsCommand(EVENT_ID).execute(null));
-    }
-
     @BeforeEach
     public void setUp() {
         model = new ModelManager();
@@ -120,7 +59,146 @@ public class ListParticipantsCommandTest {
     }
 
     @Test
-    public void execute_eventWithParticipants_listsParticipants()
+    public void execute_attendanceRolesAndTags_formatsEveryCombination()
+            throws Exception {
+        for (boolean present : new boolean[] {false, true}) {
+            for (boolean hasRoles : new boolean[] {false, true}) {
+                for (boolean hasTags : new boolean[] {false, true}) {
+                    AddressBook people = new AddressBook();
+                    people.addPerson(ALICE);
+
+                    EventList events = new EventList();
+                    events.addEvent(EVENT);
+
+                    Set<ParticipationRole> roles = hasRoles
+                            ? Set.of(new ParticipationRole("Host"), new ParticipationRole("Best Man"))
+                            : Set.of();
+
+                    Set<Tag> tags = hasTags
+                            ? Set.of(new Tag("vip"), new Tag("friend"))
+                            : Set.of();
+
+                    Participation participation = new Participation(
+                            EVENT,
+                            ALICE,
+                            present,
+                            tags,
+                            roles);
+
+                    ModelManager testModel = new ModelManager(
+                            people,
+                            new UserPrefs(),
+                            events, () -> Set.of(participation));
+
+                    String row = (present ? "[Y]" : "[N]")
+                            + "P1-Alice Tan-roles:"
+                            + (hasRoles
+                            ? "Best Man, Host"
+                            : "No role")
+                            + "（Tags:"
+                            + (hasTags ? "friend, vip" : "None")
+                            + "）";
+
+                    String expected =
+                            "1 participants found in Workshop.\n" + row;
+
+                    CommandResult result =
+                            new ListParticipantsCommand(EVENT_ID)
+                                    .execute(testModel);
+
+                    assertEquals(expected, result.getFeedbackToUser());
+                    assertTrue(result.isShowParticipants());
+                    assertFalse(result.isShowEvents());
+                    assertEquals(
+                            EVENT_ID.toString(),
+                            testModel.getSelectedEvent()
+                                    .orElseThrow()
+                                    .getId());
+
+                    assertEquals(
+                            "Event Details\n"
+                                    + "Event ID: E1\n"
+                                    + "Name: Workshop\n"
+                                    + "Capacity: 10\n"
+                                    + "Description: Learn Java\n\n"
+                                    + expected,
+                            new ViewEventCommand(EVENT_ID)
+                                    .execute(testModel)
+                                    .getFeedbackToUser());
+
+                    assertEquals(
+                            Set.of(participation),
+                            testModel.getParticipations()
+                                    .getParticipations());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void execute_personTags_areNotUsedAsEventTags()
+            throws Exception {
+        Person person = new PersonBuilder()
+                .withId("P3")
+                .withName("Carol")
+                .withTags("personal")
+                .build();
+
+        model.addPerson(person);
+        model.addParticipation(EVENT, person);
+        model.setTags(
+                EVENT,
+                person,
+                Set.of(new Tag("eventOnly")));
+
+        assertEquals(
+                "1 participants found in Workshop.\n"
+                        + "[N]P3-Carol-roles:No role"
+                        + "（Tags:eventOnly）",
+                new ListParticipantsCommand(EVENT_ID)
+                        .execute(model)
+                        .getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_hiddenEvents_preservesFiltersAndAttendance()
+            throws Exception {
+        model.addParticipation(EVENT, BOB);
+        model.addParticipation(EVENT, ALICE);
+        model.markPresent(EVENT_ID, ALICE.getId());
+        model.updateFilteredEventList(unused -> false);
+        model.updateFilteredPersonList(unused -> false);
+
+        CommandResult result =
+                new ListParticipantsCommand(EVENT_ID).execute(model);
+
+        assertEquals(
+                "2 participants found in Workshop.\n"
+                        + "[Y]P1-Alice Tan-roles:No role"
+                        + "（Tags:None）\n"
+                        + "[N]P2-Bob Lim-roles:No role"
+                        + "（Tags:None）",
+                result.getFeedbackToUser());
+
+        assertTrue(result.isShowParticipants());
+        assertEquals(
+                EVENT_ID.toString(),
+                model.getSelectedEvent().orElseThrow().getId());
+        assertTrue(model.getFilteredEventList().isEmpty());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+    }
+
+    @Test
+    public void nullArguments_throwNullPointerException() {
+        assertThrows(NullPointerException.class, () ->
+                new ListParticipantsCommand(null));
+
+        assertThrows(NullPointerException.class, () ->
+                new ListParticipantsCommand(EVENT_ID).execute(null));
+    }
+
+    @Test
+    public void execute_eventWithParticipants_listsAndSelectsEvent()
             throws CommandException {
         model.addParticipation(EVENT, ALICE);
         model.addParticipation(EVENT, BOB);
@@ -128,7 +206,8 @@ public class ListParticipantsCommandTest {
         ListParticipantsCommand command =
                 new ListParticipantsCommand(EVENT_ID);
 
-        String feedback = command.execute(model).getFeedbackToUser();
+        CommandResult result = command.execute(model);
+        String feedback = result.getFeedbackToUser();
 
         assertTrue(feedback.contains("2 participants found"));
         assertTrue(feedback.contains("Workshop"));
@@ -136,23 +215,36 @@ public class ListParticipantsCommandTest {
         assertTrue(feedback.contains("Alice Tan"));
         assertTrue(feedback.contains("P2"));
         assertTrue(feedback.contains("Bob Lim"));
+
+        assertTrue(result.isShowParticipants());
+        assertFalse(result.isShowEvents());
+        assertEquals(
+                EVENT_ID.toString(),
+                model.getSelectedEvent().orElseThrow().getId());
     }
 
     @Test
-    public void execute_emptyEvent_displaysEmptyMessage()
+    public void execute_emptyEvent_displaysEmptyMessageAndSelectsEvent()
             throws CommandException {
         ListParticipantsCommand command =
                 new ListParticipantsCommand(EVENT_ID);
 
         CommandResult result = command.execute(model);
 
-        assertEquals("No participants found in Workshop.",
+        assertEquals(
+                "No participants found in Workshop.",
                 result.getFeedbackToUser());
+        assertTrue(result.isShowParticipants());
+        assertFalse(result.isShowEvents());
+        assertEquals(
+                EVENT_ID.toString(),
+                model.getSelectedEvent().orElseThrow().getId());
     }
 
     @Test
     public void execute_nonexistentEvent_throwsCommandException() {
         EventId missingEventId = new EventId("E99");
+
         ListParticipantsCommand command =
                 new ListParticipantsCommand(missingEventId);
 
@@ -164,6 +256,7 @@ public class ListParticipantsCommandTest {
                 missingEventId);
 
         assertEquals(expectedMessage, exception.getMessage());
+        assertTrue(model.getSelectedEvent().isEmpty());
     }
 
     @Test
@@ -183,7 +276,7 @@ public class ListParticipantsCommandTest {
     }
 
     @Test
-    public void execute_listParticipants_doesNotModifyData()
+    public void execute_listParticipants_doesNotModifyParticipationData()
             throws CommandException {
         model.addParticipation(EVENT, ALICE);
 

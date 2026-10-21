@@ -168,35 +168,45 @@ Name and role searches share model state and the combined Events view:
 
 | Command | Search type | Predicate |
 | --- | --- | --- |
-| `search-participant NAME [/event EVENTID]` | `NAME` | `ParticipantNameContainsKeywordPredicate` |
-| `search-role ROLE [/event EVENTID]` | `ROLE` | `ParticipationRoleContainsKeywordPredicate` |
+| `search-participant NAME [/event EVENTID] [/include-archive]` | `NAME` | `ParticipantNameContainsKeywordPredicate` |
+| `search-role ROLE [/event EVENTID] [/include-archive]` | `ROLE` | `ParticipationRoleContainsKeywordPredicate` |
 
 Each parser normalizes query whitespace and validates the optional event ID, which
-must follow the search phrase. Duplicate or unsupported command prefixes are
-rejected. `SearchParticipantCommand` calls the global or scoped
+must follow the search phrase. The standalone `/include-archive` flag, when present,
+must come last. Parsers remove that exact trailing flag before validating the
+remaining query and event scope. Repeated, misplaced, or unsupported options and
+flag values are rejected. `SearchParticipantCommand` calls the global or scoped
 `Model#updateParticipantSearch` overload; `SearchRoleCommand` calls the
-corresponding `Model#updateParticipantRoleSearch` overload. Both commands report
-registration and event counts and request the Events tab through `CommandResult`.
+corresponding `Model#updateParticipantRoleSearch` overload. Each passes the
+`includeArchived` boolean. Both commands report registration and event counts and
+request the Events tab through `CommandResult`. Empty-result feedback distinguishes
+searches that include archives from default searches. Command equality and hash
+codes include archive visibility.
 
-`ModelManager` stores a transient `ParticipantSearchType`, normalized query, and
-optional event ID. An absent query means no active search. A present query with no
-event scope represents a global search, including when it has zero results. This
-state is independent of the selected event and is not persisted in storage.
-Starting either search type replaces the previous type, query, scope, and filter.
+`ModelManager` stores a transient `ParticipantSearchType`, normalized query,
+optional event ID, and `participantSearchIncludesArchived` boolean. An absent query
+means no active search. A present query with no event scope represents a global
+search, including when it has zero results. This state is independent of the
+selected event and is not persisted in storage.
+Starting either search type replaces the previous type, query, scope, archive
+visibility, and filter. Existing search overloads without the boolean delegate
+with `false`, preserving default exclusion of archived events.
 
-The shared `applyParticipantSearch` overloads resolve the scope, exclude archived
-events, and retrieve registrations through the mapper-backed
+The shared `applyParticipantSearch` overloads resolve the scope, include archived
+events only when requested, and retrieve registrations through the mapper-backed
 `Model#getParticipationsForEvent`. Existing people and event display filters do
 not limit the search candidates. A nonexistent scoped event fails before changing
-search state; an archived scoped event yields no matches. Name matching normalizes
-whitespace in both the query and full name. Role matching uses a substring within
-any single assigned role. Both predicates ignore case. Each registration appears
+search state; an archived scoped event yields no matches unless archives are
+included. Invalid input preserves the previous archive visibility as well as the
+query and results. Name matching normalizes whitespace in both the query and full
+name. Role matching uses a substring within any single assigned role. Both predicates
+ignore case. Each registration appears
 once, retaining all its roles, in event insertion order and then lexicographic
 Person ID order within each event.
 
-The model publishes the search type, scope, query, and matching-event filter before
-notifying observers of the result rows. `getParticipantSearchResults()` exposes a
-live, unmodifiable observable list through `Model` and `Logic`.
+The model publishes the search type, scope, query, archive visibility, and matching-event
+filter before notifying observers of the result rows. `getParticipantSearchResults()`
+exposes a live, unmodifiable observable list through `Model` and `Logic`.
 `getParticipantSearchResultsForEvent(event)` returns an immutable snapshot matched
 by stable event ID. Consumers must reread it when the observable results change,
 even if the matching event IDs remain the same.
@@ -215,16 +225,26 @@ model has finished publishing its filter and rows. `isUpdatingParticipantPanel`
 prevents programmatic selection changes from reentering that update. Refreshes
 retain the selected event by stable ID if it still matches; otherwise, they select
 the first remaining match. With no matches, selection and rows are empty while
-the panel retains the global or scoped query context.
+the panel retains the global or scoped query context. `Model` and `Logic` expose
+`isParticipantSearchIncludingArchived()`, which returns false when no search is
+active. `MainWindow` uses this value for the empty global-search heading:
+**All events** when archives are included and **All nonarchived events** otherwise.
+Scoped headings and event cards use `Event#getDisplayName()`, including its
+`<archived>` suffix. Participant cards show the stable Person ID, full name, and
+all assigned roles.
 
-Relevant model mutations refresh the active search using its stored type and
-scope, including person updates, registration and role changes, event edits, and
-archive changes. Deleting an event during a global search refreshes the remaining
-matches. Deleting the scoped event calls `clearParticipantSearch()`, which clears
+Relevant model mutations refresh the active search using its stored type, scope,
+and archive visibility, including person updates, registration and role changes,
+event edits, and archive changes. Deleting an event during a global search refreshes
+the remaining matches. Deleting the scoped event calls `clearParticipantSearch()`, which clears
 either search type and restores the ordinary nonarchived event list.
-`ListEventCommand` and `FindEventCommand` use the same reset before applying their
-own event filter. The UI clears the previous search rows and context after these
-resets, preventing a later command from reviving stale results.
+`ListEventCommand` calls `showEvents(includeArchived)` to clear the search and list
+events with the requested archive visibility. `clearParticipantSearch()` delegates
+to `showEvents(false)`; `FindEventCommand` uses this default reset before applying
+its name predicate. Both reset paths clear the stored search archive flag, even
+when the event listing includes archives. The UI clears the previous search rows
+and context after these resets, preventing a later command from reviving stale
+results.
 
 ### Participation mapping
 
@@ -390,9 +410,23 @@ The following activity diagram summarizes what happens when a user executes a ne
 
 _{more aspects and alternatives to be added}_
 
-### \[Proposed\] Data archiving
+### Event archiving and visibility
 
-_{Explain here how the data archiving feature will be implemented}_
+`Event` stores an immutable archive flag. Archiving and restoring replace the event
+through `withArchived(boolean)` and `Model#updateEvent`, preserving its stable ID
+and registrations. `JsonAdaptedEvent` persists the flag; older event records without
+an archive field load as nonarchived. `Event#getDisplayName()` appends `<archived>`
+for display without modifying the stored name used for matching.
+
+The initial event view excludes archives. The overload
+`updateFilteredEventList(predicate, includeArchived)` combines archive visibility
+with the supplied predicate; its single-argument overload defaults to `false`.
+Search result collection uses the
+same archive policy so registration counts and displayed matching events agree.
+`list-event [/include-archive]` replaces the event filter through
+`showEvents(includeArchived)` and clears any participant search. Archive state is
+persisted, while listing visibility and search context are transient and reset
+when the model is reconstructed.
 
 
 --------------------------------------------------------------------------------------------------------------------

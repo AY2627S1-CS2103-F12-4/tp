@@ -9,7 +9,7 @@
   <padding><Insets top="5" right="5" bottom="5" left="5" /></padding>
   <Label fx:id="eventHeading" text="Participant search" styleClass="label-bright" wrapText="true" />
   <Label fx:id="searchHeading"
-         text="Use search-participant NAME [/event EVENTID] or search-role ROLE [/event EVENTID]"
+         text="search-participant NAME [/event EVENTID] [/include-archive]&#10;search-role ROLE [/event EVENTID] [/include-archive]"
          styleClass="label-bright" wrapText="true" />
   <ListView fx:id="participantListView" VBox.vgrow="ALWAYS" />
 </VBox>

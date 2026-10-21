@@ -117,7 +117,8 @@ public class ParticipantUiTest {
                     labelText(panel, "eventHeading"));
 
             assertEquals(
-                    "Use search-participant NAME [/event EVENTID] or search-role ROLE [/event EVENTID]",
+                    "search-participant NAME [/event EVENTID] [/include-archive]\n"
+                            + "search-role ROLE [/event EVENTID] [/include-archive]",
                     labelText(panel, "searchHeading"));
 
             assertEquals(

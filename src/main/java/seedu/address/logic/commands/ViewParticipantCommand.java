@@ -1,4 +1,3 @@
-
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
@@ -37,11 +36,10 @@ public class ViewParticipantCommand extends Command {
     private final PersonId personId;
 
     /**
-     * Creates a ViewParticipantCommand to display the details of a
-     * person participating in the specified event.
+     * Creates a command that displays a participant in the specified event.
      *
      * @param eventId ID of the event
-     * @param personId ID of the person
+     * @param personId ID of the participant
      */
     public ViewParticipantCommand(EventId eventId, PersonId personId) {
         requireAllNonNull(eventId, personId);
@@ -54,24 +52,15 @@ public class ViewParticipantCommand extends Command {
         requireNonNull(model);
 
         Event event = model.getEvents().stream()
-                .filter(e -> e.getId().equals(eventId.toString()))
+                .filter(candidate -> candidate.getId()
+                        .equals(eventId.toString()))
                 .findFirst()
                 .orElseThrow(() -> new CommandException(
                         String.format(MESSAGE_EVENT_NOT_FOUND, eventId)));
 
-        Participation participation;
+        Participation participation = findParticipation(model, event);
 
-        try {
-            participation = model.getParticipationsForEvent(event).stream()
-                    .filter(p -> p.getPerson().getId().equals(personId))
-                    .findFirst()
-                    .orElseThrow(() -> new CommandException(
-                            String.format(MESSAGE_PARTICIPANT_NOT_FOUND,
-                                    eventId, personId)));
-        } catch (EventNotFoundException e) {
-            throw new CommandException(
-                    String.format(MESSAGE_EVENT_NOT_FOUND, eventId), e);
-        }
+        model.selectEvent(eventId);
 
         Person person = participation.getPerson();
 
@@ -90,8 +79,35 @@ public class ViewParticipantCommand extends Command {
                 + "Email: " + person.getEmail() + "\n"
                 + "Address: " + person.getAddress() + "\n"
                 + "Roles: " + roles + "\n"
-                + "Present: " + (participation.isPresent() ? "Yes" : "No");
+                + "Present: "
+                + (participation.isPresent() ? "Yes" : "No");
 
-        return new CommandResult(details);
+        return new CommandResult(
+                details,
+                false,
+                false,
+                false,
+                true);
+    }
+
+    /**
+     * Finds the requested participant in the specified event.
+     */
+    private Participation findParticipation(Model model, Event event)
+            throws CommandException {
+        try {
+            return model.getParticipationsForEvent(event).stream()
+                    .filter(participation -> participation.getPerson()
+                            .getId().equals(personId))
+                    .findFirst()
+                    .orElseThrow(() -> new CommandException(
+                            String.format(
+                                    MESSAGE_PARTICIPANT_NOT_FOUND,
+                                    eventId,
+                                    personId)));
+        } catch (EventNotFoundException e) {
+            throw new CommandException(
+                    String.format(MESSAGE_EVENT_NOT_FOUND, eventId), e);
+        }
     }
 }

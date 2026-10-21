@@ -3,6 +3,7 @@ package seedu.address.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
@@ -119,12 +120,9 @@ public class ParticipantUiTest {
                     "Use search-participant EVENT_ID /name NAME",
                     labelText(panel, "searchHeading"));
 
-            Label placeholder =
-                    (Label) listView(panel).getPlaceholder();
-
             assertEquals(
                     "Select an event to view its participants.",
-                    placeholder.getText());
+                    placeholderText(panel));
 
             assertTrue(listView(panel).getItems().isEmpty());
         });
@@ -148,6 +146,10 @@ public class ParticipantUiTest {
                     "Matching \"jOhN\"",
                     labelText(panel, "searchHeading"));
 
+            assertEquals(
+                    "No matching participants.",
+                    placeholderText(panel));
+
             assertThrows(
                     NullPointerException.class, () ->
                             panel.setSearchContext(null, "John"));
@@ -155,6 +157,119 @@ public class ParticipantUiTest {
             assertThrows(
                     NullPointerException.class, () ->
                             panel.setSearchContext(EVENT, null));
+        });
+    }
+
+    @Test
+    public void panel_showParticipantsForEvent_sortsAndDisplaysParticipants()
+            throws Exception {
+        runOnFxThread(() -> {
+            Person laterPerson = new PersonBuilder(PERSON)
+                    .withId("P010")
+                    .withName("Later Person")
+                    .build();
+
+            Person earlierPerson = new PersonBuilder(PERSON)
+                    .withId("P002")
+                    .withName("Earlier Person")
+                    .build();
+
+            Participation laterParticipation =
+                    new Participation(EVENT, laterPerson);
+            Participation earlierParticipation =
+                    new Participation(EVENT, earlierPerson);
+
+            ParticipantListPanel panel =
+                    new ParticipantListPanel(
+                            FXCollections.observableArrayList());
+
+            panel.showParticipantsForEvent(
+                    EVENT,
+                    Set.of(laterParticipation, earlierParticipation));
+
+            assertEquals(2, listView(panel).getItems().size());
+            assertEquals(
+                    earlierParticipation,
+                    listView(panel).getItems().get(0));
+            assertEquals(
+                    laterParticipation,
+                    listView(panel).getItems().get(1));
+
+            assertEquals(
+                    "Wedding (E1)",
+                    labelText(panel, "eventHeading"));
+            assertEquals(
+                    "Participants",
+                    labelText(panel, "searchHeading"));
+            assertEquals(
+                    "No participants found for this event.",
+                    placeholderText(panel));
+        });
+    }
+
+    @Test
+    public void panel_clearSearchContext_clearsParticipantsAndRestoresPrompt()
+            throws Exception {
+        runOnFxThread(() -> {
+            ParticipantListPanel panel =
+                    new ParticipantListPanel(
+                            FXCollections.observableArrayList());
+
+            panel.showParticipantsForEvent(
+                    EVENT,
+                    Set.of(PARTICIPATION));
+
+            assertEquals(1, listView(panel).getItems().size());
+
+            panel.clearSearchContext();
+
+            assertTrue(listView(panel).getItems().isEmpty());
+            assertEquals(
+                    "Participants",
+                    labelText(panel, "eventHeading"));
+            assertEquals(
+                    "Select an event to view its participants.",
+                    labelText(panel, "searchHeading"));
+            assertEquals(
+                    "Select an event to view its participants.",
+                    placeholderText(panel));
+        });
+    }
+
+    @Test
+    public void panel_searchAfterEventSelection_restoresSearchResults()
+            throws Exception {
+        runOnFxThread(() -> {
+            ObservableList<Participation> searchResults =
+                    FXCollections.observableArrayList(PARTICIPATION);
+
+            Person otherPerson = new PersonBuilder(PERSON)
+                    .withId("P099")
+                    .withName("Other Person")
+                    .build();
+
+            Participation otherParticipation =
+                    new Participation(EVENT, otherPerson);
+
+            ParticipantListPanel panel =
+                    new ParticipantListPanel(searchResults);
+
+            panel.showParticipantsForEvent(
+                    EVENT,
+                    Set.of(otherParticipation));
+
+            assertEquals(
+                    otherParticipation,
+                    listView(panel).getItems().getFirst());
+
+            panel.setSearchContext(EVENT, "John");
+
+            assertSame(
+                    searchResults,
+                    listView(panel).getItems());
+            assertEquals(
+                    PARTICIPATION,
+                    listView(panel).getItems().getFirst());
         });
     }
 
@@ -225,6 +340,13 @@ public class ParticipantUiTest {
                         .lookup("#" + id);
 
         return label.getText();
+    }
+
+    private String placeholderText(ParticipantListPanel panel) {
+        Label placeholder =
+                (Label) listView(panel).getPlaceholder();
+
+        return placeholder.getText();
     }
 
     @SuppressWarnings("unchecked")

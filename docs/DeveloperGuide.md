@@ -183,6 +183,25 @@ request the Events tab through `CommandResult`. Empty-result feedback distinguis
 searches that include archives from default searches. Command equality and hash
 codes include archive visibility.
 
+The following sequence diagram shows command execution for
+`search-participant Michael /event E1 /include-archive`, after parsing. It assumes
+that E1 exists and has at least one matching registration. `events` is the
+single-event list containing E1. Calls within the mapper and predicate are
+omitted for clarity. `matchingEventPredicate` represents the
+lambda that checks whether an event's ID belongs to `matchingEventIds`.
+
+<puml src="diagrams/ParticipantSearchSequenceDiagram.puml" width="1100"
+  alt="Sequence of a scoped participant name search including archived events" />
+
+Without `/event`, the command calls the global overload, which searches across
+events; without `/include-archive`, archived events are excluded. Role search
+follows the same flow through `SearchRoleCommand`, `updateParticipantRoleSearch`,
+the `ROLE` search type, and `ParticipationRoleContainsKeywordPredicate`.
+An unknown scoped event raises `EventNotFoundException` before search state
+changes; the command converts it to `CommandException`. The diagram ends when the
+command returns its `CommandResult` to `LogicManager`; subsequent UI rendering is
+described below.
+
 `ModelManager` stores a transient `ParticipantSearchType`, normalized query,
 optional event ID, and `participantSearchIncludesArchived` boolean. An absent query
 means no active search. A present query with no event scope represents a global

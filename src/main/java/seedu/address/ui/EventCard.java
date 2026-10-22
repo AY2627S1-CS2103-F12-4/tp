@@ -27,14 +27,36 @@ public class EventCard extends UiPart<Region> {
     @FXML
     private Button addParticipantButton;
     @FXML
+    private Button editButton;
+    @FXML
+    private Button archiveButton;
+    @FXML
     private Button deleteButton;
 
     /**
      * Creates an event card with its displayed index and entry actions.
      */
     public EventCard(Event event, int displayedIndex, Runnable addParticipantAction, Runnable deleteAction) {
+        this(event, displayedIndex, addParticipantAction, () -> { }, () -> { }, deleteAction);
+    }
+
+    /**
+     * Creates an event card with its displayed index, participant, edit and deletion actions.
+     */
+    public EventCard(Event event, int displayedIndex, Runnable addParticipantAction,
+            Runnable editAction, Runnable deleteAction) {
+        this(event, displayedIndex, addParticipantAction, editAction, () -> { }, deleteAction);
+    }
+
+    /**
+     * Creates an event card with all event actions.
+     */
+    public EventCard(Event event, int displayedIndex, Runnable addParticipantAction,
+            Runnable editAction, Runnable archiveAction, Runnable deleteAction) {
         super(FXML);
         requireNonNull(addParticipantAction);
+        requireNonNull(editAction);
+        requireNonNull(archiveAction);
         requireNonNull(deleteAction);
         index.setText(displayedIndex + ". ");
         name.setText(event.getDisplayName());
@@ -44,6 +66,9 @@ public class EventCard extends UiPart<Region> {
         description.setVisible(!event.getDescription().isBlank());
         description.setManaged(description.isVisible());
         addParticipantButton.setOnAction(actionEvent -> addParticipantAction.run());
+        editButton.setOnAction(actionEvent -> editAction.run());
+        archiveButton.setText(event.isArchived() ? "Unarchive" : "Archive");
+        archiveButton.setOnAction(actionEvent -> archiveAction.run());
         deleteButton.setOnAction(actionEvent -> deleteAction.run());
     }
 }

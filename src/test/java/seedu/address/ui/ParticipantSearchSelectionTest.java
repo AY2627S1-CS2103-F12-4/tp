@@ -304,6 +304,136 @@ public class ParticipantSearchSelectionTest {
         });
     }
 
+    @Test
+    public void archiveSearch_selectsMatchingEventsAndPreservesArchivedScope() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow(createModel());
+            try {
+                enterCommand(window, "search-participant John /include-archive");
+                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
+                assertEquals(List.of("E1", "E2", "E3"), eventIds(window));
+                assertSelection(window, "E1", "P1");
+
+                events(window).getSelectionModel().select(2);
+                assertSelection(window, "E3", "P1");
+                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("John Doe", participants(window).getItems().getFirst().getPerson().getName().fullName);
+                tabs(window).getSelectionModel().select(0);
+                tabs(window).getSelectionModel().select(1);
+                assertSelection(window, "E3", "P1");
+                events(window).getSelectionModel().select(1);
+                assertSelection(window, "E2", "P1", "P3");
+
+                enterCommand(window, "search-participant John /event E3 /include-archive");
+                assertEquals(List.of("E3"), eventIds(window));
+                assertSelection(window, "E3", "P1");
+                enterCommand(window, "search-participant John /event E3");
+                assertTrue(events(window).getItems().isEmpty());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void archiveSearch_emptyGlobalResults_useRequestedScopeAndRefreshArchivedMatches() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, "search-participant Missing /include-archive");
+                assertTrue(events(window).getItems().isEmpty());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+                assertEquals("All events", heading(window, "eventHeading"));
+                assertEquals("Matching \"Missing\"", heading(window, "searchHeading"));
+                enterCommand(window, "list");
+                assertEquals("All events", heading(window, "eventHeading"));
+
+                Event archived = new Event(new EventId("E5"), "Old Workshop", 10, "", true);
+                Person missing = new PersonBuilder().withId("P5").withName("Missing Person").build();
+                model.addEvent(archived);
+                model.addPerson(missing);
+                model.addParticipation(archived, missing);
+                assertSelection(window, "E5", "P5");
+                assertEquals("Old Workshop <archived> (E5)", heading(window, "eventHeading"));
+                model.removeParticipation(archived, missing);
+                assertEquals("All events", heading(window, "eventHeading"));
+                assertTrue(participants(window).getItems().isEmpty());
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+
+                enterCommand(window, "search-participant Missing");
+                assertEquals("All nonarchived events", heading(window, "eventHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void archiveSearch_eventAndRegistrationChanges_retainSelectionOrChooseNextMatch() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow(createModel());
+            try {
+                enterCommand(window, "search-participant John /include-archive");
+                events(window).getSelectionModel().select(1);
+                enterCommand(window, "archive-event E2");
+                assertSelection(window, "E2", "P1", "P3");
+                assertEquals("Reception <archived> (E2)", heading(window, "eventHeading"));
+                assertEquals(List.of("E1", "E2", "E3"), eventIds(window));
+                enterCommand(window, "unarchive-event E2");
+                assertSelection(window, "E2", "P1", "P3");
+                assertEquals("Reception (E2)", heading(window, "eventHeading"));
+
+                enterCommand(window, "del-participant E2 P1");
+                assertSelection(window, "E2", "P3");
+                enterCommand(window, "del-participant E2 P3");
+                assertSelection(window, "E1", "P1");
+                enterCommand(window, "del-event E1");
+                assertSelection(window, "E3", "P1");
+                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                enterCommand(window, "del-event E3");
+                assertTrue(participants(window).getItems().isEmpty());
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+                assertEquals("All events", heading(window, "eventHeading"));
+                assertEquals("Matching \"John\"", heading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void archiveListing_clearsSearchAndAllowsOrdinaryArchivedEventSelection() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, "search-participant John /event E3 /include-archive");
+                enterCommand(window, "list-event /include-archive");
+                assertEquals(List.of("E1", "E2", "E3", "E4"), eventIds(window));
+                assertTrue(model.getParticipantSearchKeyword().isEmpty());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+                assertEquals("Participants", heading(window, "eventHeading"));
+
+                events(window).getSelectionModel().select(2);
+                assertSelection(window, "E3", "P1");
+                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Participants", heading(window, "searchHeading"));
+                enterCommand(window, "list-event");
+                assertEquals(List.of("E1", "E2", "E4"), eventIds(window));
+                assertTrue(participants(window).getItems().isEmpty());
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
     private ModelManager createModel() {
         ModelManager model = new ModelManager();
         Event first = new Event(new EventId("E1"), "Wedding", 30, "Ceremony");

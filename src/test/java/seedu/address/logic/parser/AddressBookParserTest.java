@@ -88,25 +88,26 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_searchRole_returnsSearchRoleCommand() throws Exception {
         assertEquals(new SearchRoleCommand(new EventId("E1"), "Best Man"),
-                parser.parseCommand("search-role E1 /role Best Man"));
+                parser.parseCommand("search-role Best Man /event E1"));
+        assertEquals(new SearchRoleCommand("Best Man"), parser.parseCommand("search-role Best Man"));
     }
 
     @Test
     public void parseCommand_searchRoleWithWhitespace_returnsNormalizedCommand() throws Exception {
         assertEquals(new SearchRoleCommand(new EventId("E1"), "Best Man"),
-                parser.parseCommand(" \tsearch-role\tE1\t/role  Best \t Man  "));
+                parser.parseCommand(" \tsearch-role\t Best \t Man \t/event\tE1 "));
     }
 
     @Test
-    public void parseCommand_searchRoleWithMissingQuery_throwsParseException() {
+    public void parseCommand_searchRoleWithMissingEventId_throwsParseException() {
         String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, SearchRoleCommand.MESSAGE_USAGE);
-        assertThrows(ParseException.class, expectedMessage, () -> parser.parseCommand("search-role E1 /role"));
+        assertThrows(ParseException.class, expectedMessage, () -> parser.parseCommand("search-role Best Man /event"));
     }
 
     @Test
     public void parseCommand_searchRoleWithInvalidId_throwsParseException() {
         assertThrows(ParseException.class, EventId.MESSAGE_CONSTRAINTS, () ->
-                parser.parseCommand("search-role 1 /role Best Man"));
+                parser.parseCommand("search-role Best Man /event 1"));
     }
 
     @Test

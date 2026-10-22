@@ -46,6 +46,21 @@ Failed commands continue to show the specific error and usage guidance where app
 
 </box>
 
+### Using the GUI buttons
+
+The GUI buttons provide form-based shortcuts for common commands. Submitted forms use the same validation and show
+the same success or error messages as commands entered in the command box.
+
+| Location | Buttons, from left to right | Behaviour |
+|---|---|---|
+| Top action bar | **+ Person**, **+ Event** | Opens a form for adding a person or event. |
+| Each person in the People tab | **Edit**, **Delete** | **Edit** opens a pre-filled person form. **Delete** asks for confirmation, then deletes the person and their registrations from all events. |
+| Each event in the Events tab | **Add participant**, **Edit event**, **Archive** or **Unarchive**, **Delete** | **Add participant** registers a person by ID and accepts optional roles and event-specific tags. **Edit event** opens a pre-filled event form. **Archive** hides an active event from the event list; the button reads **Unarchive** for an archived event and restores it when selected. **Delete** asks for confirmation, then deletes the event and its registrations. |
+| Each participant shown for an event | **Edit participation**, **Delete** | **Edit participation** opens a pre-filled form that replaces the participant's roles and event-specific tags; leave a field blank to clear it. **Delete** asks for confirmation, then removes only that event registration. The person remains in the address book. |
+
+Select an event to display its participants and their action buttons. Closing a form or declining a deletion leaves
+the data unchanged.
+
 ### Viewing help: `help`
 
 Shows information on how to access the help page.
@@ -138,22 +153,35 @@ Use the stable Event ID, such as `E1`. This identifies the event even when multi
 events share a name. Missing or invalid IDs produce an error. Archiving an already
 archived event, or restoring an active event, also produces an error.
 
-Archived events are hidden from the event list and `find-event` results, including
-after restarting the app. Restore an event by ID to show it again (subject to the
-current search filter). Direct viewing by ID remains available and shows
-`<archived>` after the event name. Their IDs,
-registrations and attendance are preserved. Archive state is saved between sessions.
-For this initial version, all other event operations remain available.
+Archived events are hidden by default, including after restarting the app. Add
+`/include-archive` to `list-event`, `search-participant`, or `search-role` to include
+them. `find-event` continues to exclude archived events. Restore an event by ID to
+show it in the default list again, subject to the current search filter.
+
+Archived event cards and participant-panel headings show `<archived>` after the
+event name. Archiving preserves IDs, registrations, roles, tags, and attendance.
+Archive state is saved between sessions; the option to include archives in a list
+or search is not. Other event operations remain available by ID.
 
 Examples:
+
 * `archive-event E1`
 * `unarchive-event E1`
 
 ### Listing events: `list-event`
 
-Displays the events in the application.
+Lists nonarchived events by default. Add `/include-archive` to show both active and
+archived events, in their stored order. This command selects the **Events** tab,
+clears any participant or role search, and replaces the previous event filter.
 
-Format: `list-event`
+Format: `list-event [/include-archive]`
+
+Examples:
+
+* `list-event` lists only nonarchived events, even after a command that included archives.
+* `list-event /include-archive` lists all events. Select an event to view all its registrations.
+
+The flag takes no value and can appear only once. Extra arguments produce an error.
 
 ### Viewing event details: `view-event`
 
@@ -213,43 +241,102 @@ Example: `view-participant E1 P2`
 
 ### Searching participants by name: `search-participant`
 
-Finds matching participant registrations across nonarchived events, or within one event when `/event` is supplied.
+Finds matching participant registrations across nonarchived events by default,
+or within one event when `/event` is supplied. Add `/include-archive` to include
+registrations in archived events.
 
-Format: `search-participant NAME [/event EVENTID]`
+Format: `search-participant NAME [/event EVENTID] [/include-archive]`
 
 Examples:
 
 * `search-participant Michael` searches all nonarchived events.
-* `search-participant Michael Tan /event E1` searches only event E1.
+* `search-participant Michael Tan /event E1` searches only event `E1`.
+* `search-participant Michael /include-archive` searches both active and archived events.
+* `search-participant Michael Tan /event E1 /include-archive` searches `E1` even if it is archived.
 
 Names are matched using a case-insensitive substring. Multiword phrases must appear together in order:
 `Michael Tan` matches `Michael Tan Wei`, but not `Michael Wei Tan`. Surrounding whitespace is ignored,
 and repeated whitespace is treated as one space in both the query and the name.
 
-The command selects the Events tab and replaces its filter with events containing matching registrations.
-The matching registrations remain available in the Participants tab. Existing People-tab filters do not
-affect the search. Events retain their existing order, with matching participants ordered by person ID
-within each event. Feedback counts registrations and matching events: a person registered in two matching
-events counts as two registrations.
-
-Archived events are always excluded, including when explicitly supplied with `/event`. No matches leave
-the Events tab empty. A nonexistent event ID or invalid syntax produces an error and preserves the previous
-search. `/event EVENTID` must follow the name; repeated `/event` and unsupported prefixes are rejected.
-The old `EVENT_ID /name NAME` syntax is no longer supported.
-
-Results refresh when event, person, or participation data changes, including when events are archived or
-restored. Switching tabs preserves the search. `list-event` and `find-event` clear participant-search state;
-deleting the explicitly searched event also clears it and restores the ordinary nonarchived event list.
+See [Viewing and clearing participant search results](#viewing-and-clearing-participant-search-results)
+for result display, event selection, and search resets.
 
 ### Searching participants by role: `search-role`
 
-Finds participants in an event by their event-specific role.
+Finds registrations with matching event-specific roles across nonarchived events
+by default, or within one event when `/event EVENTID` is supplied. Add
+`/include-archive` to include registrations in archived events.
 
-Format: `search-role EVENT_ID /role ROLE`
+Format: `search-role ROLE [/event EVENTID] [/include-archive]`
 
-Example: `search-role E1 /role Best Man`
+Examples:
 
-![Search by role](images/searchRole.png)
+* `search-role Best Man` searches all nonarchived events.
+* `search-role Best Man /event E1` searches only event `E1`.
+* `search-role man` matches roles such as `Best Man` and `Manager`.
+* `search-role Best Man /include-archive` searches both active and archived events.
+* `search-role Best Man /event E1 /include-archive` searches `E1` even if it is archived.
+
+Matching is case-insensitive and uses the complete search phrase as a substring of
+an individual role. Leading and trailing whitespace is ignored, and consecutive
+whitespace in the query is treated as one space. A registration matches if any of
+its roles matches; text from separate roles is not combined. Registrations without
+roles do not match. All assigned roles remain visible on a matching registration.
+
+See [Viewing and clearing participant search results](#viewing-and-clearing-participant-search-results)
+for the behavior shared with name searches.
+
+### Viewing and clearing participant search results
+
+The following applies to both `search-participant` and `search-role`.
+
+The search phrase comes first, followed by the optional `/event EVENTID` and then
+the optional `/include-archive`. The archive flag takes no value. Repeated options,
+misplaced options, and unsupported command prefixes produce an error. For example,
+`search-role Speaker /include-archive /event E1` is invalid. An unknown event ID or
+invalid syntax preserves the previous search results, archive visibility, event
+selection, and selected tab.
+
+A successful search selects the **Events** tab. The left pane shows only events
+containing matching registrations, and the first matching event is selected. The
+right pane shows only that event's matching registrations, with each participant's
+stable Person ID, full name, and all assigned roles (or **No role**). The panel is
+headed by the event's name and ID and the search phrase. Click another matching
+event to see its matches while keeping the search active. Existing People-tab and
+event-list filters do not limit the search. Switching between the People and Events
+tabs preserves it.
+
+Events follow their stored order. Matching registrations within each event are
+ordered lexicographically by Person ID (for example, `P1`, `P10`, `P2`). Search
+feedback counts registrations across all matching events. Each registration counts
+once even when several roles match; the same person matching in two events counts
+as two registrations.
+
+Archived events are excluded unless `/include-archive` is supplied, even when
+explicitly scoped with `/event EVENTID`. Including archives still shows only events
+containing matching registrations. With no matches, the event list and participant
+rows are empty and no event is selected. The search phrase remains visible,
+together with **All nonarchived events** for a default global search, **All events**
+for a global search that includes archives, or the scoped event's name and ID.
+
+Results refresh after person, registration, role, or event changes, including
+archiving and restoring events. Refreshes retain the search's archive visibility.
+When archives are included, archiving a matching event keeps it in the results.
+The selected event is retained if it still has matches; otherwise, the first
+remaining matching event is selected. If no matches remain, the lists become empty
+while the search stays active. Deleting an event
+during a global search refreshes the remaining results. Deleting the scoped event
+clears the search and restores the ordinary nonarchived event list.
+
+Starting another name or role search replaces the previous query, archive
+visibility, and event filter and selects its first matching event. Each new search
+excludes archives unless it includes `/include-archive`.
+
+Use `list-event` to clear either search and show all nonarchived events, or
+`list-event /include-archive` to clear the search and show all events. `find-event`
+replaces the search with an event-name filter that excludes archives. These commands
+clear the participant rows and search context. Selecting an event after clearing
+the search shows all its registrations.
 
 ### Marking attendance: `mark-participant`
 
@@ -341,14 +428,14 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **Edit event** | `edit-event EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]` |
 | **Archive event** | `archive-event EVENT_ID` |
 | **Restore event** | `unarchive-event EVENT_ID` |
-| **List events** | `list-event` |
+| **List events** | `list-event [/include-archive]` |
 | **View event** | `view-event EVENT_ID` |
 | **Add participant** | `add-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |
 | **Edit participant** | `edit-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |
 | **List participants** | `list-participants EVENT_ID` |
 | **View participant** | `view-participant EVENT_ID PERSON_ID` |
-| **Search participant** | `search-participant NAME [/event EVENTID]` |
-| **Search role** | `search-role EVENT_ID /role ROLE` |
+| **Search participant** | `search-participant NAME [/event EVENTID] [/include-archive]` |
+| **Search role** | `search-role ROLE [/event EVENTID] [/include-archive]` |
 | **Cancel attendance** | `unmark-participant EVENT_ID PERSON_ID` |
 | **Mark attendance** | `mark-participant EVENT_ID PERSON_ID` |
 | **Remove participant** | `del-participant EVENT_ID PERSON_ID` |

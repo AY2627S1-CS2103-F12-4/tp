@@ -78,6 +78,23 @@ public class AddPersonDialogTest {
     }
 
     @Test
+    public void fieldText_leftEdgeAlignsWithUnderline() throws Exception {
+        runOnFxThread(() -> {
+            AtomicReference<Throwable> failure = new AtomicReference<>();
+            Stage owner = new Stage();
+            owner.setScene(new Scene(new StackPane()));
+            AddPersonDialog dialog = new AddPersonDialog(owner);
+            Platform.runLater(() -> checkFieldTextAlignment(failure));
+
+            dialog.showAndWait(command -> { });
+
+            if (failure.get() != null) {
+                throw new AssertionError(failure.get());
+            }
+        });
+    }
+
+    @Test
     public void validationError_longMessage_keepsDialogWidthAndContentVisible() throws Exception {
         runOnFxThread(() -> {
             AtomicReference<Throwable> failure = new AtomicReference<>();
@@ -166,6 +183,25 @@ public class AddPersonDialogTest {
                     failure, dialogPane, field, unfocusedBottomBorder));
         } catch (Throwable throwable) {
             failure.set(throwable);
+            dialogPane.getScene().getWindow().hide();
+        }
+    }
+
+    private void checkFieldTextAlignment(AtomicReference<Throwable> failure) {
+        DialogPane dialogPane = showingDialogPane();
+        try {
+            GridPane form = (GridPane) dialogPane.lookup(".dialog-form");
+            TextField field = form.getChildren().stream()
+                    .filter(TextField.class::isInstance)
+                    .map(TextField.class::cast)
+                    .findFirst()
+                    .orElseThrow();
+            field.applyCss();
+            assertEquals(0, field.getPadding().getLeft(),
+                    "Field text should start at the same left edge as its underline");
+        } catch (Throwable throwable) {
+            failure.set(throwable);
+        } finally {
             dialogPane.getScene().getWindow().hide();
         }
     }

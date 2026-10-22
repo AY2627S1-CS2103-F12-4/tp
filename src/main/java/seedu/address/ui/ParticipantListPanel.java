@@ -4,6 +4,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.function.Consumer;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,6 +27,8 @@ public class ParticipantListPanel extends UiPart<Region> {
     private final ObservableList<Participation> participantSearchResults;
     private final ObservableList<Participation> eventParticipants =
             FXCollections.observableArrayList();
+    private final Consumer<Participation> editAction;
+    private final Consumer<Participation> deleteAction;
 
     @FXML
     private Label eventHeading;
@@ -44,11 +47,19 @@ public class ParticipantListPanel extends UiPart<Region> {
      */
     public ParticipantListPanel(
             ObservableList<Participation> participantSearchResults) {
+        this(participantSearchResults, participation -> { }, participation -> { });
+    }
+
+    /** Creates a participant panel with actions for each participant card. */
+    public ParticipantListPanel(ObservableList<Participation> participantSearchResults,
+            Consumer<Participation> editAction, Consumer<Participation> deleteAction) {
         super(FXML);
 
-        requireAllNonNull(participantSearchResults);
+        requireAllNonNull(participantSearchResults, editAction, deleteAction);
 
         this.participantSearchResults = participantSearchResults;
+        this.editAction = editAction;
+        this.deleteAction = deleteAction;
         participantListView.setItems(participantSearchResults);
         setPlaceholder("Select an event to view its participants.");
 
@@ -105,9 +116,14 @@ public class ParticipantListPanel extends UiPart<Region> {
 
     /** Displays global search results and their query across nonarchived events. */
     public void setSearchContext(String keyword) {
+        setSearchContext(keyword, false);
+    }
+
+    /** Displays global search results and their query with the requested archive visibility. */
+    public void setSearchContext(String keyword, boolean includeArchived) {
         requireAllNonNull(keyword);
         participantListView.setItems(participantSearchResults);
-        eventHeading.setText("All nonarchived events");
+        eventHeading.setText(includeArchived ? "All events" : "All nonarchived events");
         searchHeading.setText("Matching \"" + keyword + "\"");
         setPlaceholder("No matching participants.");
     }
@@ -157,9 +173,14 @@ public class ParticipantListPanel extends UiPart<Region> {
             super.updateItem(participation, empty);
             setText(null);
 
-            setGraphic(empty || participation == null
-                    ? null
-                    : new ParticipantCard(participation).getRoot());
+            if (empty || participation == null) {
+                setGraphic(null);
+                return;
+            }
+
+            Runnable onEdit = () -> editAction.accept(participation);
+            Runnable onDelete = () -> deleteAction.accept(participation);
+            setGraphic(new ParticipantCard(participation, onEdit, onDelete).getRoot());
         }
     }
 }

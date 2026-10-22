@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="4" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <padding><Insets top="10" right="10" bottom="10" left="15" /></padding>
-  <Label fx:id="name" styleClass="cell_big_label" wrapText="true" />
-  <Label fx:id="personId" styleClass="cell_small_label" />
-  <Label fx:id="roles" styleClass="cell_small_label" wrapText="true" />
-</VBox>
+<HBox alignment="CENTER_LEFT" spacing="8" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <padding><Insets top="10" right="16" bottom="10" left="15" /></padding>
+  <VBox spacing="4" HBox.hgrow="ALWAYS">
+    <Label fx:id="name" styleClass="cell_big_label" wrapText="true" />
+    <Label fx:id="personId" styleClass="cell_small_label" />
+    <Label fx:id="roles" styleClass="cell_small_label" wrapText="true" />
+  </VBox>
+  <Button fx:id="editButton" mnemonicParsing="false" styleClass="button, card-action-button"
+          text="Edit participation" />
+  <Button fx:id="deleteButton" mnemonicParsing="false" styleClass="button, card-delete-button" text="Delete" />
+</HBox>

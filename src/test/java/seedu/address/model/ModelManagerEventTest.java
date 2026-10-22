@@ -38,6 +38,71 @@ public class ModelManagerEventTest {
     }
 
     @Test
+    public void updateFilteredEventList_archiveVisibility_combinesWithPredicateAndResetsByDefault() {
+        Event archived = WORKSHOP.withArchived(true);
+        model.addEvent(archived);
+        model.addEvent(CONCERT);
+        ObservableList<Event> view = model.getFilteredEventList();
+        assertEquals(List.of(CONCERT), view);
+
+        model.updateFilteredEventList(new EventNameContainsKeywordPredicate("Workshop"), true);
+        assertEquals(List.of(archived), view);
+        assertThrows(NullPointerException.class, () -> model.updateFilteredEventList(null, false));
+        assertEquals(List.of(archived), view);
+
+        model.updateFilteredEventList(event -> true);
+        assertEquals(List.of(CONCERT), view);
+    }
+
+    @Test
+    public void showEvents_includingArchives_clearsSearchAndPreservesDataSelectionAndPersonFilter() {
+        Event archived = CONCERT.withArchived(true);
+        model.addEvent(WORKSHOP);
+        model.addEvent(archived);
+        model.addPerson(alice);
+        model.addParticipation(WORKSHOP, alice);
+        model.selectEvent(new EventId(WORKSHOP.getId()));
+        model.updateFilteredPersonList(person -> false);
+        model.updateParticipantSearch("Alice", true);
+        var participations = model.getParticipations().getParticipations();
+
+        model.showEvents(true);
+
+        assertFalse(model.isParticipantSearchIncludingArchived());
+        assertEquals(List.of(WORKSHOP, archived), model.getFilteredEventList());
+        assertEquals(List.of(WORKSHOP, archived), model.getEvents());
+        assertEquals(participations, model.getParticipations().getParticipations());
+        assertEquals(alice, model.getAddressBook().getPersonList().getFirst());
+        assertEquals(WORKSHOP, model.getSelectedEvent().orElseThrow());
+        assertEquals(List.of(), model.getFilteredPersonList());
+        assertEquals(List.of(), model.getParticipantSearchResults());
+        assertFalse(model.getParticipantSearchEvent().isPresent());
+        assertFalse(model.getParticipantSearchKeyword().isPresent());
+
+        model.setPerson(alice, new PersonBuilder(alice).withName("Alice Lee").build());
+        model.updateEvent(WORKSHOP.withArchived(true));
+        assertEquals(List.of(), model.getParticipantSearchResults());
+        assertEquals(List.of(WORKSHOP.withArchived(true), archived), model.getFilteredEventList());
+
+        model.showEvents(false);
+        assertEquals(List.of(), model.getFilteredEventList());
+    }
+
+    @Test
+    public void clearSearch_archiveListing_restoresDefaultArchiveVisibility() {
+        model.showEvents(true);
+        assertEquals(List.of(), model.getFilteredEventList());
+        model.addEvent(WORKSHOP.withArchived(true));
+        assertEquals(List.of(WORKSHOP.withArchived(true)), model.getFilteredEventList());
+
+        model.clearParticipantSearch();
+
+        assertEquals(List.of(), model.getFilteredEventList());
+        model.addEvent(CONCERT);
+        assertEquals(List.of(CONCERT), model.getFilteredEventList());
+    }
+
+    @Test
     public void addParticipation_existingRecords_resolvesUpdatedPerson() {
         model.addEvent(WORKSHOP);
         model.addPerson(alice);

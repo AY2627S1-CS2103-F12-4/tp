@@ -24,22 +24,26 @@ public class PersonListPanel extends UiPart<Region> {
     private ListView<Person> personListView;
 
     /**
-     * Creates a person list panel whose cards invoke the supplied deletion action.
+     * Creates a person list panel whose cards invoke the supplied edit and deletion actions.
      */
-    public PersonListPanel(ObservableList<Person> personList, BiConsumer<Person, Integer> deleteAction) {
+    public PersonListPanel(ObservableList<Person> personList, BiConsumer<Person, Integer> editAction,
+            BiConsumer<Person, Integer> deleteAction) {
         super(FXML);
+        requireNonNull(editAction);
         requireNonNull(deleteAction);
         personListView.setItems(personList);
-        personListView.setCellFactory(listView -> new PersonListViewCell(deleteAction));
+        personListView.setCellFactory(listView -> new PersonListViewCell(editAction, deleteAction));
     }
 
     /**
      * Custom {@code ListCell} that displays the graphics of a {@code Person} using a {@code PersonCard}.
      */
     class PersonListViewCell extends ListCell<Person> {
+        private final BiConsumer<Person, Integer> editAction;
         private final BiConsumer<Person, Integer> deleteAction;
 
-        PersonListViewCell(BiConsumer<Person, Integer> deleteAction) {
+        PersonListViewCell(BiConsumer<Person, Integer> editAction, BiConsumer<Person, Integer> deleteAction) {
+            this.editAction = editAction;
             this.deleteAction = deleteAction;
         }
 
@@ -52,8 +56,9 @@ public class PersonListPanel extends UiPart<Region> {
                 setText(null);
             } else {
                 int displayedIndex = getIndex() + 1;
+                Runnable onEdit = () -> editAction.accept(person, displayedIndex);
                 Runnable onDelete = () -> deleteAction.accept(person, displayedIndex);
-                PersonCard personCard = new PersonCard(person, displayedIndex, onDelete);
+                PersonCard personCard = new PersonCard(person, displayedIndex, onEdit, onDelete);
                 setGraphic(personCard.getRoot());
             }
         }

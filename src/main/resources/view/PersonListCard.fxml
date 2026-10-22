@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox id="cardPane" fx:id="cardPane" alignment="CENTER_LEFT" xmlns="http://javafx.com/javafx/17"
+<HBox id="cardPane" fx:id="cardPane" alignment="CENTER_LEFT" spacing="8" xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1">
   <padding>
     <Insets right="16" />
@@ -38,5 +38,6 @@
       <Label fx:id="email" styleClass="cell_small_label" text="\$email" />
     </VBox>
   </GridPane>
+  <Button fx:id="editButton" mnemonicParsing="false" styleClass="button, card-action-button" text="Edit" />
   <Button fx:id="deleteButton" mnemonicParsing="false" styleClass="button, card-delete-button" text="Delete" />
 </HBox>

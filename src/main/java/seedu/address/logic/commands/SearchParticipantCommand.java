@@ -13,24 +13,29 @@ import seedu.address.model.event.EventId;
 import seedu.address.model.event.exceptions.EventNotFoundException;
 
 /**
- * Searches participants by name across nonarchived events, optionally scoped to one event ID.
+ * Searches participants by name with optional event scope and archive inclusion.
  */
 public class SearchParticipantCommand extends Command {
     /** Command word accepted by the address book parser. */
     public static final String COMMAND_WORD = "search-participant";
     /** Expected syntax and an example shown when arguments are invalid. */
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Searches participants in nonarchived events by name.\n"
-            + "Parameters: NAME [/event EVENTID]\n"
-            + "Example: " + COMMAND_WORD + " Michael Tan /event E1";
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Searches participants by name.\n"
+            + "Archived events are excluded unless /include-archive is supplied.\n"
+            + "Parameters: NAME [/event EVENTID] [/include-archive]\n"
+            + "Example: " + COMMAND_WORD + " Michael Tan /event E1 /include-archive";
     /** Feedback when no event has the supplied ID. */
     public static final String MESSAGE_EVENT_NOT_FOUND = "Event %s does not exist.";
     /** Feedback for an empty result list. */
     public static final String MESSAGE_NO_MATCHES = "No matching registrations for \"%s\" in nonarchived events.";
+    /** Feedback for an empty result list when archived events are included. */
+    public static final String MESSAGE_NO_MATCHES_INCLUDING_ARCHIVED =
+            "No matching registrations for \"%s\" (including archived events).";
     /** Feedback including registration count, event count, and the normalized search query. */
     public static final String MESSAGE_MATCHES = "%1$d matching %2$s across %3$d %4$s for \"%5$s\".";
 
     private final Optional<EventId> eventId;
     private final String keyword;
+    private final boolean includeArchived;
 
     /**
      * Creates a search for {@code keyword} within the event identified by {@code eventId}.
@@ -42,19 +47,30 @@ public class SearchParticipantCommand extends Command {
      * @throws IllegalArgumentException if the keyword is blank.
      */
     public SearchParticipantCommand(EventId eventId, String keyword) {
-        this(Optional.of(eventId), keyword);
+        this(eventId, keyword, false);
+    }
+
+    /** Creates a scoped name search with the requested archive visibility. */
+    public SearchParticipantCommand(EventId eventId, String keyword, boolean includeArchived) {
+        this(Optional.of(eventId), keyword, includeArchived);
     }
 
     /** Creates a name search across all nonarchived events. */
     public SearchParticipantCommand(String keyword) {
-        this(Optional.empty(), keyword);
+        this(keyword, false);
     }
 
-    private SearchParticipantCommand(Optional<EventId> eventId, String keyword) {
+    /** Creates a global name search with the requested archive visibility. */
+    public SearchParticipantCommand(String keyword, boolean includeArchived) {
+        this(Optional.empty(), keyword, includeArchived);
+    }
+
+    private SearchParticipantCommand(Optional<EventId> eventId, String keyword, boolean includeArchived) {
         String normalizedKeyword = StringUtil.normalizeWhitespace(keyword);
         checkArgument(!normalizedKeyword.isEmpty(), "Participant search names must not be blank.");
         this.eventId = eventId;
         this.keyword = normalizedKeyword;
+        this.includeArchived = includeArchived;
     }
 
     /**
@@ -71,16 +87,17 @@ public class SearchParticipantCommand extends Command {
         requireNonNull(model);
         try {
             if (eventId.isPresent()) {
-                model.updateParticipantSearch(eventId.orElseThrow(), keyword);
+                model.updateParticipantSearch(eventId.orElseThrow(), keyword, includeArchived);
             } else {
-                model.updateParticipantSearch(keyword);
+                model.updateParticipantSearch(keyword, includeArchived);
             }
         } catch (EventNotFoundException e) {
             throw new CommandException(String.format(MESSAGE_EVENT_NOT_FOUND, eventId.orElseThrow()), e);
         }
         int matchCount = model.getParticipantSearchResults().size();
         if (matchCount == 0) {
-            return new CommandResult(String.format(MESSAGE_NO_MATCHES, keyword), false, false, true);
+            String message = includeArchived ? MESSAGE_NO_MATCHES_INCLUDING_ARCHIVED : MESSAGE_NO_MATCHES;
+            return new CommandResult(String.format(message, keyword), false, false, true);
         }
         int eventCount = model.getFilteredEventList().size();
         return new CommandResult(String.format(MESSAGE_MATCHES, matchCount,
@@ -93,11 +110,12 @@ public class SearchParticipantCommand extends Command {
         return other == this
                 || other instanceof SearchParticipantCommand otherCommand
                 && eventId.equals(otherCommand.eventId)
-                && keyword.equals(otherCommand.keyword);
+                && keyword.equals(otherCommand.keyword)
+                && includeArchived == otherCommand.includeArchived;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(eventId, keyword);
+        return Objects.hash(eventId, keyword, includeArchived);
     }
 }

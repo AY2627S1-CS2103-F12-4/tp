@@ -119,7 +119,8 @@ public class ParticipantUiTest {
                     labelText(panel, "eventHeading"));
 
             assertEquals(
-                    "Use search-participant NAME [/event EVENTID] or search-role ROLE [/event EVENTID]",
+                    "search-participant NAME [/event EVENTID] [/include-archive]\n"
+                            + "search-role ROLE [/event EVENTID] [/include-archive]",
                     labelText(panel, "searchHeading"));
 
             assertEquals(
@@ -311,6 +312,29 @@ public class ParticipantUiTest {
             assertEquals("Matching \"jOhN\"", labelText(panel, "searchHeading"));
             assertEquals("No matching participants.", placeholderText(panel));
             assertThrows(NullPointerException.class, () -> panel.setSearchContext((String) null));
+        });
+    }
+
+    @Test
+    public void panel_archiveSearchContext_updatesScopeAndPreservesResultsBinding() throws Exception {
+        runOnFxThread(() -> {
+            ObservableList<Participation> results = FXCollections.observableArrayList();
+            ParticipantListPanel panel = new ParticipantListPanel(results);
+            panel.setSearchContext("jOhN", true);
+            assertEquals("All events", labelText(panel, "eventHeading"));
+            assertEquals("Matching \"jOhN\"", labelText(panel, "searchHeading"));
+            assertEquals("No matching participants.", placeholderText(panel));
+            assertSame(results, listView(panel).getItems());
+
+            results.add(PARTICIPATION);
+            assertEquals(PARTICIPATION, listView(panel).getItems().getFirst());
+            panel.setSearchContext("jOhN", false);
+            assertEquals("All nonarchived events", labelText(panel, "eventHeading"));
+            panel.setSearchContext("jOhN", true);
+            panel.setSearchContext("jOhN");
+            assertEquals("All nonarchived events", labelText(panel, "eventHeading"));
+            assertSame(results, listView(panel).getItems());
+            assertThrows(NullPointerException.class, () -> panel.setSearchContext(null, true));
         });
     }
 

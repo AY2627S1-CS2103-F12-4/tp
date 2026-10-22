@@ -391,7 +391,7 @@ public class MainWindow extends UiPart<Stage> {
                     scope.orElseThrow(),
                     keyword);
         } else {
-            participantListPanel.setSearchContext(keyword);
+            participantListPanel.setSearchContext(keyword, logic.isParticipantSearchIncludingArchived());
         }
     }
 

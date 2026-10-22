@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
 import seedu.address.model.event.Event;
@@ -56,7 +57,13 @@ public class SearchParticipantCommandTest {
         for (String keyword : List.of("", " ", "\t\n", "\u2003")) {
             assertThrows(IllegalArgumentException.class, () -> new SearchParticipantCommand(FIRST_EVENT, keyword));
             assertThrows(IllegalArgumentException.class, () -> new SearchParticipantCommand(keyword));
+            assertThrows(IllegalArgumentException.class, () ->
+                    new SearchParticipantCommand(FIRST_EVENT, keyword, true));
+            assertThrows(IllegalArgumentException.class, () -> new SearchParticipantCommand(keyword, true));
         }
+        assertThrows(NullPointerException.class, () -> new SearchParticipantCommand(null, "Michael", true));
+        assertThrows(NullPointerException.class, () -> new SearchParticipantCommand(FIRST_EVENT, null, true));
+        assertThrows(NullPointerException.class, () -> new SearchParticipantCommand(null, true));
     }
 
     @Test
@@ -129,7 +136,7 @@ public class SearchParticipantCommandTest {
     public void execute_eventDisappearsDuringSearch_throwsCommandException() {
         ModelManager unavailableEventModel = new ModelManager() {
             @Override
-            public void updateParticipantSearch(EventId eventId, String keyword) {
+            public void updateParticipantSearch(EventId eventId, String keyword, boolean includeArchived) {
                 throw new EventNotFoundException();
             }
         };
@@ -280,6 +287,104 @@ public class SearchParticipantCommandTest {
         assertEquals(global.hashCode(), equivalent.hashCode());
         assertNotEquals(global, new SearchParticipantCommand(FIRST_EVENT, "Michael Tan"));
         assertNotEquals(global, new SearchParticipantCommand("MICHAEL TAN"));
+    }
+
+    @Test
+    public void parseAndExecute_archiveFlag_countsArchivedMatchesAndResetsOnNextDefaultSearch() throws Exception {
+        model.updateEvent(WEDDING.withArchived(true));
+        model.addParticipation(WORKSHOP, MICHAEL);
+        AddressBookParser parser = new AddressBookParser();
+
+        CommandResult result = parser.parseCommand("search-participant Michael /include-archive").execute(model);
+
+        assertEquals("3 matching registrations across 2 events for \"Michael\".", result.getFeedbackToUser());
+        assertEquals(List.of(WEDDING.withArchived(true), WORKSHOP), model.getFilteredEventList());
+        assertEquals(3, model.getParticipantSearchResults().size());
+        assertTrue(result.isShowEvents());
+        assertFalse(result.isShowHelp());
+        assertFalse(result.isExit());
+
+        CommandResult defaultResult = parser.parseCommand("search-participant Michael").execute(model);
+        assertEquals("1 matching registration across 1 event for \"Michael\".", defaultResult.getFeedbackToUser());
+        assertEquals(List.of(WORKSHOP), model.getFilteredEventList());
+    }
+
+    @Test
+    public void parseAndExecute_archivedScope_searchesOnlyRequestedEventAndResetsOnDefaultSearch() throws Exception {
+        model.updateEvent(WEDDING.withArchived(true));
+        model.addParticipation(WORKSHOP, MICHAEL);
+        AddressBookParser parser = new AddressBookParser();
+
+        CommandResult result = parser.parseCommand("search-participant Michael /event E1 /include-archive")
+                .execute(model);
+
+        assertEquals("2 matching registrations across 1 event for \"Michael\".", result.getFeedbackToUser());
+        assertEquals(List.of(WEDDING.withArchived(true)), model.getFilteredEventList());
+        assertEquals(WEDDING.withArchived(true), model.getParticipantSearchEvent().orElseThrow());
+
+        CommandResult defaultResult = parser.parseCommand("search-participant Michael /event E1").execute(model);
+        assertEquals("No matching registrations for \"Michael\" in nonarchived events.",
+                defaultResult.getFeedbackToUser());
+        assertTrue(model.getParticipantSearchResults().isEmpty());
+        assertTrue(model.getFilteredEventList().isEmpty());
+    }
+
+    @Test
+    public void execute_archiveFlagWithoutMatches_reportsArchiveInclusion() throws Exception {
+        model.updateEvent(WEDDING.withArchived(true));
+        for (SearchParticipantCommand command : List.of(new SearchParticipantCommand("Missing", true),
+                new SearchParticipantCommand(FIRST_EVENT, "Missing", true))) {
+            CommandResult result = command.execute(model);
+            assertEquals("No matching registrations for \"Missing\" (including archived events).",
+                    result.getFeedbackToUser());
+            assertTrue(model.getParticipantSearchResults().isEmpty());
+            assertTrue(model.getFilteredEventList().isEmpty());
+            assertTrue(result.isShowEvents());
+        }
+    }
+
+    @Test
+    public void parseAndExecute_invalidSearch_preservesPreviousArchiveResultsAndContext() throws Exception {
+        model.updateEvent(WEDDING.withArchived(true));
+        AddressBookParser parser = new AddressBookParser();
+        parser.parseCommand("search-participant Michael /event E1 /include-archive").execute(model);
+        List<Participation> results = List.copyOf(model.getParticipantSearchResults());
+
+        assertThrows(ParseException.class, () ->
+                parser.parseCommand("search-participant Michael /include-archive /event E1").execute(model));
+        CommandException exception = assertThrows(CommandException.class, () ->
+                parser.parseCommand("search-participant Michael /event E99").execute(model));
+        assertEquals("Event E99 does not exist.", exception.getMessage());
+        assertTrue(exception.getCause() instanceof EventNotFoundException);
+        assertThrows(CommandException.class, () ->
+                parser.parseCommand("search-participant Michael /event E99 /include-archive").execute(model));
+
+        assertEquals(results, model.getParticipantSearchResults());
+        assertEquals(List.of(WEDDING.withArchived(true)), model.getFilteredEventList());
+        assertEquals(WEDDING.withArchived(true), model.getParticipantSearchEvent().orElseThrow());
+        assertEquals("Michael", model.getParticipantSearchKeyword().orElseThrow());
+        model.removeParticipation(WEDDING, MICHAELA);
+        assertEquals(1, model.getParticipantSearchResults().size());
+        assertEquals(List.of(WEDDING.withArchived(true)), model.getFilteredEventList());
+    }
+
+    @Test
+    public void equalsAndHashCode_archiveVisibility_distinguishesCommandsInBothScopes() {
+        SearchParticipantCommand global = new SearchParticipantCommand("Michael Tan", true);
+        SearchParticipantCommand globalCopy = new SearchParticipantCommand(" Michael\tTan ", true);
+        assertEquals(global, globalCopy);
+        assertEquals(global.hashCode(), globalCopy.hashCode());
+        assertNotEquals(global, new SearchParticipantCommand("Michael Tan"));
+        assertEquals(new SearchParticipantCommand("Michael Tan"), new SearchParticipantCommand("Michael Tan", false));
+
+        SearchParticipantCommand scoped = new SearchParticipantCommand(FIRST_EVENT, "Michael Tan", true);
+        SearchParticipantCommand scopedCopy = new SearchParticipantCommand(FIRST_EVENT, " Michael\tTan ", true);
+        assertEquals(scoped, scopedCopy);
+        assertEquals(scoped.hashCode(), scopedCopy.hashCode());
+        assertNotEquals(scoped, global);
+        assertNotEquals(scoped, new SearchParticipantCommand(FIRST_EVENT, "Michael Tan"));
+        assertEquals(new SearchParticipantCommand(FIRST_EVENT, "Michael Tan"),
+                new SearchParticipantCommand(FIRST_EVENT, "Michael Tan", false));
     }
 
     private String executeSearch(EventId eventId, String keyword) throws CommandException {

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -19,11 +20,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.layout.FlowPane;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class ParticipantUiTest {
@@ -66,6 +69,40 @@ public class ParticipantUiTest {
             assertEquals(
                     "Roles: Best Man, Speaker",
                     labelText(new ParticipantCard(participation), "roles"));
+        });
+    }
+
+    @Test
+    public void card_personAndEventTags_displaysSortedDistinctTags()
+            throws Exception {
+        runOnFxThread(() -> {
+            Person taggedPerson = new PersonBuilder(PERSON)
+                    .withTags("person", "shared")
+                    .build();
+
+            Participation participation = new Participation(
+                    EVENT,
+                    taggedPerson,
+                    false,
+                    Set.of(
+                            new Tag("event"),
+                            new Tag("shared")),
+                    Set.of());
+
+            ParticipantCard card = new ParticipantCard(participation);
+
+            assertEquals(
+                    List.of("event", "person", "shared"),
+                    tagTexts(card));
+        });
+    }
+
+    @Test
+    public void card_noTags_displaysEmptyTagPane() throws Exception {
+        runOnFxThread(() -> {
+            ParticipantCard card = new ParticipantCard(PARTICIPATION);
+
+            assertTrue(tagTexts(card).isEmpty());
         });
     }
 
@@ -412,6 +449,15 @@ public class ParticipantUiTest {
                 (Label) listView(panel).getPlaceholder();
 
         return placeholder.getText();
+    }
+
+    private List<String> tagTexts(ParticipantCard card) {
+        FlowPane tags = (FlowPane) card.getRoot()
+                .lookup("#tags");
+
+        return tags.getChildren().stream()
+                .map(node -> ((Label) node).getText())
+                .toList();
     }
 
     @SuppressWarnings("unchecked")

@@ -68,12 +68,14 @@ public class ParticipantUiTest {
 
             assertEquals(
                     "Roles: Best Man, Speaker",
-                    labelText(new ParticipantCard(participation), "roles"));
+                    labelText(
+                            new ParticipantCard(participation),
+                            "roles"));
         });
     }
 
     @Test
-    public void card_personAndEventTags_displaysSortedDistinctTags()
+    public void card_personAndEventTags_displaysDistinctStyledTags()
             throws Exception {
         runOnFxThread(() -> {
             Person taggedPerson = new PersonBuilder(PERSON)
@@ -90,10 +92,28 @@ public class ParticipantUiTest {
                     Set.of());
 
             ParticipantCard card = new ParticipantCard(participation);
+            List<Label> labels = tagLabels(card);
 
             assertEquals(
-                    List.of("event", "person", "shared"),
-                    tagTexts(card));
+                    List.of("person", "shared", "event"),
+                    labels.stream()
+                            .map(Label::getText)
+                            .toList());
+
+            assertTrue(
+                    labels.get(0)
+                            .getStyleClass()
+                            .contains("person-tag"));
+
+            assertTrue(
+                    labels.get(1)
+                            .getStyleClass()
+                            .contains("person-tag"));
+
+            assertTrue(
+                    labels.get(2)
+                            .getStyleClass()
+                            .contains("event-tag"));
         });
     }
 
@@ -102,7 +122,7 @@ public class ParticipantUiTest {
         runOnFxThread(() -> {
             ParticipantCard card = new ParticipantCard(PARTICIPATION);
 
-            assertTrue(tagTexts(card).isEmpty());
+            assertTrue(tagLabels(card).isEmpty());
         });
     }
 
@@ -138,8 +158,11 @@ public class ParticipantUiTest {
     @Test
     public void constructors_nullArguments_rejectInput() throws Exception {
         runOnFxThread(() -> {
-            assertThrows(NullPointerException.class, () -> new ParticipantCard(null));
-            assertThrows(NullPointerException.class, () -> new ParticipantListPanel(null));
+            assertThrows(NullPointerException.class, () ->
+                    new ParticipantCard(null));
+
+            assertThrows(NullPointerException.class, () ->
+                    new ParticipantListPanel(null));
         });
     }
 
@@ -156,8 +179,10 @@ public class ParticipantUiTest {
                     labelText(panel, "eventHeading"));
 
             assertEquals(
-                    "search-participant NAME [/event EVENTID] [/include-archive]\n"
-                            + "search-role ROLE [/event EVENTID] [/include-archive]",
+                    "search-participant NAME "
+                            + "[/event EVENTID] [/include-archive]\n"
+                            + "search-role ROLE "
+                            + "[/event EVENTID] [/include-archive]",
                     labelText(panel, "searchHeading"));
 
             assertEquals(
@@ -190,13 +215,11 @@ public class ParticipantUiTest {
                     "No matching participants.",
                     placeholderText(panel));
 
-            assertThrows(
-                    NullPointerException.class, () ->
-                            panel.setSearchContext(null, "John"));
+            assertThrows(NullPointerException.class, () ->
+                    panel.setSearchContext(null, "John"));
 
-            assertThrows(
-                    NullPointerException.class, () ->
-                            panel.setSearchContext(EVENT, null));
+            assertThrows(NullPointerException.class, () ->
+                    panel.setSearchContext(EVENT, null));
         });
     }
 
@@ -216,6 +239,7 @@ public class ParticipantUiTest {
 
             Participation laterParticipation =
                     new Participation(EVENT, laterPerson);
+
             Participation earlierParticipation =
                     new Participation(EVENT, earlierPerson);
 
@@ -228,9 +252,11 @@ public class ParticipantUiTest {
                     Set.of(laterParticipation, earlierParticipation));
 
             assertEquals(2, listView(panel).getItems().size());
+
             assertEquals(
                     earlierParticipation,
                     listView(panel).getItems().get(0));
+
             assertEquals(
                     laterParticipation,
                     listView(panel).getItems().get(1));
@@ -238,9 +264,11 @@ public class ParticipantUiTest {
             assertEquals(
                     "Wedding (E1)",
                     labelText(panel, "eventHeading"));
+
             assertEquals(
                     "Participants",
                     labelText(panel, "searchHeading"));
+
             assertEquals(
                     "No participants found for this event.",
                     placeholderText(panel));
@@ -248,20 +276,39 @@ public class ParticipantUiTest {
     }
 
     @Test
-    public void panel_participantButtons_runConfiguredActions() throws Exception {
+    public void panel_participantButtons_runConfiguredActions()
+            throws Exception {
         runOnFxThread(() -> {
-            AtomicReference<Participation> edited = new AtomicReference<>();
-            AtomicReference<Participation> deleted = new AtomicReference<>();
+            AtomicReference<Participation> edited =
+                    new AtomicReference<>();
+
+            AtomicReference<Participation> deleted =
+                    new AtomicReference<>();
+
             ParticipantListPanel panel = new ParticipantListPanel(
-                    FXCollections.observableArrayList(), edited::set, deleted::set);
-            panel.showParticipantsForEvent(EVENT, Set.of(PARTICIPATION));
+                    FXCollections.observableArrayList(),
+                    edited::set,
+                    deleted::set);
+
+            panel.showParticipantsForEvent(
+                    EVENT,
+                    Set.of(PARTICIPATION));
 
             ListView<Participation> list = listView(panel);
-            ListCell<Participation> cell = list.getCellFactory().call(list);
+            ListCell<Participation> cell =
+                    list.getCellFactory().call(list);
+
             cell.updateListView(list);
             cell.updateIndex(0);
-            Button editButton = (Button) cell.getGraphic().lookup("#editButton");
-            Button deleteButton = (Button) cell.getGraphic().lookup("#deleteButton");
+
+            Button editButton =
+                    (Button) cell.getGraphic()
+                            .lookup("#editButton");
+
+            Button deleteButton =
+                    (Button) cell.getGraphic()
+                            .lookup("#deleteButton");
+
             editButton.fire();
             deleteButton.fire();
 
@@ -287,12 +334,15 @@ public class ParticipantUiTest {
             panel.clearSearchContext();
 
             assertTrue(listView(panel).getItems().isEmpty());
+
             assertEquals(
                     "Participants",
                     labelText(panel, "eventHeading"));
+
             assertEquals(
                     "Select an event to view its participants.",
                     labelText(panel, "searchHeading"));
+
             assertEquals(
                     "Select an event to view its participants.",
                     placeholderText(panel));
@@ -330,6 +380,7 @@ public class ParticipantUiTest {
             assertSame(
                     searchResults,
                     listView(panel).getItems());
+
             assertEquals(
                     PARTICIPATION,
                     listView(panel).getItems().getFirst());
@@ -337,41 +388,90 @@ public class ParticipantUiTest {
     }
 
     @Test
-    public void panel_globalSearchContext_displaysScopeAndPhrase() throws Exception {
+    public void panel_globalSearchContext_displaysScopeAndPhrase()
+            throws Exception {
         runOnFxThread(() -> {
-            ObservableList<Participation> results = FXCollections.observableArrayList(PARTICIPATION);
-            ParticipantListPanel panel = new ParticipantListPanel(results);
+            ObservableList<Participation> results =
+                    FXCollections.observableArrayList(PARTICIPATION);
+
+            ParticipantListPanel panel =
+                    new ParticipantListPanel(results);
+
             panel.showParticipantsForEvent(EVENT, Set.of());
             panel.setSearchContext("jOhN");
+
             assertSame(results, listView(panel).getItems());
-            assertEquals(PARTICIPATION, listView(panel).getItems().getFirst());
-            assertEquals("All nonarchived events", labelText(panel, "eventHeading"));
-            assertEquals("Matching \"jOhN\"", labelText(panel, "searchHeading"));
-            assertEquals("No matching participants.", placeholderText(panel));
-            assertThrows(NullPointerException.class, () -> panel.setSearchContext((String) null));
+
+            assertEquals(
+                    PARTICIPATION,
+                    listView(panel).getItems().getFirst());
+
+            assertEquals(
+                    "All nonarchived events",
+                    labelText(panel, "eventHeading"));
+
+            assertEquals(
+                    "Matching \"jOhN\"",
+                    labelText(panel, "searchHeading"));
+
+            assertEquals(
+                    "No matching participants.",
+                    placeholderText(panel));
+
+            assertThrows(NullPointerException.class, () ->
+                    panel.setSearchContext((String) null));
         });
     }
 
     @Test
-    public void panel_archiveSearchContext_updatesScopeAndPreservesResultsBinding() throws Exception {
+    public void panel_archiveSearchContext_updatesScopeAndPreservesResultsBinding()
+            throws Exception {
         runOnFxThread(() -> {
-            ObservableList<Participation> results = FXCollections.observableArrayList();
-            ParticipantListPanel panel = new ParticipantListPanel(results);
+            ObservableList<Participation> results =
+                    FXCollections.observableArrayList();
+
+            ParticipantListPanel panel =
+                    new ParticipantListPanel(results);
+
             panel.setSearchContext("jOhN", true);
-            assertEquals("All events", labelText(panel, "eventHeading"));
-            assertEquals("Matching \"jOhN\"", labelText(panel, "searchHeading"));
-            assertEquals("No matching participants.", placeholderText(panel));
+
+            assertEquals(
+                    "All events",
+                    labelText(panel, "eventHeading"));
+
+            assertEquals(
+                    "Matching \"jOhN\"",
+                    labelText(panel, "searchHeading"));
+
+            assertEquals(
+                    "No matching participants.",
+                    placeholderText(panel));
+
             assertSame(results, listView(panel).getItems());
 
             results.add(PARTICIPATION);
-            assertEquals(PARTICIPATION, listView(panel).getItems().getFirst());
+
+            assertEquals(
+                    PARTICIPATION,
+                    listView(panel).getItems().getFirst());
+
             panel.setSearchContext("jOhN", false);
-            assertEquals("All nonarchived events", labelText(panel, "eventHeading"));
+
+            assertEquals(
+                    "All nonarchived events",
+                    labelText(panel, "eventHeading"));
+
             panel.setSearchContext("jOhN", true);
             panel.setSearchContext("jOhN");
-            assertEquals("All nonarchived events", labelText(panel, "eventHeading"));
+
+            assertEquals(
+                    "All nonarchived events",
+                    labelText(panel, "eventHeading"));
+
             assertSame(results, listView(panel).getItems());
-            assertThrows(NullPointerException.class, () -> panel.setSearchContext(null, true));
+
+            assertThrows(NullPointerException.class, () ->
+                    panel.setSearchContext(null, true));
         });
     }
 
@@ -451,12 +551,12 @@ public class ParticipantUiTest {
         return placeholder.getText();
     }
 
-    private List<String> tagTexts(ParticipantCard card) {
+    private List<Label> tagLabels(ParticipantCard card) {
         FlowPane tags = (FlowPane) card.getRoot()
                 .lookup("#tags");
 
         return tags.getChildren().stream()
-                .map(node -> ((Label) node).getText())
+                .map(node -> (Label) node)
                 .toList();
     }
 

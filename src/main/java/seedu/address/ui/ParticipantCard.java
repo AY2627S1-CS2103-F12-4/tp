@@ -3,8 +3,8 @@ package seedu.address.ui;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Comparator;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -90,13 +90,21 @@ public class ParticipantCard extends UiPart<Region> {
      * Displays the person's original tags and event-specific tags.
      */
     private void displayTags(Participation participation) {
-        Stream.concat(
-                        participation.getPerson().getTags().stream(),
-                        participation.getTags().stream())
-                .distinct()
+        Set<Tag> personTags = participation.getPerson().getTags();
+
+        personTags.stream()
                 .sorted(Comparator.comparing(Tag::toString))
-                .forEach(tag ->
-                        tags.getChildren().add(
-                                new Label(tag.tagName)));
+                .forEach(tag -> addTag(tag, "person-tag"));
+
+        participation.getTags().stream()
+                .filter(tag -> !personTags.contains(tag))
+                .sorted(Comparator.comparing(Tag::toString))
+                .forEach(tag -> addTag(tag, "event-tag"));
+    }
+
+    private void addTag(Tag tag, String styleClass) {
+        Label tagLabel = new Label(tag.tagName);
+        tagLabel.getStyleClass().add(styleClass);
+        tags.getChildren().add(tagLabel);
     }
 }

@@ -22,38 +22,76 @@ public class CommandResult {
     /** The event list should be shown to the user. */
     private final boolean showEvents;
 
-    /** The participant search results should be shown to the user. */
+    /** The participant results should be shown to the user. */
     private final boolean showParticipants;
 
+    /** The people list should be shown to the user. */
+    private final boolean showPeople;
+
     /**
-     * Constructs a {@code CommandResult} with the specified fields.
+     * Constructs a result with help and exit instructions.
      */
-    public CommandResult(String feedbackToUser, boolean showHelp, boolean exit) {
+    public CommandResult(
+            String feedbackToUser,
+            boolean showHelp,
+            boolean exit) {
         this(feedbackToUser, showHelp, exit, false);
     }
 
     /**
-     * Constructs a result with feedback, help, exit, and event-display instructions.
+     * Constructs a result with help, exit, and event-display instructions.
      */
-    public CommandResult(String feedbackToUser, boolean showHelp, boolean exit, boolean showEvents) {
-        this(feedbackToUser, showHelp, exit, showEvents, false);
+    public CommandResult(
+            String feedbackToUser,
+            boolean showHelp,
+            boolean exit,
+            boolean showEvents) {
+        this(
+                feedbackToUser,
+                showHelp,
+                exit,
+                showEvents,
+                false);
     }
 
     /**
-     * Constructs a result with feedback and instructions for help, exit, events, and participant results.
+     * Constructs a result with participant-display instructions.
      */
-    public CommandResult(String feedbackToUser, boolean showHelp, boolean exit,
-            boolean showEvents, boolean showParticipants) {
+    public CommandResult(
+            String feedbackToUser,
+            boolean showHelp,
+            boolean exit,
+            boolean showEvents,
+            boolean showParticipants) {
+        this(
+                feedbackToUser,
+                showHelp,
+                exit,
+                showEvents,
+                showParticipants,
+                false);
+    }
+
+    /**
+     * Constructs a result with all display instructions.
+     */
+    public CommandResult(
+            String feedbackToUser,
+            boolean showHelp,
+            boolean exit,
+            boolean showEvents,
+            boolean showParticipants,
+            boolean showPeople) {
         this.feedbackToUser = requireNonNull(feedbackToUser);
         this.showHelp = showHelp;
         this.exit = exit;
         this.showEvents = showEvents;
         this.showParticipants = showParticipants;
+        this.showPeople = showPeople;
     }
 
     /**
-     * Constructs a {@code CommandResult} with the specified {@code feedbackToUser},
-     * and other fields set to their default value.
+     * Constructs a result containing only user feedback.
      */
     public CommandResult(String feedbackToUser) {
         this(feedbackToUser, false, false);
@@ -79,27 +117,39 @@ public class CommandResult {
         return showParticipants;
     }
 
+    public boolean isShowPeople() {
+        return showPeople;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
             return true;
         }
 
-        // instanceof handles nulls
         if (!(other instanceof CommandResult otherCommandResult)) {
             return false;
         }
 
-        return feedbackToUser.equals(otherCommandResult.feedbackToUser)
+        return feedbackToUser.equals(
+                otherCommandResult.feedbackToUser)
                 && showHelp == otherCommandResult.showHelp
                 && exit == otherCommandResult.exit
                 && showEvents == otherCommandResult.showEvents
-                && showParticipants == otherCommandResult.showParticipants;
+                && showParticipants
+                == otherCommandResult.showParticipants
+                && showPeople == otherCommandResult.showPeople;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feedbackToUser, showHelp, exit, showEvents, showParticipants);
+        return Objects.hash(
+                feedbackToUser,
+                showHelp,
+                exit,
+                showEvents,
+                showParticipants,
+                showPeople);
     }
 
     @Override
@@ -110,7 +160,7 @@ public class CommandResult {
                 .add("exit", exit)
                 .add("showEvents", showEvents)
                 .add("showParticipants", showParticipants)
+                .add("showPeople", showPeople)
                 .toString();
     }
-
 }

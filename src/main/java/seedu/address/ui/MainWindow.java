@@ -290,7 +290,8 @@ public class MainWindow extends UiPart<Stage> {
             }
 
             if (logic.getParticipantSearchKeyword().isPresent()) {
-                participantDisplayMode = ParticipantDisplayMode.SEARCH;
+                participantDisplayMode =
+                        ParticipantDisplayMode.SEARCH;
                 refreshParticipantSearch();
             } else if (participantDisplayMode
                     == ParticipantDisplayMode.SEARCH) {
@@ -630,6 +631,10 @@ public class MainWindow extends UiPart<Stage> {
                 showCommandSelectedEvent();
             } else {
                 updateParticipantPanel(commandText);
+            }
+
+            if (commandResult.isShowPeople()) {
+                listTabs.getSelectionModel().select(peopleTab);
             }
 
             if (commandResult.isShowParticipants()

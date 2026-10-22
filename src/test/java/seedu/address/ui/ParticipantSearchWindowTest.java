@@ -183,7 +183,7 @@ public class ParticipantSearchWindowTest {
     }
 
     @Test
-    public void selectingEventAfterClearingSearch_unrelatedCommandPreservesParticipants()
+    public void selectingEventAfterClearingSearch_listOpensPeopleAndPreservesParticipants()
             throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
@@ -208,7 +208,7 @@ public class ParticipantSearchWindowTest {
 
                 enterCommand(window, "list");
 
-                assertEquals("Events", selectedTabName(window));
+                assertEquals("People", selectedTabName(window));
                 assertEquals(1, participants(window).getItems().size());
                 assertEquals(
                         "birthday (E1)",

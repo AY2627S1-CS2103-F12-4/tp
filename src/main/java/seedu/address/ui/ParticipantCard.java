@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Region;
@@ -14,8 +15,8 @@ import seedu.address.model.mapper.Participation;
 import seedu.address.model.tag.Tag;
 
 /**
- * Displays a participant's stable person ID, full name, tags, and
- * event-specific roles.
+ * Displays a participant's stable person ID, full name, tags,
+ * event-specific roles, and actions.
  */
 public class ParticipantCard extends UiPart<Region> {
 
@@ -33,14 +34,31 @@ public class ParticipantCard extends UiPart<Region> {
     @FXML
     private Label roles;
 
+    @FXML
+    private Button editButton;
+
+    @FXML
+    private Button deleteButton;
+
     /**
      * Creates a card for the supplied participation.
-     *
-     * @param participation event membership to display
      */
     public ParticipantCard(Participation participation) {
+        this(participation, () -> { }, () -> { });
+    }
+
+    /**
+     * Creates a participant card with edit and delete actions.
+     */
+    public ParticipantCard(
+            Participation participation,
+            Runnable editAction,
+            Runnable deleteAction) {
         super(FXML);
+
         requireNonNull(participation);
+        requireNonNull(editAction);
+        requireNonNull(deleteAction);
 
         personId.setText(
                 "Person ID: " + participation.getPerson().getId());
@@ -49,8 +67,10 @@ public class ParticipantCard extends UiPart<Region> {
                 participation.getPerson().getName().fullName);
 
         roles.setText(formatRoles(participation));
-
         displayTags(participation);
+
+        editButton.setOnAction(event -> editAction.run());
+        deleteButton.setOnAction(event -> deleteAction.run());
     }
 
     private String formatRoles(Participation participation) {
@@ -67,7 +87,7 @@ public class ParticipantCard extends UiPart<Region> {
     }
 
     /**
-     * Displays both the person's original tags and event-specific tags.
+     * Displays the person's original tags and event-specific tags.
      */
     private void displayTags(Participation participation) {
         Stream.concat(

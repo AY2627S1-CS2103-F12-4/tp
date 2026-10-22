@@ -1,0 +1,67 @@
+@startuml
+!include style.puml
+
+participant ":LogicManager" as Logic LOGIC_COLOR
+participant ":UnmarkParticipantCommand" as Command LOGIC_COLOR
+participant ":ModelManager" as Model MODEL_COLOR
+participant ":EventList" as Events MODEL_COLOR
+participant ":AddressBook" as People MODEL_COLOR
+participant ":MapperManager" as Mapper MODEL_COLOR
+
+note over Logic, Mapper
+Successful execution of unmark-participant E1 P1.
+The person is registered for the event and is currently present.
+Parsing and persistence are omitted.
+end note
+
+[-> Logic : execute("unmark-participant E1 P1")
+activate Logic
+Logic -> Command : execute(model)
+activate Command
+Command -> Model : unmarkPresent(eventId, personId)
+activate Model
+Model -> Events : getEventFromId(eventId.toString())
+activate Events
+Events --> Model : event
+deactivate Events
+Model -> People : getPersonFromId(personId)
+activate People
+People --> Model : person
+deactivate People
+Model -> Mapper : getParticipationsForEvent(event)
+activate Mapper
+Mapper --> Model : participations
+deactivate Mapper
+
+note right of Model
+Find the participation by personId
+and check that it is present.
+end note
+
+Model -> Mapper : setPresent(event, person, false)
+activate Mapper
+note right of Mapper
+Replace attendance state;
+preserve roles and tags.
+Internal ID resolution is omitted.
+end note
+Mapper --> Model : updatedParticipation
+deactivate Mapper
+Model -> Model : refreshParticipantSearch()
+activate Model
+note right of Model
+Refresh results if a search is active.
+end note
+Model --> Model
+deactivate Model
+Model --> Command
+deactivate Model
+Command --> Logic : commandResult
+deactivate Command
+note right of Logic
+Save application data before returning.
+Storage calls are omitted.
+end note
+[<-- Logic : commandResult
+deactivate Logic
+@enduml

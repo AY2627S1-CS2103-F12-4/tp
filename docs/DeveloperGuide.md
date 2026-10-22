@@ -321,6 +321,26 @@ participations through the `ReadOnlyParticipations` interface.
   * Pros: Simpler retrieval because no ID resolution is required.
   * Cons: Replacing or editing domain objects can leave stale references or make key equality unreliable.
 
+### Cancelling participant attendance
+
+The `unmark-participant EVENT_ID PERSON_ID` command corrects an accidental check-in
+without removing the person's registration. The following sequence diagram shows
+the successful execution of `unmark-participant E1 P1` after parsing.
+
+<puml src="diagrams/UnmarkParticipantSequenceDiagram.puml" width="850" />
+
+`UnmarkParticipantCommand` calls `ModelManager#unmarkPresent`, which resolves the
+event and person by their stable IDs and checks that the participation exists and
+is currently present. `MapperManager#setPresent(event, person, false)` replaces
+the attendance state while preserving roles and tags. The model then refreshes
+any active participant search before the command returns a `CommandResult`.
+
+Missing events, people or registrations, and participants already marked absent,
+cause a `CommandException` with a specific error message; attendance is unchanged.
+These error paths and the mapper's internal ID resolution are omitted from the
+diagram for clarity. `LogicManager` saves the application data after successful
+command execution; those storage calls are also omitted.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation

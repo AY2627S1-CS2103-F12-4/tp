@@ -14,6 +14,7 @@ import seedu.address.model.event.Event;
 import seedu.address.model.event.EventList;
 import seedu.address.model.event.exceptions.EventNotFoundException;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.EventAtCapacityException;
 import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
@@ -84,7 +85,7 @@ public class MapperManager implements Mapper {
 
         requireAllNonNull(event, person, roles, tags);
         ParticipationKey key = createKey(event, person);
-        eventList.getEventFromId(key.eventId());
+        Event storedEvent = eventList.getEventFromId(key.eventId());
         if (addressBook.getPersonFromId(key.personId()) == null) {
             throw new PersonNotFoundException();
         }
@@ -93,6 +94,13 @@ public class MapperManager implements Mapper {
             throw new DuplicateParticipationException(
                     key.eventId(),
                     key.personId().toString());
+        }
+
+        long participationCount = participations.keySet().stream()
+                .filter(participationKey -> participationKey.eventId().equals(key.eventId()))
+                .count();
+        if (participationCount >= storedEvent.getCapacity()) {
+            throw new EventAtCapacityException(key.eventId());
         }
 
         participations.put(

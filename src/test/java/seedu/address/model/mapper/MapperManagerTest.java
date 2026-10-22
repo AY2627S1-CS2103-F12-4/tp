@@ -18,6 +18,7 @@ import seedu.address.model.event.EventId;
 import seedu.address.model.event.EventList;
 import seedu.address.model.event.exceptions.EventNotFoundException;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.EventAtCapacityException;
 import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
@@ -201,6 +202,21 @@ public class MapperManagerTest {
                 DuplicateParticipationException.class, () -> mapper.addParticipation(EVENT, PERSON));
 
         assertEquals("A participation already exists for event E1 and person P1", exception.getMessage());
+    }
+
+    @Test
+    public void addParticipation_eventAtCapacity_throwsEventAtCapacityException() {
+        Event storedEvent = new Event(new EventId("E3"), "Briefing", 1, "Description");
+        Event staleEvent = new Event(new EventId("E3"), "Briefing", 2, "Description");
+        eventList.addEvent(storedEvent);
+        mapper.addParticipation(storedEvent, PERSON);
+
+        EventAtCapacityException exception = assertThrows(
+                EventAtCapacityException.class, () -> mapper.addParticipation(staleEvent, OTHER_PERSON));
+
+        assertEquals("Event E3 is at full capacity", exception.getMessage());
+        assertEquals(Set.of(new Participation(storedEvent, PERSON)),
+                mapper.getParticipationsForEvent(storedEvent));
     }
 
     @Test

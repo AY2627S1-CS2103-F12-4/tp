@@ -332,11 +332,12 @@ Starting another name or role search replaces the previous query, archive
 visibility, and event filter and selects its first matching event. Each new search
 excludes archives unless it includes `/include-archive`.
 
-Use `list-event` to clear either search and show all nonarchived events, or
+Use the **Clear search** button to run `list-event`, clear either search, and show all
+nonarchived events. You can also enter `list-event` directly, or use
 `list-event /include-archive` to clear the search and show all events. `find-event`
 replaces the search with an event-name filter that excludes archives. These commands
-clear the participant rows and search context. Selecting an event after clearing
-the search shows all its registrations.
+clear the participant rows and search context. Selecting an event after clearing the
+search shows all its registrations.
 
 ### Marking attendance: `mark-participant`
 

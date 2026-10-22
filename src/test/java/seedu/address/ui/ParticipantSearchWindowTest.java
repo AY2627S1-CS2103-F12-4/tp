@@ -1,6 +1,8 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 
@@ -10,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javafx.event.ActionEvent;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TabPane;
@@ -52,6 +55,38 @@ public class ParticipantSearchWindowTest {
                 assertTrue(events(window).getItems().isEmpty());
                 assertEquals("No matching registrations for \"Missing\" in nonarchived events.", feedback(window));
                 assertEquals("Matching \"Missing\"", heading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void clearSearchButton_afterParticipantAndRoleSearch_runsListEvent() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                Button clearSearchButton = (Button) window.getPrimaryStage()
+                        .getScene()
+                        .lookup("#clearSearchButton");
+
+                assertNotNull(clearSearchButton);
+                assertFalse(clearSearchButton.isVisible());
+
+                for (String command : new String[]{
+                    "search-participant John",
+                    "search-role Missing"
+                }) {
+                    enterCommand(window, command);
+                    assertTrue(clearSearchButton.isVisible());
+
+                    clearSearchButton.fire();
+
+                    assertFalse(clearSearchButton.isVisible());
+                    assertEquals("Listing events...", feedback(window));
+                    assertEquals(1, events(window).getItems().size());
+                    assertTrue(participants(window).getItems().isEmpty());
+                }
             } finally {
                 window.getPrimaryStage().close();
             }

@@ -52,6 +52,7 @@
         "implementation": "Implementation",
         "participant-search": "Participant search",
         "participation-mapping": "Participation mapping",
+        "cancelling-participant-attendance": "Cancelling participant attendance",
         "proposed-undo-redo-feature": "[Proposed] Undo/redo feature",
         "event-archiving-and-visibility": "Event archiving and visibility",
         "documentation-logging-testing-dev-ops": "Documentation, logging, testing, dev-ops",

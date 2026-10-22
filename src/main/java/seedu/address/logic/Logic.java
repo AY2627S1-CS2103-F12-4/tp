@@ -62,6 +62,9 @@ public interface Logic {
      */
     Optional<String> getParticipantSearchKeyword();
 
+    /** Returns whether the active participant search includes archived events, or false when no search is active. */
+    boolean isParticipantSearchIncludingArchived();
+
     /**
      * Returns the currently selected event, or empty when no event is selected.
      */

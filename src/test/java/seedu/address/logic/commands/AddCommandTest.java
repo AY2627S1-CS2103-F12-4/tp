@@ -135,12 +135,47 @@ public class AddCommandTest {
         }
 
         @Override
+        public void updateParticipantSearch(EventId eventId, String keyword, boolean includeArchived) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public void updateParticipantSearch(String keyword) {
             throw new AssertionError("This method should not be called.");
         }
 
         @Override
+        public void updateParticipantSearch(String keyword, boolean includeArchived) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void updateParticipantRoleSearch(String keyword) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void updateParticipantRoleSearch(String keyword, boolean includeArchived) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void updateParticipantRoleSearch(EventId eventId, String keyword) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void updateParticipantRoleSearch(EventId eventId, String keyword, boolean includeArchived) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public void clearParticipantSearch() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void showEvents(boolean includeArchived) {
             throw new AssertionError("This method should not be called.");
         }
 
@@ -161,6 +196,11 @@ public class AddCommandTest {
 
         @Override
         public Optional<String> getParticipantSearchKeyword() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public boolean isParticipantSearchIncludingArchived() {
             throw new AssertionError("This method should not be called.");
         }
 
@@ -197,6 +237,11 @@ public class AddCommandTest {
 
         @Override
         public void updateFilteredEventList(Predicate<Event> predicate) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void updateFilteredEventList(Predicate<Event> predicate, boolean includeArchived) {
             throw new AssertionError("This method should not be called.");
         }
 

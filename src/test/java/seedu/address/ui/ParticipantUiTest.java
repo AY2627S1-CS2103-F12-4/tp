@@ -10,11 +10,13 @@ import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.Test;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -154,7 +156,8 @@ public class ParticipantUiTest {
                     labelText(panel, "eventHeading"));
 
             assertEquals(
-                    "Use search-participant NAME [/event EVENTID]",
+                    "search-participant NAME [/event EVENTID] [/include-archive]\n"
+                            + "search-role ROLE [/event EVENTID] [/include-archive]",
                     labelText(panel, "searchHeading"));
 
             assertEquals(
@@ -245,6 +248,29 @@ public class ParticipantUiTest {
     }
 
     @Test
+    public void panel_participantButtons_runConfiguredActions() throws Exception {
+        runOnFxThread(() -> {
+            AtomicReference<Participation> edited = new AtomicReference<>();
+            AtomicReference<Participation> deleted = new AtomicReference<>();
+            ParticipantListPanel panel = new ParticipantListPanel(
+                    FXCollections.observableArrayList(), edited::set, deleted::set);
+            panel.showParticipantsForEvent(EVENT, Set.of(PARTICIPATION));
+
+            ListView<Participation> list = listView(panel);
+            ListCell<Participation> cell = list.getCellFactory().call(list);
+            cell.updateListView(list);
+            cell.updateIndex(0);
+            Button editButton = (Button) cell.getGraphic().lookup("#editButton");
+            Button deleteButton = (Button) cell.getGraphic().lookup("#deleteButton");
+            editButton.fire();
+            deleteButton.fire();
+
+            assertSame(PARTICIPATION, edited.get());
+            assertSame(PARTICIPATION, deleted.get());
+        });
+    }
+
+    @Test
     public void panel_clearSearchContext_clearsParticipantsAndRestoresPrompt()
             throws Exception {
         runOnFxThread(() -> {
@@ -323,6 +349,29 @@ public class ParticipantUiTest {
             assertEquals("Matching \"jOhN\"", labelText(panel, "searchHeading"));
             assertEquals("No matching participants.", placeholderText(panel));
             assertThrows(NullPointerException.class, () -> panel.setSearchContext((String) null));
+        });
+    }
+
+    @Test
+    public void panel_archiveSearchContext_updatesScopeAndPreservesResultsBinding() throws Exception {
+        runOnFxThread(() -> {
+            ObservableList<Participation> results = FXCollections.observableArrayList();
+            ParticipantListPanel panel = new ParticipantListPanel(results);
+            panel.setSearchContext("jOhN", true);
+            assertEquals("All events", labelText(panel, "eventHeading"));
+            assertEquals("Matching \"jOhN\"", labelText(panel, "searchHeading"));
+            assertEquals("No matching participants.", placeholderText(panel));
+            assertSame(results, listView(panel).getItems());
+
+            results.add(PARTICIPATION);
+            assertEquals(PARTICIPATION, listView(panel).getItems().getFirst());
+            panel.setSearchContext("jOhN", false);
+            assertEquals("All nonarchived events", labelText(panel, "eventHeading"));
+            panel.setSearchContext("jOhN", true);
+            panel.setSearchContext("jOhN");
+            assertEquals("All nonarchived events", labelText(panel, "eventHeading"));
+            assertSame(results, listView(panel).getItems());
+            assertThrows(NullPointerException.class, () -> panel.setSearchContext(null, true));
         });
     }
 

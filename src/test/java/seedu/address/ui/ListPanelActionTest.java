@@ -33,9 +33,11 @@ public class ListPanelActionTest {
                     "Learn Java");
 
     @Test
-    public void personPanel_deleteButton_forwardsPersonAndDisplayedIndex()
+    public void personPanel_actionButtons_forwardPersonAndDisplayedIndex()
             throws Exception {
         runOnFxThread(() -> {
+            AtomicReference<Person> editedPerson = new AtomicReference<>();
+            AtomicInteger editedIndex = new AtomicInteger();
             AtomicReference<Person> deletedPerson =
                     new AtomicReference<>();
             AtomicInteger deletedIndex =
@@ -45,9 +47,14 @@ public class ListPanelActionTest {
                 deletedPerson.set(person);
                 deletedIndex.set(index);
             };
+            BiConsumer<Person, Integer> editAction = (person, index) -> {
+                editedPerson.set(person);
+                editedIndex.set(index);
+            };
 
             PersonListPanel panel = new PersonListPanel(
                     FXCollections.observableArrayList(ALICE),
+                    editAction,
                     deleteAction);
 
             ListView<Person> list = personListView(panel);
@@ -57,11 +64,17 @@ public class ListPanelActionTest {
             cell.updateListView(list);
             cell.updateIndex(0);
 
+            Button editButton =
+                    (Button) cell.getGraphic()
+                            .lookup("#editButton");
             Button deleteButton =
                     (Button) cell.getGraphic()
                             .lookup("#deleteButton");
+            editButton.fire();
             deleteButton.fire();
 
+            assertSame(ALICE, editedPerson.get());
+            assertEquals(1, editedIndex.get());
             assertSame(ALICE, deletedPerson.get());
             assertEquals(1, deletedIndex.get());
 
@@ -147,6 +160,10 @@ public class ListPanelActionTest {
                     new AtomicReference<>();
             AtomicReference<Event> participantEvent =
                     new AtomicReference<>();
+            AtomicReference<Event> editedEvent =
+                    new AtomicReference<>();
+            AtomicReference<Event> archivedEvent =
+                    new AtomicReference<>();
             AtomicReference<Event> deletedEvent =
                     new AtomicReference<>();
 
@@ -154,6 +171,8 @@ public class ListPanelActionTest {
                     FXCollections.observableArrayList(EVENT),
                     selectedEvent::set,
                     participantEvent::set,
+                    editedEvent::set,
+                    archivedEvent::set,
                     deletedEvent::set);
 
             ListView<Event> list = eventListView(panel);
@@ -167,15 +186,25 @@ public class ListPanelActionTest {
             Button addParticipantButton =
                     (Button) cell.getGraphic()
                             .lookup("#addParticipantButton");
+            Button editButton =
+                    (Button) cell.getGraphic()
+                            .lookup("#editButton");
+            Button archiveButton =
+                    (Button) cell.getGraphic()
+                            .lookup("#archiveButton");
             Button deleteButton =
                     (Button) cell.getGraphic()
                             .lookup("#deleteButton");
 
             addParticipantButton.fire();
+            editButton.fire();
+            archiveButton.fire();
             deleteButton.fire();
 
             assertSame(EVENT, selectedEvent.get());
             assertSame(EVENT, participantEvent.get());
+            assertSame(EVENT, editedEvent.get());
+            assertSame(EVENT, archivedEvent.get());
             assertSame(EVENT, deletedEvent.get());
         });
     }
@@ -220,6 +249,15 @@ public class ListPanelActionTest {
                                     action::set,
                                     action::set,
                                     null));
+
+            assertThrows(
+                    NullPointerException.class, () ->
+                            new EventListPanel(
+                                    events,
+                                    action::set,
+                                    action::set,
+                                    null,
+                                    action::set));
         });
     }
 

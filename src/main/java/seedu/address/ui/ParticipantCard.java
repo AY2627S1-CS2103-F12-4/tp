@@ -33,6 +33,10 @@ public class ParticipantCard extends UiPart<Region> {
 
     @FXML
     private Label roles;
+    @FXML
+    private Button editButton;
+    @FXML
+    private Button deleteButton;
 
     @FXML
     private Button editButton;
@@ -47,6 +51,7 @@ public class ParticipantCard extends UiPart<Region> {
         this(participation, () -> { }, () -> { });
     }
 
+<<<<<<< HEAD
     /**
      * Creates a participant card with edit and delete actions.
      */
@@ -54,11 +59,16 @@ public class ParticipantCard extends UiPart<Region> {
             Participation participation,
             Runnable editAction,
             Runnable deleteAction) {
+=======
+    /** Creates a participant card with edit and delete actions. */
+    public ParticipantCard(Participation participation, Runnable editAction, Runnable deleteAction) {
+>>>>>>> upstream/master
         super(FXML);
 
         requireNonNull(participation);
         requireNonNull(editAction);
         requireNonNull(deleteAction);
+<<<<<<< HEAD
 
         personId.setText(
                 "Person ID: " + participation.getPerson().getId());
@@ -98,5 +108,14 @@ public class ParticipantCard extends UiPart<Region> {
                 .forEach(tag ->
                         tags.getChildren().add(
                                 new Label(tag.tagName)));
+=======
+        personId.setText("Person ID: " + participation.getPerson().getId());
+        name.setText(participation.getPerson().getName().fullName);
+        roles.setText("Roles: " + (participation.getRoles().isEmpty() ? "No role"
+                : participation.getRoles().stream().map(Object::toString).sorted()
+                        .collect(Collectors.joining(", "))));
+        editButton.setOnAction(event -> editAction.run());
+        deleteButton.setOnAction(event -> deleteAction.run());
+>>>>>>> upstream/master
     }
 }

@@ -97,6 +97,11 @@ public class LogicManager implements Logic {
     }
 
     @Override
+    public boolean isParticipantSearchIncludingArchived() {
+        return model.isParticipantSearchIncludingArchived();
+    }
+
+    @Override
     public GuiSettings getGuiSettings() {
         return model.getGuiSettings();
     }

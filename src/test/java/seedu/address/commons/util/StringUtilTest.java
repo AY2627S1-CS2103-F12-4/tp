@@ -13,6 +13,8 @@ public class StringUtilTest {
 
     @Test
     public void normalizeWhitespace_preservesCaseAndCollapsesWhitespaceRuns() {
+        assertEquals("Best Man", StringUtil.normalizeWhitespace(" \tBest  \nMan\u2003"));
+        assertEquals("bEsT Man", StringUtil.normalizeWhitespace("bEsT\u00a0Man"));
         assertEquals("Michael Tan", StringUtil.normalizeWhitespace(" \tMichael  \nTan\u2003"));
         assertEquals("mIcHaEl Tan", StringUtil.normalizeWhitespace("mIcHaEl\u00a0Tan"));
         assertEquals("", StringUtil.normalizeWhitespace("\u2003\t \n"));

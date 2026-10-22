@@ -23,6 +23,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteEventCommand;
 import seedu.address.logic.commands.DeleteParticipantCommand;
+import seedu.address.logic.commands.ListEventCommand;
 import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.commands.SearchRoleCommand;
 import seedu.address.logic.commands.UnarchiveEventCommand;
@@ -62,6 +63,7 @@ public class MainWindow extends UiPart<Stage> {
     private PersonListPanel personListPanel;
     private EventListPanel eventListPanel;
     private ParticipantListPanel participantListPanel;
+    private ActionBar actionBar;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
 
@@ -195,9 +197,10 @@ public class MainWindow extends UiPart<Stage> {
                     }
                 });
 
-        ActionBar actionBar = new ActionBar(
+        actionBar = new ActionBar(
                 this::handleAddPerson,
-                this::handleAddEvent);
+                this::handleAddEvent,
+                this::handleClearSearch);
         actionBarPlaceholder.getChildren()
                 .add(actionBar.getRoot());
 
@@ -462,6 +465,14 @@ public class MainWindow extends UiPart<Stage> {
         });
     }
 
+    private void handleClearSearch() {
+        try {
+            executeCommand(ListEventCommand.COMMAND_WORD);
+        } catch (CommandException | ParseException exception) {
+            // executeCommand already displays the error.
+        }
+    }
+
     private void handleEditPerson(Person person, int displayedIndex) {
         new EditPersonDialog(primaryStage, person, displayedIndex).showAndWait(command -> {
             executeCommand(command);
@@ -633,6 +644,9 @@ public class MainWindow extends UiPart<Stage> {
             } else {
                 updateParticipantPanel(commandText);
             }
+
+            actionBar.setClearSearchVisible(
+                    logic.getParticipantSearchKeyword().isPresent());
 
             if (commandResult.isShowPeople()) {
                 listTabs.getSelectionModel().select(peopleTab);

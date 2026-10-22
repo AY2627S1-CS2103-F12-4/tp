@@ -316,6 +316,22 @@ translated by the command into user-facing `CommandException` messages.
 The same mapper API supports the other participation operations. `mark-participant` replaces the stored state with one
 whose `isPresent` value is `true`, while `del-participant` removes the event-person pair.
 
+#### Displaying participants in the Events tab
+
+The Events tab displays `EventListPanel` and `ParticipantListPanel`
+together. `MainWindow` coordinates the selected event and obtains its
+participations through `Logic`. When the selected event changes,
+`MainWindow` passes the corresponding `Participation` objects to
+`ParticipantListPanel`.
+
+<puml src="diagrams/ParticipantUiClassDiagram.puml" width="850"
+alt="Class diagram of the participant display in the Events tab" />
+
+`ParticipantListPanel` creates a `ParticipantCard` for each
+participation. Each card displays the linked person's ID and name,
+participation roles, person tags, and event-specific tags. Edit and
+delete actions are passed back to `MainWindow`.
+
 #### Persistence
 
 Participations are stored separately in `data/participations.json`. Each `JsonAdaptedParticipation` stores only the event

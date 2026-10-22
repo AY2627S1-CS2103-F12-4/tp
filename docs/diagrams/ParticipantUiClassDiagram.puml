@@ -1,0 +1,41 @@
+@startuml
+!include style.puml
+
+skinparam arrowThickness 1.1
+skinparam arrowColor #555555
+
+package "UI" as UiPackage <<Rectangle>> {
+Class MainWindow UI_COLOR
+Class EventListPanel UI_COLOR
+Class ParticipantListPanel UI_COLOR
+Class ParticipantCard UI_COLOR
+}
+
+package "Logic" as LogicPackage <<Rectangle>> {
+Class "<<interface>>\nLogic" as Logic LOGIC_COLOR
+}
+
+package "Model" as ModelPackage <<Rectangle>> {
+Class Event MODEL_COLOR
+Class Participation MODEL_COLOR
+Class Person MODEL_COLOR
+}
+
+MainWindow --> "1" Logic : requests data
+MainWindow *--> "1" EventListPanel : owns
+MainWindow *--> "1" ParticipantListPanel : owns
+
+EventListPanel --> "*" Event : displays
+ParticipantListPanel --> "*" Participation : displays
+ParticipantListPanel ..> ParticipantCard : creates
+ParticipantCard --> "1" Participation : renders
+
+Participation --> "1" Event
+Participation --> "1" Person
+
+note right of MainWindow
+  Coordinates event selection
+  and refreshes participants
+end note
+
+@enduml

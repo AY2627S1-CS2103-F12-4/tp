@@ -14,6 +14,7 @@ import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.EventAtCapacityException;
 import seedu.address.model.mapper.exceptions.ParticipationAlreadyAbsentException;
 import seedu.address.model.mapper.exceptions.ParticipationAlreadyPresentException;
 import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
@@ -93,20 +94,23 @@ public interface Model {
      * Adds a participation between {@code event} and {@code person}.
      */
     void addParticipation(Event event, Person person)
-            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException;
+            throws DuplicateParticipationException, EventAtCapacityException,
+            EventNotFoundException, PersonNotFoundException;
 
     /**
      * Adds a participation identified by {@code eventId} and {@code personId}.
      */
     void addParticipation(EventId eventId, PersonId personId)
-            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException;
+            throws DuplicateParticipationException, EventAtCapacityException,
+            EventNotFoundException, PersonNotFoundException;
 
     /**
      * Adds a participation with event-specific {@code roles} and {@code tags}.
      */
     void addParticipation(EventId eventId, PersonId personId,
                           Set<ParticipationRole> roles, Set<Tag> tags)
-            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException;
+            throws DuplicateParticipationException, EventAtCapacityException,
+            EventNotFoundException, PersonNotFoundException;
 
     /**
      * Removes the participation between {@code event} and {@code person}.

@@ -68,6 +68,27 @@ public class AddParticipantCommandTest {
     }
 
     @Test
+    public void execute_eventAtCapacity_throwsCommandException() throws CommandException {
+        Person secondPerson = new PersonBuilder().withId("P2").build();
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(PERSON);
+        addressBook.addPerson(secondPerson);
+        Event fullEvent = new Event(EVENT_ID, "Workshop", 1, "Learn Java");
+        EventList eventList = new EventList();
+        eventList.addEvent(fullEvent);
+        ModelManager capacityLimitedModel = new ModelManager(
+                addressBook, new UserPrefs(), eventList, Set::of);
+        new AddParticipantCommand(EVENT_ID, PERSON_ID).execute(capacityLimitedModel);
+        AddParticipantCommand command = new AddParticipantCommand(EVENT_ID, secondPerson.getId());
+
+        assertCommandFailure(command, capacityLimitedModel,
+                String.format(AddParticipantCommand.MESSAGE_EVENT_AT_CAPACITY, EVENT_ID));
+        int participantCount = capacityLimitedModel.getParticipations().getParticipations().size();
+        assertTrue(participantCount <= fullEvent.getCapacity());
+        assertEquals(1, participantCount);
+    }
+
+    @Test
     public void execute_missingEvent_throwsCommandException() {
         EventId missingEventId = new EventId("E2");
         AddParticipantCommand command = new AddParticipantCommand(missingEventId, PERSON_ID);

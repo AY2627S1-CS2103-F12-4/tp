@@ -15,6 +15,7 @@ import seedu.address.model.event.EventId;
 import seedu.address.model.event.exceptions.EventNotFoundException;
 import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.EventAtCapacityException;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
 import seedu.address.model.tag.Tag;
@@ -36,6 +37,7 @@ public class AddParticipantCommand extends Command {
     public static final String MESSAGE_SUCCESS = "Added person %2$s as a participant of event %1$s.";
     public static final String MESSAGE_DUPLICATE_PARTICIPANT =
             "Person %2$s is already a participant of event %1$s.";
+    public static final String MESSAGE_EVENT_AT_CAPACITY = "Event %1$s is at full capacity.";
     public static final String MESSAGE_EVENT_NOT_FOUND = "Event %1$s does not exist.";
     public static final String MESSAGE_PERSON_NOT_FOUND = "Person %1$s does not exist.";
 
@@ -75,6 +77,8 @@ public class AddParticipantCommand extends Command {
             throw new CommandException(String.format(MESSAGE_PERSON_NOT_FOUND, personId), e);
         } catch (DuplicateParticipationException e) {
             throw new CommandException(String.format(MESSAGE_DUPLICATE_PARTICIPANT, eventId, personId), e);
+        } catch (EventAtCapacityException e) {
+            throw new CommandException(String.format(MESSAGE_EVENT_AT_CAPACITY, eventId), e);
         }
 
         return new CommandResult(String.format(MESSAGE_SUCCESS, eventId, personId));

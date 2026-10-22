@@ -5,6 +5,7 @@ import java.util.Set;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.exceptions.EventNotFoundException;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.EventAtCapacityException;
 import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
@@ -21,6 +22,7 @@ public interface Mapper extends ReadOnlyParticipations {
      * Both arguments must not be null.
      *
      * @throws DuplicateParticipationException if the participation already exists.
+     * @throws EventAtCapacityException if the event is at capacity.
      * @throws EventNotFoundException if the event cannot be found.
      * @throws PersonNotFoundException if the person cannot be found.
      */
@@ -32,6 +34,7 @@ public interface Mapper extends ReadOnlyParticipations {
      * Arguments must not be null.
      *
      * @throws DuplicateParticipationException if the participation already exists.
+     * @throws EventAtCapacityException if the event is at capacity.
      * @throws EventNotFoundException if the event cannot be found.
      * @throws PersonNotFoundException if the person cannot be found.
      */

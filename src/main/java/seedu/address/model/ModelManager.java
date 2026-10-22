@@ -30,6 +30,7 @@ import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.mapper.ParticipationRoleContainsKeywordPredicate;
 import seedu.address.model.mapper.ReadOnlyParticipations;
 import seedu.address.model.mapper.exceptions.DuplicateParticipationException;
+import seedu.address.model.mapper.exceptions.EventAtCapacityException;
 import seedu.address.model.mapper.exceptions.ParticipationAlreadyAbsentException;
 import seedu.address.model.mapper.exceptions.ParticipationAlreadyPresentException;
 import seedu.address.model.mapper.exceptions.ParticipationNotFoundException;
@@ -189,21 +190,24 @@ public class ModelManager implements Model {
 
     @Override
     public void addParticipation(Event event, Person person)
-            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException {
+            throws DuplicateParticipationException, EventAtCapacityException,
+            EventNotFoundException, PersonNotFoundException {
         mapper.addParticipation(event, person);
         refreshParticipantSearch();
     }
 
     @Override
     public void addParticipation(EventId eventId, PersonId personId)
-            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException {
+            throws DuplicateParticipationException, EventAtCapacityException,
+            EventNotFoundException, PersonNotFoundException {
         addParticipation(eventId, personId, Set.of(), Set.of());
     }
 
     @Override
     public void addParticipation(EventId eventId, PersonId personId,
                                  Set<ParticipationRole> roles, Set<Tag> tags)
-            throws DuplicateParticipationException, EventNotFoundException, PersonNotFoundException {
+            throws DuplicateParticipationException, EventAtCapacityException,
+            EventNotFoundException, PersonNotFoundException {
         requireAllNonNull(eventId, personId, roles, tags);
         Event event = eventList.getEventFromId(eventId.toString());
         Person person = addressBook.getPersonFromId(personId);

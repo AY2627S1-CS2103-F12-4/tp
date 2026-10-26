@@ -14,9 +14,10 @@ import seedu.address.model.event.EventNameContainsKeywordPredicate;
 public class FindEventCommand extends Command {
     public static final String COMMAND_WORD = "find-event";
     public static final String MESSAGE_NO_MATCHES = "No matching events found.";
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds events by name.\n"
-            + "Parameters: KEYWORD\n"
-            + "Example: " + COMMAND_WORD + " Workshop";
+    public static final String MESSAGE_USAGE = COMMAND_WORD
+            + ": Finds non-archived events by name, or includes archived matches with /include-archive.\n"
+            + "Parameters: KEYWORD [/include-archive]\n"
+            + "Example: " + COMMAND_WORD + " Workshop /include-archive";
 
     private final EventNameContainsKeywordPredicate predicate;
     private final boolean includeArchived;

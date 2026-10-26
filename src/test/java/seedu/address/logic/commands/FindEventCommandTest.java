@@ -1,6 +1,8 @@
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import java.util.Set;
@@ -18,7 +20,6 @@ import seedu.address.testutil.PersonBuilder;
 
 /**
  * Tests the interaction between {@code FindEventCommand} and the event list in the model.
- * Defines the event filtering API to be implemented in {@code Model} and {@code ModelManager}.
  */
 public class FindEventCommandTest {
     private static final Event WORKSHOP = new Event(new EventId("E1"), "Java Workshop", 10, "Learn Java");
@@ -33,6 +34,98 @@ public class FindEventCommandTest {
 
         assertEquals(List.of(WORKSHOP, MEETUP), model.getFilteredEventList());
         assertEquals(new CommandResult("2 event(s) listed!", false, false, true), result);
+    }
+
+    @Test
+    public void execute_excludeArchived_listsOnlyActiveMatches() {
+        Model model = createModelWithEvents();
+        model.updateEvent(WORKSHOP.withArchived(true));
+        EventNameContainsKeywordPredicate predicate = new EventNameContainsKeywordPredicate("Java");
+
+        for (FindEventCommand command : List.of(new FindEventCommand(predicate),
+                new FindEventCommand(predicate, false))) {
+            model.showEvents(true);
+
+            CommandResult result = command.execute(model);
+
+            assertEquals(List.of(MEETUP), model.getFilteredEventList());
+            assertEquals(new CommandResult("1 event(s) listed!", false, false, true), result);
+        }
+    }
+
+    @Test
+    public void execute_includeArchived_listsOnlyMatchingActiveAndArchivedEvents() {
+        Model model = createModelWithEvents();
+        Event archivedWorkshop = WORKSHOP.withArchived(true);
+        Event archivedConcert = CONCERT.withArchived(true);
+        model.updateEvent(archivedWorkshop);
+        model.updateEvent(archivedConcert);
+        Person alice = new PersonBuilder().withId("P1").build();
+        model.addPerson(alice);
+        model.addParticipation(archivedWorkshop, alice);
+        Set<Participation> originalParticipations = model.getParticipationsForEvent(archivedWorkshop);
+
+        CommandResult result = new FindEventCommand(new EventNameContainsKeywordPredicate("java"), true)
+                .execute(model);
+
+        assertEquals(List.of(archivedWorkshop, MEETUP), model.getFilteredEventList());
+        assertEquals(new CommandResult("2 event(s) listed!", false, false, true), result);
+        assertEquals(List.of(archivedWorkshop, archivedConcert, MEETUP), model.getEvents());
+        assertEquals(originalParticipations, model.getParticipationsForEvent(archivedWorkshop));
+    }
+
+    @Test
+    public void execute_includeArchivedWithoutMatches_clearsPreviousResultsAndReportsNoMatches() {
+        Model model = createModelWithEvents();
+        model.updateEvent(WORKSHOP.withArchived(true));
+        new FindEventCommand(new EventNameContainsKeywordPredicate("Java"), true).execute(model);
+
+        CommandResult result = new FindEventCommand(new EventNameContainsKeywordPredicate("Football"), true)
+                .execute(model);
+
+        assertEquals(List.of(), model.getFilteredEventList());
+        assertEquals(new CommandResult("No matching events found.", false, false, true), result);
+    }
+
+    @Test
+    public void execute_successiveSearches_replaceKeywordAndArchiveScope() {
+        Model model = createModelWithEvents();
+        Event archivedWorkshop = WORKSHOP.withArchived(true);
+        Event archivedConcert = CONCERT.withArchived(true);
+        model.updateEvent(archivedWorkshop);
+        model.updateEvent(archivedConcert);
+
+        new FindEventCommand(new EventNameContainsKeywordPredicate("Java"), true).execute(model);
+        assertEquals(List.of(archivedWorkshop, MEETUP), model.getFilteredEventList());
+
+        new FindEventCommand(new EventNameContainsKeywordPredicate("Java")).execute(model);
+        assertEquals(List.of(MEETUP), model.getFilteredEventList());
+
+        new FindEventCommand(new EventNameContainsKeywordPredicate("Concert"), true).execute(model);
+        assertEquals(List.of(archivedConcert), model.getFilteredEventList());
+    }
+
+    @Test
+    public void equalsAndHashCode_comparePredicateAndArchiveScope() {
+        EventNameContainsKeywordPredicate predicate = new EventNameContainsKeywordPredicate("Java");
+        FindEventCommand command = new FindEventCommand(predicate, true);
+        FindEventCommand sameCommand = new FindEventCommand(new EventNameContainsKeywordPredicate("Java"), true);
+
+        assertEquals(command, command);
+        assertEquals(command, sameCommand);
+        assertEquals(command.hashCode(), sameCommand.hashCode());
+        assertEquals(new FindEventCommand(predicate), new FindEventCommand(predicate, false));
+        assertEquals(new FindEventCommand(predicate).hashCode(), new FindEventCommand(predicate, false).hashCode());
+        assertNotEquals(command, new FindEventCommand(predicate, false));
+        assertNotEquals(command, new FindEventCommand(new EventNameContainsKeywordPredicate("Concert"), true));
+        assertNotEquals(command, null);
+        assertNotEquals(command, "Java");
+    }
+
+    @Test
+    public void constructor_nullPredicate_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new FindEventCommand(null));
+        assertThrows(NullPointerException.class, () -> new FindEventCommand(null, true));
     }
 
     @Test

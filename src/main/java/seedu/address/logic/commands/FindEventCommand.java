@@ -2,6 +2,8 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.Objects;
+
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.event.EventNameContainsKeywordPredicate;
@@ -17,19 +19,28 @@ public class FindEventCommand extends Command {
             + "Example: " + COMMAND_WORD + " Workshop";
 
     private final EventNameContainsKeywordPredicate predicate;
+    private final boolean includeArchived;
 
     /**
-     * Creates a command with the supplied event-name predicate.
+     * Creates a command with the supplied event-name predicate, excluding archived events.
      */
     public FindEventCommand(EventNameContainsKeywordPredicate predicate) {
+        this(predicate, false);
+    }
+
+    /**
+     * Creates a command with the supplied event-name predicate and archive inclusion setting.
+     */
+    public FindEventCommand(EventNameContainsKeywordPredicate predicate, boolean includeArchived) {
         this.predicate = requireNonNull(predicate);
+        this.includeArchived = includeArchived;
     }
 
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
         model.clearParticipantSearch();
-        model.updateFilteredEventList(predicate);
+        model.updateFilteredEventList(predicate, includeArchived);
         if (model.getFilteredEventList().isEmpty()) {
             return new CommandResult(MESSAGE_NO_MATCHES, false, false, true);
         }
@@ -40,11 +51,13 @@ public class FindEventCommand extends Command {
     @Override
     public boolean equals(Object other) {
         return other == this
-                || other instanceof FindEventCommand otherCommand && predicate.equals(otherCommand.predicate);
+                || other instanceof FindEventCommand otherCommand
+                && predicate.equals(otherCommand.predicate)
+                && includeArchived == otherCommand.includeArchived;
     }
 
     @Override
     public int hashCode() {
-        return predicate.hashCode();
+        return Objects.hash(predicate, includeArchived);
     }
 }

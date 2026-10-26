@@ -18,6 +18,16 @@ public class CommandSuccessMessagesTest {
     }
 
     @Test
+    public void forCommand_findEventWithArchives_excludesFlagFromSearchPhrase() {
+        assertEquals("Showing event search results for Workshop...",
+                CommandSuccessMessages.forCommand("find-event Workshop /include-archive"));
+        assertEquals("Showing event search results for Welcome Party...",
+                CommandSuccessMessages.forCommand(" \tfind-event\t Welcome Party \t /include-archive  "));
+        assertEquals("Showing event search results for Java/Kotlin...",
+                CommandSuccessMessages.forCommand("find-event Java/Kotlin /include-archive"));
+    }
+
+    @Test
     public void forCommand_mutations_showSpecificSuccessMessages() {
         Map<String, String> messages = Map.ofEntries(
                 Map.entry("add", "Person added successfully."),

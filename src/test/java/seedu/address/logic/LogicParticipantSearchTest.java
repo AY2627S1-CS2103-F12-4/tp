@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javafx.collections.ObservableList;
+import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
@@ -113,6 +114,51 @@ public class LogicParticipantSearchTest {
         model.addParticipation(other, person);
         assertEquals(List.of(other), logic.getFilteredEventList());
         assertTrue(logic.getParticipantSearchResults().isEmpty());
+    }
+
+    @Test
+    public void execute_findEventArchiveFlag_matchesNamesAndReplacesSearchScope() throws Exception {
+        Event archived = new Event(new EventId("E2"), "Wedding Workshop", 10, "", true);
+        model.addEvent(archived);
+        model.addEvent(new Event(new EventId("E3"), "Concert", 10, "", true));
+        logic.execute("search-participant Michael /event E1");
+
+        CommandResult result = logic.execute("find-event wedding /include-archive");
+
+        assertEquals(List.of(event, archived), logic.getFilteredEventList());
+        assertEquals("2 event(s) listed!", result.getFeedbackToUser());
+        assertTrue(result.isShowEvents());
+        assertTrue(logic.getParticipantSearchResults().isEmpty());
+        assertTrue(logic.getParticipantSearchEvent().isEmpty());
+        assertTrue(logic.getParticipantSearchKeyword().isEmpty());
+
+        model.addParticipation(archived, person);
+        assertEquals(List.of(event, archived), logic.getFilteredEventList());
+        assertTrue(logic.getParticipantSearchResults().isEmpty());
+
+        logic.execute("find-event wedding");
+        assertEquals(List.of(event), logic.getFilteredEventList());
+
+        logic.execute("find-event wedding workshop /include-archive");
+        assertEquals(List.of(archived), logic.getFilteredEventList());
+
+        result = logic.execute("find-event Missing /include-archive");
+        assertTrue(logic.getFilteredEventList().isEmpty());
+        assertEquals("No matching events found.", result.getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_findEventInvalidFlag_preservesParticipantSearch() throws Exception {
+        logic.execute("search-participant Michael /event E1");
+        List<Participation> results = List.copyOf(logic.getParticipantSearchResults());
+
+        assertThrows(ParseException.class, () ->
+                logic.execute("find-event Wedding /include-archive /include-archive"));
+
+        assertEquals(List.of(event), logic.getFilteredEventList());
+        assertEquals(results, logic.getParticipantSearchResults());
+        assertEquals(Optional.of(event), logic.getParticipantSearchEvent());
+        assertEquals(Optional.of("Michael"), logic.getParticipantSearchKeyword());
     }
 
     @Test

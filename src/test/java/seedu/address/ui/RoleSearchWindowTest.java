@@ -168,6 +168,19 @@ public class RoleSearchWindowTest {
                 assertTrue(participants(window).getItems().isEmpty());
                 assertEquals(SELECT_EVENT_PROMPT, heading(window, "searchHeading"));
                 assertEquals("Showing event search results for Workshop...", feedback(window));
+
+                enterCommand(window, "find-event Archived /include-archive");
+                assertEquals(List.of(ARCHIVED), events(window).getItems());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals("Showing event search results for Archived...", feedback(window));
+
+                enterCommand(window, "find-event Missing /include-archive");
+                assertTrue(events(window).getItems().isEmpty());
+                assertEquals("No matching events found.", feedback(window));
+
+                enterCommand(window, "find-event Archived");
+                assertTrue(events(window).getItems().isEmpty());
+                assertEquals("No matching events found.", feedback(window));
             } finally {
                 window.getPrimaryStage().close();
             }

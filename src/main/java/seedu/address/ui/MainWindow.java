@@ -23,6 +23,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteEventCommand;
 import seedu.address.logic.commands.DeleteParticipantCommand;
+import seedu.address.logic.commands.FindEventCommand;
 import seedu.address.logic.commands.ListEventCommand;
 import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.commands.SearchRoleCommand;
@@ -635,6 +636,7 @@ public class MainWindow extends UiPart<Stage> {
 
             resultDisplay.setFeedbackToUser(
                     isParticipantSearchCommand(commandText)
+                            || FindEventCommand.MESSAGE_NO_MATCHES.equals(commandResult.getFeedbackToUser())
                             ? commandResult.getFeedbackToUser()
                             : CommandSuccessMessages.forCommand(
                             commandText));

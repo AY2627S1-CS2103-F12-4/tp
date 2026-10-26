@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.parser.CliSyntax.FLAG_INCLUDE_ARCHIVE;
 
 /** Short status messages shown after commands complete successfully. */
 public final class CommandSuccessMessages {
@@ -24,9 +25,13 @@ public final class CommandSuccessMessages {
             case "edit-event" -> "Event updated successfully.";
             case "del-event" -> "Event deleted successfully.";
             case "list-event" -> "Listing events...";
-            case "find-event" -> commandParts.length > 1
-                    ? "Showing event search results for " + commandParts[1] + "..."
-                    : "Showing event search results...";
+            case "find-event" -> {
+                if (commandParts.length == 1) {
+                    yield "Showing event search results...";
+                }
+                String keyword = commandParts[1].replaceFirst("\\s+" + FLAG_INCLUDE_ARCHIVE + "$", "");
+                yield "Showing event search results for " + keyword + "...";
+            }
             case "view-event" -> "Viewing event...";
             case "add-participant" -> "Participant added successfully.";
             case "edit-participant" -> "Participant updated successfully.";

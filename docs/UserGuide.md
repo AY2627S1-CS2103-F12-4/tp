@@ -154,8 +154,8 @@ events share a name. Missing or invalid IDs produce an error. Archiving an alrea
 archived event, or restoring an active event, also produces an error.
 
 Archived events are hidden by default, including after restarting the app. Add
-`/include-archive` to `list-event`, `search-participant`, or `search-role` to include
-them. `find-event` continues to exclude archived events. Restore an event by ID to
+`/include-archive` to `list-event`, `find-event`, `search-participant`, or `search-role`
+to include them. Restore an event by ID to
 show it in the default list again, subject to the current search filter.
 
 Archived event cards and participant-panel headings show `<archived>` after the
@@ -182,6 +182,36 @@ Examples:
 * `list-event /include-archive` lists all events. Select an event to view all its registrations.
 
 The flag takes no value and can appear only once. Extra arguments produce an error.
+
+### Finding events by name: `find-event`
+
+Finds events whose names contain the supplied keyword or phrase, ignoring letter
+case. A multiword phrase must appear together in the event name, including its
+internal spaces. The search uses the stored name, excluding the `<archived>` display
+suffix.
+
+Format: `find-event KEYWORD [/include-archive]`
+
+Archived events are excluded by default. Add `/include-archive` to search both active
+and archived events. Results still contain only events whose names match the keyword.
+Each new search replaces the previous event filter and archive visibility; omitting
+the flag excludes archives even after a search that included them.
+
+Examples:
+
+* `find-event Workshop` finds nonarchived events with `Workshop` in their names.
+* `find-event workshop /include-archive` also finds archived events with matching names.
+* `find-event Java Workshop /include-archive` searches for the phrase `Java Workshop`
+  in active and archived event names.
+
+The keyword is required. The flag takes no value, can appear only once, and must
+follow the entire keyword or phrase. Unknown options and misplaced flags produce
+an error. With no matches, the events list is empty and the app displays
+`No matching events found.`
+
+This command selects the **Events** tab and clears any participant or role search.
+Archived matching cards retain their `<archived>` indication. Searching preserves
+events and their registrations.
 
 ### Viewing event details: `view-event`
 
@@ -335,7 +365,8 @@ excludes archives unless it includes `/include-archive`.
 Use the **Clear search** button to run `list-event`, clear either search, and show all
 nonarchived events. You can also enter `list-event` directly, or use
 `list-event /include-archive` to clear the search and show all events. `find-event`
-replaces the search with an event-name filter that excludes archives. These commands
+replaces the search with an event-name filter, excluding archives unless
+`/include-archive` is supplied. These commands
 clear the participant rows and search context. Selecting an event after clearing the
 search shows all its registrations.
 
@@ -430,6 +461,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **Archive event** | `archive-event EVENT_ID` |
 | **Restore event** | `unarchive-event EVENT_ID` |
 | **List events** | `list-event [/include-archive]` |
+| **Find events** | `find-event KEYWORD [/include-archive]` |
 | **View event** | `view-event EVENT_ID` |
 | **Add participant** | `add-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |
 | **Edit participant** | `edit-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...` |

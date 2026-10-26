@@ -483,6 +483,17 @@ same archive policy so registration counts and displayed matching events agree.
 persisted, while listing visibility and search context are transient and reset
 when the model is reconstructed.
 
+`find-event KEYWORD [/include-archive]` retains case-insensitive substring matching
+through `EventNameContainsKeywordPredicate`. Its parser removes a single trailing
+archive flag before constructing the predicate, preserving the keyword's internal
+whitespace. Empty keywords, unknown options, duplicate flags, and misplaced flags
+are rejected before changing model state. `FindEventCommand` clears participant
+search and applies the predicate through
+`updateFilteredEventList(predicate, includeArchived)`. The existing constructor
+defaults to excluding archives. Each command replaces the previous keyword and
+archive scope; including archives does not include events that fail the predicate.
+The GUI success message displays the keyword without the archive flag.
+
 
 --------------------------------------------------------------------------------------------------------------------
 

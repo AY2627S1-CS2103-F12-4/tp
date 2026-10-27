@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
@@ -16,10 +17,12 @@ import javafx.event.ActionEvent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
+import seedu.address.logic.commands.FindEventCommand;
 import seedu.address.model.ModelManager;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
@@ -296,6 +299,156 @@ public class ParticipantSearchSelectionTest {
     }
 
     @Test
+    public void findEvent_afterEventSelection_clearsPanelAndReselectionAllowsParticipantUpdates() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow(createModel());
+            try {
+                tabs(window).getSelectionModel().select(1);
+                events(window).getSelectionModel().select(0);
+                assertSelection(window, "E1", "P1", "P2");
+
+                enterCommand(window, " \tfind-event\t Wedding  ");
+
+                assertEquals(List.of("E1"), eventIds(window));
+                assertParticipantPanelCleared(window);
+                enterCommand(window, "list");
+                assertParticipantPanelCleared(window);
+
+                events(window).getSelectionModel().select(0);
+                assertSelection(window, "E1", "P1", "P2");
+                enterCommand(window, "edit-participant E1 P1 /role Host");
+                assertSelection(window, "E1", "P1", "P2");
+                assertEquals(Set.of(new ParticipationRole("Host")),
+                        participants(window).getItems().getFirst().getRoles());
+                enterCommand(window, "mark-participant E1 P1");
+                assertSelection(window, "E1", "P1", "P2");
+                assertTrue(participants(window).getItems().getFirst().isPresent());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void findEvent_includeArchived_clearsSelectedArchivedEventUntilReselected() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow(createModel());
+            try {
+                enterCommand(window, "list-event /include-archive");
+                events(window).getSelectionModel().select(2);
+                assertSelection(window, "E3", "P1");
+
+                enterCommand(window, "find-event Archived /include-archive");
+
+                assertEquals(List.of("E3"), eventIds(window));
+                assertParticipantPanelCleared(window);
+                events(window).getSelectionModel().select(0);
+                assertSelection(window, "E3", "P1");
+                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Participants", heading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void findEvent_noMatches_clearsEventSelectionRowsAndHeadings() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow(createModel());
+            try {
+                for (String command : List.of("find-event Missing", "find-event Missing /include-archive")) {
+                    enterCommand(window, "list-event");
+                    enterCommand(window, "list-participants E1");
+                    assertSelection(window, "E1", "P1", "P2");
+
+                    enterCommand(window, command);
+
+                    assertTrue(events(window).getItems().isEmpty());
+                    assertParticipantPanelCleared(window);
+                    assertEquals(FindEventCommand.MESSAGE_NO_MATCHES, feedback(window));
+                }
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void findEvent_afterParticipantOrRoleSearch_clearsSearchAndReselectionShowsAllRegistrations()
+            throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                for (String search : List.of("search-participant John /event E2 /include-archive",
+                        "search-role Guest /event E2 /include-archive")) {
+                    enterCommand(window, search);
+                    assertTrue(model.getParticipantSearchKeyword().isPresent());
+                    assertTrue(model.isParticipantSearchIncludingArchived());
+                    assertEquals("E2", events(window).getSelectionModel().getSelectedItem().getId());
+                    assertTrue(heading(window, "searchHeading").startsWith("Matching"));
+
+                    enterCommand(window, "find-event Reception");
+
+                    assertEquals(List.of("E2"), eventIds(window));
+                    assertParticipantPanelCleared(window);
+                    assertTrue(model.getParticipantSearchKeyword().isEmpty());
+                    assertTrue(model.getParticipantSearchEvent().isEmpty());
+                    assertTrue(model.getParticipantSearchResults().isEmpty());
+                    assertFalse(model.isParticipantSearchIncludingArchived());
+                    events(window).getSelectionModel().select(0);
+                    assertSelection(window, "E2", "P1", "P3");
+                    assertEquals("Participants", heading(window, "searchHeading"));
+                }
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void invalidFindEvent_preservesEventSelectionRowsSearchContextAndSelectedTab() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                for (String context : List.of("list-participants E2",
+                        "search-participant John /event E2 /include-archive",
+                        "search-role Guest /event E2 /include-archive")) {
+                    enterCommand(window, context);
+                    tabs(window).getSelectionModel().select(0);
+                    List<String> previousEventIds = eventIds(window);
+                    List<Participation> previousRows = List.copyOf(participants(window).getItems());
+                    String previousEventHeading = heading(window, "eventHeading");
+                    String previousSearchHeading = heading(window, "searchHeading");
+                    String previousKeyword = model.getParticipantSearchKeyword().orElse("");
+                    String previousScope = model.getParticipantSearchEvent().map(Event::getId).orElse("");
+                    boolean previouslyIncludedArchived = model.isParticipantSearchIncludingArchived();
+
+                    for (String invalid : List.of("find-event",
+                            "find-event Reception /include-archive /include-archive")) {
+                        enterCommand(window, invalid);
+
+                        assertTrue(feedback(window).contains(FindEventCommand.MESSAGE_USAGE));
+                        assertEquals("People", tabs(window).getSelectionModel().getSelectedItem().getText());
+                        assertEquals(previousEventIds, eventIds(window));
+                        assertEquals("E2", events(window).getSelectionModel().getSelectedItem().getId());
+                        assertEquals(previousRows, participants(window).getItems());
+                        assertEquals(previousEventHeading, heading(window, "eventHeading"));
+                        assertEquals(previousSearchHeading, heading(window, "searchHeading"));
+                        assertEquals(previousKeyword, model.getParticipantSearchKeyword().orElse(""));
+                        assertEquals(previousScope, model.getParticipantSearchEvent().map(Event::getId).orElse(""));
+                        assertEquals(previouslyIncludedArchived, model.isParticipantSearchIncludingArchived());
+                    }
+                }
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
     public void resetCommands_restoreOrdinaryEventSelectionAndDoNotReviveSearch() throws Exception {
         runOnFxThread(() -> {
             ModelManager model = createModel();
@@ -562,6 +715,17 @@ public class ParticipantSearchSelectionTest {
         List<Participation> displayed = participants(window).getItems();
         assertEquals(List.of(personIds), displayed.stream().map(row -> row.getPerson().getId().toString()).toList());
         assertTrue(displayed.stream().allMatch(row -> row.getEvent().getId().equals(eventId)));
+    }
+
+    private void assertParticipantPanelCleared(MainWindow window) {
+        assertNull(events(window).getSelectionModel().getSelectedItem());
+        assertTrue(participants(window).getItems().isEmpty());
+        assertEquals("Participants", heading(window, "eventHeading"));
+        assertEquals("Select an event to view its participants.", heading(window, "searchHeading"));
+    }
+
+    private String feedback(MainWindow window) {
+        return ((TextArea) window.getPrimaryStage().getScene().lookup("#resultDisplay")).getText();
     }
 
     private String heading(MainWindow window, String id) {

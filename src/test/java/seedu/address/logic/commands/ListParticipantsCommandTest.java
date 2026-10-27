@@ -107,8 +107,8 @@ public class ListParticipantsCommandTest {
                                     .execute(testModel);
 
                     assertEquals(expected, result.getFeedbackToUser());
-                    assertTrue(result.isShowParticipants());
-                    assertFalse(result.isShowEvents());
+                    assertTrue(result.shouldShowParticipants());
+                    assertFalse(result.shouldShowEvents());
                     assertEquals(
                             EVENT_ID.toString(),
                             testModel.getSelectedEvent()
@@ -180,7 +180,7 @@ public class ListParticipantsCommandTest {
                         + "（Tags:None）",
                 result.getFeedbackToUser());
 
-        assertTrue(result.isShowParticipants());
+        assertTrue(result.shouldShowParticipants());
         assertEquals(
                 EVENT_ID.toString(),
                 model.getSelectedEvent().orElseThrow().getId());
@@ -216,8 +216,8 @@ public class ListParticipantsCommandTest {
         assertTrue(feedback.contains("P2"));
         assertTrue(feedback.contains("Bob Lim"));
 
-        assertTrue(result.isShowParticipants());
-        assertFalse(result.isShowEvents());
+        assertTrue(result.shouldShowParticipants());
+        assertFalse(result.shouldShowEvents());
         assertEquals(
                 EVENT_ID.toString(),
                 model.getSelectedEvent().orElseThrow().getId());
@@ -234,8 +234,8 @@ public class ListParticipantsCommandTest {
         assertEquals(
                 "No participants found in Workshop.",
                 result.getFeedbackToUser());
-        assertTrue(result.isShowParticipants());
-        assertFalse(result.isShowEvents());
+        assertTrue(result.shouldShowParticipants());
+        assertFalse(result.shouldShowEvents());
         assertEquals(
                 EVENT_ID.toString(),
                 model.getSelectedEvent().orElseThrow().getId());

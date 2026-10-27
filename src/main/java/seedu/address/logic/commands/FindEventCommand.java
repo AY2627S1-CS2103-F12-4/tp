@@ -20,7 +20,7 @@ public class FindEventCommand extends Command {
             + "Example: " + COMMAND_WORD + " Workshop /include-archive";
 
     private final EventNameContainsKeywordPredicate predicate;
-    private final boolean includeArchived;
+    private final boolean shouldIncludeArchived;
 
     /**
      * Creates a command with the supplied event-name predicate, excluding archived events.
@@ -32,16 +32,16 @@ public class FindEventCommand extends Command {
     /**
      * Creates a command with the supplied event-name predicate and archive inclusion setting.
      */
-    public FindEventCommand(EventNameContainsKeywordPredicate predicate, boolean includeArchived) {
+    public FindEventCommand(EventNameContainsKeywordPredicate predicate, boolean shouldIncludeArchived) {
         this.predicate = requireNonNull(predicate);
-        this.includeArchived = includeArchived;
+        this.shouldIncludeArchived = shouldIncludeArchived;
     }
 
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
         model.clearParticipantSearch();
-        model.updateFilteredEventList(predicate, includeArchived);
+        model.updateFilteredEventList(predicate, shouldIncludeArchived);
         if (model.getFilteredEventList().isEmpty()) {
             return new CommandResult(MESSAGE_NO_MATCHES, false, false, true);
         }
@@ -54,11 +54,11 @@ public class FindEventCommand extends Command {
         return other == this
                 || other instanceof FindEventCommand otherCommand
                 && predicate.equals(otherCommand.predicate)
-                && includeArchived == otherCommand.includeArchived;
+                && shouldIncludeArchived == otherCommand.shouldIncludeArchived;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(predicate, includeArchived);
+        return Objects.hash(predicate, shouldIncludeArchived);
     }
 }

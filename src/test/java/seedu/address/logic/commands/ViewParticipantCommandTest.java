@@ -72,8 +72,8 @@ public class ViewParticipantCommandTest {
         assertTrue(feedback.contains(ALICE.getAddress().toString()));
         assertTrue(feedback.contains("Present: No"));
 
-        assertTrue(result.isShowParticipants());
-        assertFalse(result.isShowEvents());
+        assertTrue(result.shouldShowParticipants());
+        assertFalse(result.shouldShowEvents());
         assertEquals(
                 EVENT_ID.toString(),
                 model.getSelectedEvent().orElseThrow().getId());

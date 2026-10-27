@@ -641,7 +641,7 @@ public class MainWindow extends UiPart<Stage> {
                             : CommandSuccessMessages.forCommand(
                             commandText));
 
-            if (commandResult.isShowParticipants()) {
+            if (commandResult.shouldShowParticipants()) {
                 showCommandSelectedEvent();
             } else {
                 updateParticipantPanel(commandText);
@@ -650,20 +650,20 @@ public class MainWindow extends UiPart<Stage> {
             actionBar.setClearSearchVisible(
                     logic.getParticipantSearchKeyword().isPresent());
 
-            if (commandResult.isShowPeople()) {
+            if (commandResult.shouldShowPeople()) {
                 listTabs.getSelectionModel().select(peopleTab);
             }
 
-            if (commandResult.isShowParticipants()
-                    || commandResult.isShowEvents()) {
+            if (commandResult.shouldShowParticipants()
+                    || commandResult.shouldShowEvents()) {
                 listTabs.getSelectionModel().select(eventsTab);
             }
 
-            if (commandResult.isShowHelp()) {
+            if (commandResult.shouldShowHelp()) {
                 handleHelp();
             }
 
-            if (commandResult.isExit()) {
+            if (commandResult.shouldExit()) {
                 handleExit();
             }
 

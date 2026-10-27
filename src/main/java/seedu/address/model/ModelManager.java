@@ -313,8 +313,8 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public void updateParticipantSearch(EventId eventId, String keyword, boolean includeArchived) {
-        applyParticipantSearch(eventId, keyword, ParticipantSearchType.NAME, includeArchived);
+    public void updateParticipantSearch(EventId eventId, String keyword, boolean shouldIncludeArchived) {
+        applyParticipantSearch(eventId, keyword, ParticipantSearchType.NAME, shouldIncludeArchived);
     }
 
     @Override
@@ -323,8 +323,9 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public void updateParticipantSearch(String keyword, boolean includeArchived) {
-        applyParticipantSearch(eventList.getEvents(), null, keyword, ParticipantSearchType.NAME, includeArchived);
+    public void updateParticipantSearch(String keyword, boolean shouldIncludeArchived) {
+        applyParticipantSearch(eventList.getEvents(), null, keyword, ParticipantSearchType.NAME,
+                shouldIncludeArchived);
     }
 
     @Override
@@ -333,8 +334,8 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public void updateParticipantRoleSearch(EventId eventId, String keyword, boolean includeArchived) {
-        applyParticipantSearch(eventId, keyword, ParticipantSearchType.ROLE, includeArchived);
+    public void updateParticipantRoleSearch(EventId eventId, String keyword, boolean shouldIncludeArchived) {
+        applyParticipantSearch(eventId, keyword, ParticipantSearchType.ROLE, shouldIncludeArchived);
     }
 
     @Override
@@ -343,27 +344,28 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public void updateParticipantRoleSearch(String keyword, boolean includeArchived) {
-        applyParticipantSearch(eventList.getEvents(), null, keyword, ParticipantSearchType.ROLE, includeArchived);
+    public void updateParticipantRoleSearch(String keyword, boolean shouldIncludeArchived) {
+        applyParticipantSearch(eventList.getEvents(), null, keyword, ParticipantSearchType.ROLE,
+                shouldIncludeArchived);
     }
 
     private void applyParticipantSearch(EventId eventId, String keyword, ParticipantSearchType searchType,
-            boolean includeArchived) {
+            boolean shouldIncludeArchived) {
         requireAllNonNull(eventId, keyword);
         // Resolve archived scopes too, so nonexistent IDs fail before changing the previous search.
         Event event = eventList.getEventFromId(eventId.toString());
-        applyParticipantSearch(List.of(event), eventId, keyword, searchType, includeArchived);
+        applyParticipantSearch(List.of(event), eventId, keyword, searchType, shouldIncludeArchived);
     }
 
     private void applyParticipantSearch(List<Event> events, EventId eventId, String keyword,
-            ParticipantSearchType searchType, boolean includeArchived) {
+            ParticipantSearchType searchType, boolean shouldIncludeArchived) {
         String normalizedKeyword = StringUtil.normalizeWhitespace(keyword);
         Predicate<Participation> predicate = switch (searchType) {
             case NAME -> new ParticipantNameContainsKeywordPredicate(normalizedKeyword);
             case ROLE -> new ParticipationRoleContainsKeywordPredicate(normalizedKeyword);
         };
         List<Participation> matches = events.stream()
-                .filter(event -> includeArchived || !event.isArchived())
+                .filter(event -> shouldIncludeArchived || !event.isArchived())
                 .flatMap(event -> getParticipationsForEvent(event).stream()
                         .filter(predicate)
                         .sorted(Comparator.comparing(participation -> participation.getPerson().getId().toString())))
@@ -374,9 +376,9 @@ public class ModelManager implements Model {
         participantSearchType = searchType;
         participantSearchEventId = eventId;
         participantSearchKeyword = normalizedKeyword;
-        participantSearchIncludesArchived = includeArchived;
+        participantSearchIncludesArchived = shouldIncludeArchived;
         // Publish the search context and event filter before notifying result observers.
-        updateFilteredEventList(event -> matchingEventIds.contains(event.getId()), includeArchived);
+        updateFilteredEventList(event -> matchingEventIds.contains(event.getId()), shouldIncludeArchived);
         participantSearchResults.setAll(matches);
     }
 
@@ -386,12 +388,12 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public void showEvents(boolean includeArchived) {
+    public void showEvents(boolean shouldIncludeArchived) {
         participantSearchType = null;
         participantSearchEventId = null;
         participantSearchKeyword = null;
         participantSearchIncludesArchived = false;
-        updateFilteredEventList(event -> true, includeArchived);
+        updateFilteredEventList(event -> true, shouldIncludeArchived);
         participantSearchResults.clear();
     }
 
@@ -547,9 +549,9 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public void updateFilteredEventList(Predicate<Event> predicate, boolean includeArchived) {
+    public void updateFilteredEventList(Predicate<Event> predicate, boolean shouldIncludeArchived) {
         requireNonNull(predicate);
-        filteredEvents.setPredicate(event -> (includeArchived || !event.isArchived()) && predicate.test(event));
+        filteredEvents.setPredicate(event -> (shouldIncludeArchived || !event.isArchived()) && predicate.test(event));
     }
 
     @Override

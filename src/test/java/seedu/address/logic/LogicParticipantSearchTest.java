@@ -127,7 +127,7 @@ public class LogicParticipantSearchTest {
 
         assertEquals(List.of(event, archived), logic.getFilteredEventList());
         assertEquals("2 event(s) listed!", result.getFeedbackToUser());
-        assertTrue(result.isShowEvents());
+        assertTrue(result.shouldShowEvents());
         assertTrue(logic.getParticipantSearchResults().isEmpty());
         assertTrue(logic.getParticipantSearchEvent().isEmpty());
         assertTrue(logic.getParticipantSearchKeyword().isEmpty());

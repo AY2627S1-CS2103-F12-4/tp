@@ -162,7 +162,7 @@ public interface Model {
      * Uses the same matching and validation as {@link #updateParticipantSearch(EventId, String)}.
      * Invalid input preserves the previous search; refreshes retain the requested archive visibility.
      */
-    void updateParticipantSearch(EventId eventId, String keyword, boolean includeArchived);
+    void updateParticipantSearch(EventId eventId, String keyword, boolean shouldIncludeArchived);
 
     /**
      * Searches all nonarchived events for a nonblank name phrase, replacing previous display filters.
@@ -175,7 +175,7 @@ public interface Model {
      * Uses the same matching and validation as {@link #updateParticipantSearch(String)}.
      * Invalid input preserves the previous search; refreshes retain the requested archive visibility.
      */
-    void updateParticipantSearch(String keyword, boolean includeArchived);
+    void updateParticipantSearch(String keyword, boolean shouldIncludeArchived);
 
     /**
      * Searches roles across all nonarchived events and filters events to those with matching registrations.
@@ -193,7 +193,7 @@ public interface Model {
      * Uses the same matching and validation as {@link #updateParticipantRoleSearch(String)}.
      * Invalid input preserves the previous search; refreshes retain the requested archive visibility.
      */
-    void updateParticipantRoleSearch(String keyword, boolean includeArchived);
+    void updateParticipantRoleSearch(String keyword, boolean shouldIncludeArchived);
 
     /**
      * Searches roles within the event identified by its stable ID, independently of existing display filters.
@@ -212,7 +212,7 @@ public interface Model {
      * Uses the same matching and validation as {@link #updateParticipantRoleSearch(EventId, String)}.
      * Invalid input preserves the previous search; refreshes retain the requested archive visibility.
      */
-    void updateParticipantRoleSearch(EventId eventId, String keyword, boolean includeArchived);
+    void updateParticipantRoleSearch(EventId eventId, String keyword, boolean shouldIncludeArchived);
 
     /** Clears search context and results and restores the ordinary nonarchived event list. */
     void clearParticipantSearch();
@@ -221,7 +221,7 @@ public interface Model {
      * Clears search context and results and lists events with the requested archive visibility.
      * Replaces any event filter without changing stored data, the person filter, or the selected event.
      */
-    void showEvents(boolean includeArchived);
+    void showEvents(boolean shouldIncludeArchived);
 
     /**
      * Returns live, unmodifiable results in event insertion order, then lexicographic person-ID order.
@@ -322,6 +322,6 @@ public interface Model {
      * Replaces the event filter and includes archived events when requested.
      * Rejects a null predicate without changing the current view.
      */
-    void updateFilteredEventList(Predicate<Event> predicate, boolean includeArchived);
+    void updateFilteredEventList(Predicate<Event> predicate, boolean shouldIncludeArchived);
 
 }

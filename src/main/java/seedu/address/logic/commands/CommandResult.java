@@ -14,28 +14,28 @@ public class CommandResult {
     private final String feedbackToUser;
 
     /** Help information should be shown to the user. */
-    private final boolean showHelp;
+    private final boolean shouldShowHelp;
 
     /** The application should exit. */
-    private final boolean exit;
+    private final boolean shouldExit;
 
     /** The event list should be shown to the user. */
-    private final boolean showEvents;
+    private final boolean shouldShowEvents;
 
     /** The participant results should be shown to the user. */
-    private final boolean showParticipants;
+    private final boolean shouldShowParticipants;
 
     /** The people list should be shown to the user. */
-    private final boolean showPeople;
+    private final boolean shouldShowPeople;
 
     /**
      * Constructs a result with help and exit instructions.
      */
     public CommandResult(
             String feedbackToUser,
-            boolean showHelp,
-            boolean exit) {
-        this(feedbackToUser, showHelp, exit, false);
+            boolean shouldShowHelp,
+            boolean shouldExit) {
+        this(feedbackToUser, shouldShowHelp, shouldExit, false);
     }
 
     /**
@@ -43,14 +43,14 @@ public class CommandResult {
      */
     public CommandResult(
             String feedbackToUser,
-            boolean showHelp,
-            boolean exit,
-            boolean showEvents) {
+            boolean shouldShowHelp,
+            boolean shouldExit,
+            boolean shouldShowEvents) {
         this(
                 feedbackToUser,
-                showHelp,
-                exit,
-                showEvents,
+                shouldShowHelp,
+                shouldExit,
+                shouldShowEvents,
                 false);
     }
 
@@ -59,16 +59,16 @@ public class CommandResult {
      */
     public CommandResult(
             String feedbackToUser,
-            boolean showHelp,
-            boolean exit,
-            boolean showEvents,
-            boolean showParticipants) {
+            boolean shouldShowHelp,
+            boolean shouldExit,
+            boolean shouldShowEvents,
+            boolean shouldShowParticipants) {
         this(
                 feedbackToUser,
-                showHelp,
-                exit,
-                showEvents,
-                showParticipants,
+                shouldShowHelp,
+                shouldExit,
+                shouldShowEvents,
+                shouldShowParticipants,
                 false);
     }
 
@@ -77,17 +77,17 @@ public class CommandResult {
      */
     public CommandResult(
             String feedbackToUser,
-            boolean showHelp,
-            boolean exit,
-            boolean showEvents,
-            boolean showParticipants,
-            boolean showPeople) {
+            boolean shouldShowHelp,
+            boolean shouldExit,
+            boolean shouldShowEvents,
+            boolean shouldShowParticipants,
+            boolean shouldShowPeople) {
         this.feedbackToUser = requireNonNull(feedbackToUser);
-        this.showHelp = showHelp;
-        this.exit = exit;
-        this.showEvents = showEvents;
-        this.showParticipants = showParticipants;
-        this.showPeople = showPeople;
+        this.shouldShowHelp = shouldShowHelp;
+        this.shouldExit = shouldExit;
+        this.shouldShowEvents = shouldShowEvents;
+        this.shouldShowParticipants = shouldShowParticipants;
+        this.shouldShowPeople = shouldShowPeople;
     }
 
     /**
@@ -101,24 +101,29 @@ public class CommandResult {
         return feedbackToUser;
     }
 
-    public boolean isShowHelp() {
-        return showHelp;
+    /** Returns whether help information should be shown. */
+    public boolean shouldShowHelp() {
+        return shouldShowHelp;
     }
 
-    public boolean isExit() {
-        return exit;
+    /** Returns whether the application should exit. */
+    public boolean shouldExit() {
+        return shouldExit;
     }
 
-    public boolean isShowEvents() {
-        return showEvents;
+    /** Returns whether the event list should be shown. */
+    public boolean shouldShowEvents() {
+        return shouldShowEvents;
     }
 
-    public boolean isShowParticipants() {
-        return showParticipants;
+    /** Returns whether participant results should be shown. */
+    public boolean shouldShowParticipants() {
+        return shouldShowParticipants;
     }
 
-    public boolean isShowPeople() {
-        return showPeople;
+    /** Returns whether the people list should be shown. */
+    public boolean shouldShowPeople() {
+        return shouldShowPeople;
     }
 
     @Override
@@ -133,34 +138,33 @@ public class CommandResult {
 
         return feedbackToUser.equals(
                 otherCommandResult.feedbackToUser)
-                && showHelp == otherCommandResult.showHelp
-                && exit == otherCommandResult.exit
-                && showEvents == otherCommandResult.showEvents
-                && showParticipants
-                == otherCommandResult.showParticipants
-                && showPeople == otherCommandResult.showPeople;
+                && shouldShowHelp == otherCommandResult.shouldShowHelp
+                && shouldExit == otherCommandResult.shouldExit
+                && shouldShowEvents == otherCommandResult.shouldShowEvents
+                && shouldShowParticipants == otherCommandResult.shouldShowParticipants
+                && shouldShowPeople == otherCommandResult.shouldShowPeople;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
                 feedbackToUser,
-                showHelp,
-                exit,
-                showEvents,
-                showParticipants,
-                showPeople);
+                shouldShowHelp,
+                shouldExit,
+                shouldShowEvents,
+                shouldShowParticipants,
+                shouldShowPeople);
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this)
                 .add("feedbackToUser", feedbackToUser)
-                .add("showHelp", showHelp)
-                .add("exit", exit)
-                .add("showEvents", showEvents)
-                .add("showParticipants", showParticipants)
-                .add("showPeople", showPeople)
+                .add("shouldShowHelp", shouldShowHelp)
+                .add("shouldExit", shouldExit)
+                .add("shouldShowEvents", shouldShowEvents)
+                .add("shouldShowParticipants", shouldShowParticipants)
+                .add("shouldShowPeople", shouldShowPeople)
                 .toString();
     }
 }

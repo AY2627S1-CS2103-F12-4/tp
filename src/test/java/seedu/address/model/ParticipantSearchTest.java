@@ -494,30 +494,31 @@ public class ParticipantSearchTest {
 
     @Test
     public void search_invalidInput_preservesPreviousArchiveVisibility() {
-        for (boolean includeArchived : List.of(false, true)) {
+        for (boolean shouldIncludeArchived : List.of(false, true)) {
             model = createModel();
             model.updateEvent(FIRST_EVENT.withArchived(true));
-            model.updateParticipantSearch("Michael", includeArchived);
+            model.updateParticipantSearch("Michael", shouldIncludeArchived);
             List<Participation> before = List.copyOf(model.getParticipantSearchResults());
 
             assertThrows(EventNotFoundException.class, () ->
-                    model.updateParticipantSearch(new EventId("E99"), "Michael", !includeArchived));
+                    model.updateParticipantSearch(new EventId("E99"), "Michael", !shouldIncludeArchived));
             assertThrows(IllegalArgumentException.class, () ->
-                    model.updateParticipantSearch("\u2003", !includeArchived));
+                    model.updateParticipantSearch("\u2003", !shouldIncludeArchived));
             assertThrows(IllegalArgumentException.class, () ->
-                    model.updateParticipantSearch(FIRST_EVENT_ID, " ", !includeArchived));
+                    model.updateParticipantSearch(FIRST_EVENT_ID, " ", !shouldIncludeArchived));
             assertThrows(NullPointerException.class, () ->
-                    model.updateParticipantSearch(null, "Michael", !includeArchived));
+                    model.updateParticipantSearch(null, "Michael", !shouldIncludeArchived));
             assertThrows(NullPointerException.class, () ->
-                    model.updateParticipantSearch(FIRST_EVENT_ID, null, !includeArchived));
-            assertThrows(NullPointerException.class, () -> model.updateParticipantSearch(null, !includeArchived));
+                    model.updateParticipantSearch(FIRST_EVENT_ID, null, !shouldIncludeArchived));
+            assertThrows(NullPointerException.class, () -> model.updateParticipantSearch(
+                    null, !shouldIncludeArchived));
             assertEquals(before, model.getParticipantSearchResults());
             assertEquals(Optional.of("Michael"), model.getParticipantSearchKeyword());
             assertTrue(model.getParticipantSearchEvent().isEmpty());
 
             model.removeParticipation(FIRST_EVENT, MICHAELA);
-            assertEquals(includeArchived ? List.of("P1") : List.of(), resultIds());
-            assertEquals(includeArchived ? List.of(FIRST_EVENT.withArchived(true)) : List.of(),
+            assertEquals(shouldIncludeArchived ? List.of("P1") : List.of(), resultIds());
+            assertEquals(shouldIncludeArchived ? List.of(FIRST_EVENT.withArchived(true)) : List.of(),
                     model.getFilteredEventList());
         }
     }
@@ -565,18 +566,18 @@ public class ParticipantSearchTest {
 
     @Test
     public void searchObservers_archiveVisibility_isPublishedBeforeResultsAndClearedWithSearch() {
-        for (boolean includeArchived : List.of(false, true)) {
+        for (boolean shouldIncludeArchived : List.of(false, true)) {
             model = createModel();
             AtomicInteger changes = new AtomicInteger();
             ListChangeListener<Participation> listener = change -> {
                 changes.incrementAndGet();
-                assertEquals(includeArchived, model.isParticipantSearchIncludingArchived());
+                assertEquals(shouldIncludeArchived, model.isParticipantSearchIncludingArchived());
                 assertEquals(Optional.of("Michael"), model.getParticipantSearchKeyword());
                 assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
             };
             model.getParticipantSearchResults().addListener(listener);
 
-            model.updateParticipantSearch("Michael", includeArchived);
+            model.updateParticipantSearch("Michael", shouldIncludeArchived);
 
             assertTrue(changes.get() > 0);
             model.getParticipantSearchResults().removeListener(listener);

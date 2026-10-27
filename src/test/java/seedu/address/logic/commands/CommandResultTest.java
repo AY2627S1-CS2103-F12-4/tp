@@ -101,16 +101,16 @@ public class CommandResultTest {
                 CommandResult.class.getCanonicalName()
                         + "{feedbackToUser="
                         + commandResult.getFeedbackToUser()
-                        + ", showHelp="
-                        + commandResult.isShowHelp()
-                        + ", exit="
-                        + commandResult.isExit()
-                        + ", showEvents="
-                        + commandResult.isShowEvents()
-                        + ", showParticipants="
-                        + commandResult.isShowParticipants()
-                        + ", showPeople="
-                        + commandResult.isShowPeople()
+                        + ", shouldShowHelp="
+                        + commandResult.shouldShowHelp()
+                        + ", shouldExit="
+                        + commandResult.shouldExit()
+                        + ", shouldShowEvents="
+                        + commandResult.shouldShowEvents()
+                        + ", shouldShowParticipants="
+                        + commandResult.shouldShowParticipants()
+                        + ", shouldShowPeople="
+                        + commandResult.shouldShowPeople()
                         + "}";
 
         assertEquals(expected, commandResult.toString());
@@ -125,9 +125,9 @@ public class CommandResultTest {
                         false,
                         true);
 
-        assertTrue(eventResult.isShowEvents());
-        assertFalse(eventResult.isShowParticipants());
-        assertFalse(eventResult.isShowPeople());
+        assertTrue(eventResult.shouldShowEvents());
+        assertFalse(eventResult.shouldShowParticipants());
+        assertFalse(eventResult.shouldShowPeople());
         assertNotEquals(
                 new CommandResult("feedback"),
                 eventResult);
@@ -158,11 +158,11 @@ public class CommandResultTest {
                         false,
                         true);
 
-        assertTrue(result.isShowParticipants());
-        assertFalse(result.isShowEvents());
-        assertFalse(result.isShowPeople());
-        assertFalse(result.isShowHelp());
-        assertFalse(result.isExit());
+        assertTrue(result.shouldShowParticipants());
+        assertFalse(result.shouldShowEvents());
+        assertFalse(result.shouldShowPeople());
+        assertFalse(result.shouldShowHelp());
+        assertFalse(result.shouldExit());
         assertEquals(result, copy);
         assertEquals(result.hashCode(), copy.hashCode());
         assertNotEquals(
@@ -190,11 +190,11 @@ public class CommandResultTest {
                         false,
                         true);
 
-        assertTrue(result.isShowPeople());
-        assertFalse(result.isShowEvents());
-        assertFalse(result.isShowParticipants());
-        assertFalse(result.isShowHelp());
-        assertFalse(result.isExit());
+        assertTrue(result.shouldShowPeople());
+        assertFalse(result.shouldShowEvents());
+        assertFalse(result.shouldShowParticipants());
+        assertFalse(result.shouldShowHelp());
+        assertFalse(result.shouldExit());
         assertEquals(result, copy);
         assertEquals(result.hashCode(), copy.hashCode());
         assertNotEquals(

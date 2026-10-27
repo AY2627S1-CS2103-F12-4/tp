@@ -19,6 +19,7 @@ hs_err_pid[0-9]*.log
 
 # Test sandbox files
 src/test/data/sandbox/
+/alpha-test-results/
 
 # MacOS custom attributes files created by Finder
 .DS_Store

@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -22,9 +24,13 @@ import javafx.stage.Stage;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
 import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
+import seedu.address.model.mapper.Participation;
+import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.person.Person;
+import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonParticipationStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -86,6 +92,104 @@ public class ParticipantSearchWindowTest {
                     assertEquals("Listing events...", feedback(window));
                     assertEquals(1, events(window).getItems().size());
                     assertTrue(participants(window).getItems().isEmpty());
+                }
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void listParticipants_targetOutsideNameSearch_resetsSearchAndDisplaysRegistrations() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager(SampleDataUtil.getSampleAddressBook(), new UserPrefs());
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, "add-event Main /cap 10 /desc Main event");
+                enterCommand(window, "add-event Other /cap 10 /desc Other event");
+                enterCommand(window, "add-participant E1 P1 /role Host");
+                enterCommand(window, "add-participant E2 P1 /role Speaker");
+                enterCommand(window, "search-participant Alex /event E1");
+                assertEquals(List.of("E1"), events(window).getItems().stream().map(Event::getId).toList());
+                Button clearSearchButton = (Button) window.getPrimaryStage().getScene().lookup("#clearSearchButton");
+                assertTrue(clearSearchButton.isVisible());
+
+                tabs(window).getSelectionModel().select(0);
+                enterCommand(window, "list-participants E2");
+
+                assertEquals("Events", selectedTabName(window));
+                assertEquals(List.of("E1", "E2"), events(window).getItems().stream().map(Event::getId).toList());
+                assertEquals("E2", events(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Other (E2)", heading(window, "eventHeading"));
+                assertEquals("Participants", heading(window, "searchHeading"));
+                assertEquals(1, participants(window).getItems().size());
+                Participation displayed = participants(window).getItems().getFirst();
+                assertEquals("E2", displayed.getEvent().getId());
+                assertEquals("P1", displayed.getPerson().getId().toString());
+                assertEquals("Alex Yeoh", displayed.getPerson().getName().fullName);
+                assertEquals(Set.of(new ParticipationRole("Speaker")), displayed.getRoles());
+                assertEquals("Listing participants...", feedback(window));
+                assertFalse(clearSearchButton.isVisible());
+                assertFalse(clearSearchButton.isManaged());
+
+                enterCommand(window, "edit-participant E2 P1 /role Guest");
+                assertEquals("E2", events(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Participants", heading(window, "searchHeading"));
+                assertEquals(Set.of(new ParticipationRole("Guest")),
+                        participants(window).getItems().getFirst().getRoles());
+                assertFalse(clearSearchButton.isVisible());
+
+                enterCommand(window, "search-participant Alex /event E1");
+                assertEquals(List.of("E1"), events(window).getItems().stream().map(Event::getId).toList());
+                assertEquals("E1", events(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Matching \"Alex\"", heading(window, "searchHeading"));
+                assertEquals(1, participants(window).getItems().size());
+                assertEquals("E1", participants(window).getItems().getFirst().getEvent().getId());
+                assertTrue(clearSearchButton.isVisible());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void listParticipants_afterEmptySearch_displaysEmptyAndArchivedTargets() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "add-event Empty /cap 10 /desc No registrations");
+                enterCommand(window, "add-event Archived /cap 10 /desc Archived event");
+                enterCommand(window, "add-participant E3 P1 /role Host");
+                enterCommand(window, "archive-event E3");
+                assertEquals(List.of("E1", "E2"), events(window).getItems().stream().map(Event::getId).toList());
+
+                for (String target : List.of("E2", "E3")) {
+                    enterCommand(window, "search-participant Missing /event E1");
+                    assertTrue(events(window).getItems().isEmpty());
+
+                    enterCommand(window, "list-participants " + target);
+
+                    assertEquals("Events", selectedTabName(window));
+                    assertEquals(target, events(window).getSelectionModel().getSelectedItem().getId());
+                    assertEquals("Participants", heading(window, "searchHeading"));
+                    Button clearSearchButton = (Button) window.getPrimaryStage()
+                            .getScene().lookup("#clearSearchButton");
+                    assertFalse(clearSearchButton.isVisible());
+                    assertFalse(clearSearchButton.isManaged());
+                    if (target.equals("E2")) {
+                        assertEquals(List.of("E1", "E2"),
+                                events(window).getItems().stream().map(Event::getId).toList());
+                        assertEquals("Empty (E2)", heading(window, "eventHeading"));
+                        assertTrue(participants(window).getItems().isEmpty());
+                        Label placeholder = (Label) participants(window).getPlaceholder();
+                        assertEquals("No participants found for this event.", placeholder.getText());
+                    } else {
+                        assertEquals(List.of("E1", "E2", "E3"),
+                                events(window).getItems().stream().map(Event::getId).toList());
+                        assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                        assertEquals(1, participants(window).getItems().size());
+                        assertEquals("E3", participants(window).getItems().getFirst().getEvent().getId());
+                    }
                 }
             } finally {
                 window.getPrimaryStage().close();
@@ -349,6 +453,10 @@ public class ParticipantSearchWindowTest {
         model.addPerson(person);
         model.addParticipation(event, person);
 
+        return createWindow(model);
+    }
+
+    private MainWindow createWindow(ModelManager model) {
         StorageManager storage = new StorageManager(
                 new JsonAddressBookStorage(
                         temporaryFolder.resolve("people.json")),
@@ -408,8 +516,9 @@ public class ParticipantSearchWindowTest {
                 .lookup("#eventListView");
     }
 
-    private ListView<?> participants(MainWindow window) {
-        return (ListView<?>) window.getParticipantListPanel()
+    @SuppressWarnings("unchecked")
+    private ListView<Participation> participants(MainWindow window) {
+        return (ListView<Participation>) window.getParticipantListPanel()
                 .getRoot()
                 .lookup("#participantListView");
     }

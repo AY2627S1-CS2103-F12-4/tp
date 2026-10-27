@@ -23,12 +23,14 @@ import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
 import seedu.address.logic.commands.SearchRoleCommand;
 import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.mapper.Participation;
 import seedu.address.model.mapper.ParticipationRole;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
+import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonParticipationStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -43,6 +45,100 @@ public class RoleSearchWindowTest {
 
     @TempDir
     public Path temporaryFolder;
+
+    @Test
+    public void addEventDuringSearch_preservesSelectedMatchAndHeadings() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                for (String search : List.of("search-role Speaker", "search-participant Alice",
+                        "search-role Speaker /include-archive")) {
+                    enterCommand(window, search);
+                    List<Event> matchingEvents = List.copyOf(events(window).getItems());
+                    Event selected = matchingEvents.getLast();
+                    events(window).getSelectionModel().select(selected);
+                    List<String> registrations = resultIds(window);
+                    String eventHeading = heading(window, "eventHeading");
+                    String searchHeading = heading(window, "searchHeading");
+                    int eventCount = model.getEvents().size();
+
+                    enterCommand(window, "add-event Empty /cap 10 /desc No participants");
+
+                    assertEquals("Event added successfully.", feedback(window));
+                    assertEquals(eventCount + 1, model.getEvents().size());
+                    assertEquals("Events", selectedTab(window));
+                    assertEquals(matchingEvents, events(window).getItems());
+                    assertEquals(selected, events(window).getSelectionModel().getSelectedItem());
+                    assertEquals(registrations, resultIds(window));
+                    assertEquals(eventHeading, heading(window, "eventHeading"));
+                    assertEquals(searchHeading, heading(window, "searchHeading"));
+                }
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void addEventDuringEmptySearch_preservesEmptySelectionAndContext() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                for (String search : List.of("search-role Missing", "search-role Missing /event E1 /include-archive",
+                        "search-participant Missing /include-archive", "search-participant Missing /event E1")) {
+                    enterCommand(window, search);
+                    assertTrue(events(window).getItems().isEmpty());
+                    String eventHeading = heading(window, "eventHeading");
+                    int eventCount = model.getEvents().size();
+
+                    enterCommand(window, "add-event Empty /cap 10 /desc No participants");
+
+                    assertEquals("Event added successfully.", feedback(window));
+                    assertEquals(eventCount + 1, model.getEvents().size());
+                    assertEquals("Events", selectedTab(window));
+                    assertTrue(events(window).getItems().isEmpty());
+                    assertNull(events(window).getSelectionModel().getSelectedItem());
+                    assertTrue(participants(window).getItems().isEmpty());
+                    assertEquals(eventHeading, heading(window, "eventHeading"));
+                    assertEquals("Matching \"Missing\"", heading(window, "searchHeading"));
+                }
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void addEventAfterRoleSearch_issue179Sequence_showsOnlyMatchingEvent() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager(SampleDataUtil.getSampleAddressBook(), new UserPrefs());
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, "add-event Main /cap 10 /desc Main event");
+                enterCommand(window, "add-event Other /cap 10 /desc Other event");
+                enterCommand(window, "add-participant E1 P1 /role Host");
+                enterCommand(window, "add-participant E2 P1 /role Speaker");
+                enterCommand(window, "search-role Speaker");
+                Event matchingEvent = new Event(new EventId("E2"), "Other", 10, "Other event");
+                assertEquals(List.of(matchingEvent), events(window).getItems());
+
+                enterCommand(window, "add-event Empty /cap 10 /desc No participants");
+
+                assertEquals("Event added successfully.", feedback(window));
+                assertEquals(List.of("E1", "E2", "E3"), model.getEvents().stream().map(Event::getId).toList());
+                assertEquals(List.of(matchingEvent), events(window).getItems());
+                assertEquals(matchingEvent, events(window).getSelectionModel().getSelectedItem());
+                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals("Other (E2)", heading(window, "eventHeading"));
+                assertEquals("Matching \"Speaker\"", heading(window, "searchHeading"));
+                assertEquals("Events", selectedTab(window));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
 
     @Test
     public void globalSearch_showsFilteredEventsAndDetailedFeedback() throws Exception {

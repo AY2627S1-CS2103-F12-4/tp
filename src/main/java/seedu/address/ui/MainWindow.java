@@ -270,6 +270,12 @@ public class MainWindow extends UiPart<Stage> {
         isUpdatingParticipantPanel = true;
 
         try {
+            if (commandText.trim().split("\\s+", 2)[0].equals(FindEventCommand.COMMAND_WORD)) {
+                eventListPanel.clearSelection();
+                clearParticipantPanel();
+                return;
+            }
+
             boolean startsSearch =
                     isParticipantSearchCommand(commandText);
 

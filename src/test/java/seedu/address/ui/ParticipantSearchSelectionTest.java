@@ -234,6 +234,36 @@ public class ParticipantSearchSelectionTest {
     }
 
     @Test
+    public void findEvent_afterListingParticipants_clearsPanelUntilEventReselected() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, "list-participants E1");
+                assertSelection(window, "E1", "P1", "P2");
+
+                enterCommand(window, "find-event Wedding");
+
+                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
+                assertEquals(List.of("E1"), eventIds(window));
+                assertNull(events(window).getSelectionModel().getSelectedItem());
+                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals("Participants", heading(window, "eventHeading"));
+                assertEquals("Select an event to view its participants.", heading(window, "searchHeading"));
+                assertTrue(model.getParticipantSearchKeyword().isEmpty());
+
+                events(window).getSelectionModel().select(0);
+
+                assertSelection(window, "E1", "P1", "P2");
+                assertEquals("Wedding (E1)", heading(window, "eventHeading"));
+                assertEquals("Participants", heading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
     public void resetCommands_restoreOrdinaryEventSelectionAndDoNotReviveSearch() throws Exception {
         runOnFxThread(() -> {
             ModelManager model = createModel();

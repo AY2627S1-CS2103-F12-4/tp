@@ -264,6 +264,38 @@ public class ParticipantSearchSelectionTest {
     }
 
     @Test
+    public void listEvent_afterEventSelection_clearsPanelWithAndWithoutArchives() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow(createModel());
+            try {
+                for (String command : List.of("list-event", "list-event /include-archive")) {
+                    events(window).getSelectionModel().select(0);
+                    assertSelection(window, "E1", "P1", "P2");
+
+                    enterCommand(window, command);
+
+                    List<String> expectedEventIds = command.equals("list-event")
+                            ? List.of("E1", "E2", "E4") : List.of("E1", "E2", "E3", "E4");
+                    assertEquals(expectedEventIds, eventIds(window));
+                    assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
+                    assertNull(events(window).getSelectionModel().getSelectedItem());
+                    assertTrue(participants(window).getItems().isEmpty());
+                    assertEquals("Participants", heading(window, "eventHeading"));
+                    assertEquals("Select an event to view its participants.", heading(window, "searchHeading"));
+
+                    events(window).getSelectionModel().select(0);
+
+                    assertSelection(window, "E1", "P1", "P2");
+                    assertEquals("Wedding (E1)", heading(window, "eventHeading"));
+                    assertEquals("Participants", heading(window, "searchHeading"));
+                }
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
     public void resetCommands_restoreOrdinaryEventSelectionAndDoNotReviveSearch() throws Exception {
         runOnFxThread(() -> {
             ModelManager model = createModel();

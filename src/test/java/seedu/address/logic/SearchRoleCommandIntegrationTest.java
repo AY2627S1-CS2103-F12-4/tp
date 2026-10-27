@@ -9,7 +9,9 @@ import static seedu.address.testutil.Assert.assertThrows;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -220,6 +222,91 @@ public class SearchRoleCommandIntegrationTest {
     }
 
     @Test
+    public void execute_addEventDuringSearch_preservesFiltersAndRefreshesAfterRegistration() throws Exception {
+        for (String search : List.of("search-participant Cara", "search-role Best Man")) {
+            for (String scope : List.of("", " /event E4")) {
+                for (boolean includeArchived : List.of(false, true)) {
+                    logic.execute(search + scope + (includeArchived ? " /include-archive" : ""));
+                    List<Event> events = new ArrayList<>(logic.getFilteredEventList());
+                    List<Participation> matches = new ArrayList<>(logic.getParticipantSearchResults());
+                    String keyword = search.equals("search-participant Cara") ? "Cara" : "Best Man";
+                    Optional<Event> scopedEvent = scope.isEmpty() ? Optional.empty() : Optional.of(ARCHIVED_EVENT);
+
+                    CommandResult result = logic.execute("add-event New event /cap 10 /desc No participants");
+
+                    Event added = model.getEvents().getLast();
+                    assertEquals("New event", added.getName());
+                    assertEquals(10, added.getCapacity());
+                    assertEquals("No participants", added.getDescription());
+                    assertEquals(new CommandResult("New event added: New event (" + added.getId() + ")",
+                            false, false, true), result);
+                    assertEquals(events, logic.getFilteredEventList());
+                    assertEquals(matches, logic.getParticipantSearchResults());
+                    assertSearchContext(keyword, scopedEvent, includeArchived);
+                    Model stored = readStoredModel();
+                    assertEquals(model.getEvents(), stored.getEvents());
+                    assertEquals(PARTICIPATIONS, stored.getParticipations().getParticipations());
+
+                    logic.execute("add-participant " + added.getId() + " P3 /role Best Man");
+
+                    Participation registration = new Participation(added, CARA, false, Set.of(),
+                            Set.of(new ParticipationRole("Best Man")));
+                    if (scope.isEmpty()) {
+                        events.add(added);
+                        matches.add(registration);
+                    }
+                    assertEquals(events, logic.getFilteredEventList());
+                    assertEquals(matches, logic.getParticipantSearchResults());
+                    assertSearchContext(keyword, scopedEvent, includeArchived);
+                    assertEquals(Set.of(registration), logic.getParticipationsForEvent(added));
+                    stored = readStoredModel();
+                    assertEquals(model.getEvents(), stored.getEvents());
+                    assertEquals(model.getParticipations().getParticipations(),
+                            stored.getParticipations().getParticipations());
+
+                    logic.execute("del-event " + added.getId());
+                    assertMemoryAndStorageUnchanged();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void execute_addEventDuringEmptySearch_keepsResultsEmptyAndSearchActive() throws Exception {
+        for (String search : List.of("search-participant Missing", "search-role Missing")) {
+            for (String scope : List.of("", " /event E1")) {
+                for (boolean includeArchived : List.of(false, true)) {
+                    logic.execute(search + scope + (includeArchived ? " /include-archive" : ""));
+                    assertTrue(logic.getFilteredEventList().isEmpty());
+
+                    logic.execute("add-event New event /cap 10 /desc No participants");
+
+                    assertTrue(logic.getFilteredEventList().isEmpty());
+                    assertTrue(logic.getParticipantSearchResults().isEmpty());
+                    assertSearchContext("Missing", scope.isEmpty() ? Optional.empty() : Optional.of(WEDDING),
+                            includeArchived);
+                    assertEquals(model.getEvents(), readStoredModel().getEvents());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void execute_addEventWithoutParticipantSearch_resetsEventFilterAndExcludesArchives() throws Exception {
+        for (String command : List.of("list-event", "find-event Workshop", "list-event /include-archive")) {
+            logic.execute(command);
+
+            logic.execute("add-event New event /cap 10 /desc No participants");
+
+            assertEquals(model.getEvents().stream().filter(event -> !event.isArchived()).toList(),
+                    logic.getFilteredEventList());
+            assertTrue(logic.getParticipantSearchResults().isEmpty());
+            assertSearchContext(null, Optional.empty(), false);
+            assertEquals(model.getEvents(), readStoredModel().getEvents());
+        }
+    }
+
+    @Test
     public void execute_listAndFindEvents_clearRoleSearchAndPreventLaterReactivation() throws Exception {
         List<String> resetCommands = List.of("list-event", "find-event Workshop", "find-event Missing");
         List<List<Event>> expectedEvents = List.of(List.of(WEDDING, WORKSHOP, EMPTY_EVENT),
@@ -349,6 +436,13 @@ public class SearchRoleCommandIntegrationTest {
 
         assertThrows(CommandException.class, expectedMessage, () -> logic.execute("search-role Best Man /event E1"));
         assertMemoryAndStorageUnchanged();
+    }
+
+    /** Verifies the active participant search's keyword, event scope, and archive visibility. */
+    private void assertSearchContext(String keyword, Optional<Event> scope, boolean includeArchived) {
+        assertEquals(Optional.ofNullable(keyword), logic.getParticipantSearchKeyword());
+        assertEquals(scope, logic.getParticipantSearchEvent());
+        assertEquals(includeArchived, logic.isParticipantSearchIncludingArchived());
     }
 
     /**

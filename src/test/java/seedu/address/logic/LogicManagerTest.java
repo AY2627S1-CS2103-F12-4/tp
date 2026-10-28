@@ -79,6 +79,23 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_addAndEditPunctuatedName_preservesSavedPerson() throws Exception {
+        logic.execute("add n/Mary-Jane O'Connor p/91234568 e/mary@example.com a/2 Main Street");
+        Person addedPerson = model.getFilteredPersonList().get(0);
+        assertEquals("Mary-Jane O'Connor", addedPerson.getName().fullName);
+
+        logic.execute("edit 1 n/Anne-Marie O'Neill");
+        Person editedPerson = model.getFilteredPersonList().get(0);
+        assertEquals("Anne-Marie O'Neill", editedPerson.getName().fullName);
+        assertEquals(addedPerson.getId(), editedPerson.getId());
+
+        JsonAddressBookStorage storage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        Model reloadedModel = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
+        assertEquals(List.of(editedPerson), reloadedModel.getFilteredPersonList());
+    }
+
+    @Test
     public void execute_addEvent_savesEventsAndPeopleIndependently() throws Exception {
         logic.execute("add-event Party /cap 10 /desc Welcome");
         JsonEventStorage eventStorage = new JsonEventStorage(temporaryFolder.resolve("events.json"));

@@ -49,6 +49,15 @@ public class AddCommandParserTest {
     private AddCommandParser parser = new AddCommandParser();
 
     @Test
+    public void parse_nameWithHyphenAndApostrophe_success() {
+        Person expectedPerson = new PersonBuilder().withName("Mary-Jane O'Connor")
+                .withPhone("91234568").withEmail("mary@example.com").withAddress("2 Main Street").build();
+
+        assertParseSuccess(parser, " n/Mary-Jane O'Connor p/91234568 e/mary@example.com a/2 Main Street",
+                new AddCommand(expectedPerson));
+    }
+
+    @Test
     public void parse_allFieldsPresent_success() {
         Person expectedPerson = new PersonBuilder(BOB).withTags(VALID_TAG_FRIEND).build();
 

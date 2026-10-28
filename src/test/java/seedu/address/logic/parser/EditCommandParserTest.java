@@ -55,6 +55,13 @@ public class EditCommandParserTest {
     private EditCommandParser parser = new EditCommandParser();
 
     @Test
+    public void parse_nameWithHyphenAndApostrophe_success() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName("Mary-Jane O'Connor").build();
+
+        assertParseSuccess(parser, "1 n/Mary-Jane O'Connor", new EditCommand(INDEX_FIRST_PERSON, descriptor));
+    }
+
+    @Test
     public void parse_missingParts_failure() {
         // no index specified
         assertParseFailure(parser, VALID_NAME_AMY, MESSAGE_INVALID_FORMAT);

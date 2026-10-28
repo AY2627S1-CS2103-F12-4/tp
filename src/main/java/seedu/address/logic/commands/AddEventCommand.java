@@ -32,7 +32,9 @@ public class AddEventCommand extends Command {
     public CommandResult execute(Model model) {
         requireNonNull(model);
         Event event = model.createEvent(name, capacity, description);
-        model.updateFilteredEventList(unused -> true);
+        if (model.getParticipantSearchKeyword().isEmpty()) {
+            model.updateFilteredEventList(unused -> true);
+        }
         return new CommandResult(String.format(MESSAGE_SUCCESS, event.getName(), event.getId()), false, false, true);
     }
 

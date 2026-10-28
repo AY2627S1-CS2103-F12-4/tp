@@ -34,6 +34,9 @@ public class ParticipantListPanel extends UiPart<Region> {
     private Label eventHeading;
 
     @FXML
+    private Label archivedStatus;
+
+    @FXML
     private Label searchHeading;
 
     @FXML
@@ -90,7 +93,8 @@ public class ParticipantListPanel extends UiPart<Region> {
         participantListView.setItems(eventParticipants);
 
         eventHeading.setText(
-                event.getDisplayName() + " (" + event.getId() + ")");
+                event.getName() + " (" + event.getId() + ")");
+        showArchivedStatus(event.isArchived());
         searchHeading.setText("Participants");
 
         setPlaceholder("No participants found for this event.");
@@ -108,7 +112,8 @@ public class ParticipantListPanel extends UiPart<Region> {
         participantListView.setItems(participantSearchResults);
 
         eventHeading.setText(
-                event.getDisplayName() + " (" + event.getId() + ")");
+                event.getName() + " (" + event.getId() + ")");
+        showArchivedStatus(event.isArchived());
         searchHeading.setText("Matching \"" + keyword + "\"");
 
         setPlaceholder("No matching participants.");
@@ -124,6 +129,7 @@ public class ParticipantListPanel extends UiPart<Region> {
         requireAllNonNull(keyword);
         participantListView.setItems(participantSearchResults);
         eventHeading.setText(includeArchived ? "All events" : "All nonarchived events");
+        showArchivedStatus(false);
         searchHeading.setText("Matching \"" + keyword + "\"");
         setPlaceholder("No matching participants.");
     }
@@ -148,10 +154,16 @@ public class ParticipantListPanel extends UiPart<Region> {
         participantListView.setItems(eventParticipants);
 
         eventHeading.setText("Participants");
+        showArchivedStatus(false);
         searchHeading.setText(
                 "Select an event to view its participants.");
 
         setPlaceholder("Select an event to view its participants.");
+    }
+
+    private void showArchivedStatus(boolean archived) {
+        archivedStatus.setVisible(archived);
+        archivedStatus.setManaged(archived);
     }
 
     private void setPlaceholder(String message) {

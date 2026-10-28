@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
@@ -23,17 +24,32 @@ import seedu.address.model.mapper.Participation;
 public class EntryCardActionButtonTest {
 
     @Test
-    public void eventCard_archiveState_displaysSuffixWithoutChangingStoredName() throws Exception {
+    public void eventCard_archiveState_displaysSeparateRedLabelAfterName() throws Exception {
         runOnFxThread(() -> {
-            Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
+            Event event = new Event(new EventId("E1"), "Training <archived>", 20, "Learn Java");
             EventCard archived = new EventCard(event.withArchived(true), 1, () -> { }, () -> { });
             Label archivedName = (Label) archived.getRoot().lookup("#name");
-            assertEquals("Workshop <archived>", archivedName.getText());
+            assertEquals("Training <archived>", archivedName.getText());
+            Label status = (Label) archived.getRoot().lookup("#archivedStatus");
+            assertEquals("Archived", status.getText());
+            assertTrue(status.isVisible());
+            assertTrue(status.isManaged());
+            HBox heading = (HBox) archivedName.getParent();
+            assertSame(status, heading.getChildren().get(heading.getChildren().indexOf(archivedName) + 1));
+            StackPane root = new StackPane(archived.getRoot());
+            root.getStylesheets().add("view/DarkTheme.css");
+            new Scene(root);
+            root.applyCss();
+            assertEquals(Color.web("#a52d37"), status.getBackground().getFills().getFirst().getFill());
+            assertEquals(Color.WHITE, status.getTextFill());
             assertEquals("Unarchive", ((Button) archived.getRoot().lookup("#archiveButton")).getText());
             EventCard active = new EventCard(event, 1, () -> { }, () -> { });
-            assertEquals("Workshop", ((Label) active.getRoot().lookup("#name")).getText());
+            assertEquals("Training <archived>", ((Label) active.getRoot().lookup("#name")).getText());
+            Label activeStatus = (Label) active.getRoot().lookup("#archivedStatus");
+            assertFalse(activeStatus.isVisible());
+            assertFalse(activeStatus.isManaged());
             assertEquals("Archive", ((Button) active.getRoot().lookup("#archiveButton")).getText());
-            assertEquals("Workshop", event.withArchived(true).getName());
+            assertEquals("Training <archived>", event.withArchived(true).getName());
         });
     }
 

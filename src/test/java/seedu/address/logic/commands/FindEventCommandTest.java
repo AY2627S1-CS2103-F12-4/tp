@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -195,6 +196,35 @@ public class FindEventCommandTest {
         assertEquals(new CommandResult("2 event(s) listed!", false, false, true), result);
         assertEquals(originalParticipations, model.getParticipationsForEvent(WORKSHOP));
         assertEquals(Set.of(), model.getParticipationsForEvent(MEETUP));
+    }
+
+    @Test
+    public void execute_turkishDefaultLocale_listsMatchesWithinArchiveScope() {
+        Locale previousLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            Model model = new ModelManager();
+            Event dinner = new Event(new EventId("E1"), "DINNER", 10, "Locale reproduction");
+            Event archivedDinner = new Event(new EventId("E3"), "DINNER RECEPTION", 20, "Reception")
+                    .withArchived(true);
+            model.addEvent(dinner);
+            model.addEvent(archivedDinner);
+            model.addEvent(CONCERT);
+
+            for (String keyword : List.of("i", "I", "dinner", "DINNER")) {
+                EventNameContainsKeywordPredicate predicate = new EventNameContainsKeywordPredicate(keyword);
+
+                CommandResult activeResult = new FindEventCommand(predicate).execute(model);
+                assertEquals(List.of(dinner), model.getFilteredEventList(), keyword);
+                assertEquals(new CommandResult("1 event(s) listed!", false, false, true), activeResult);
+
+                CommandResult archivedResult = new FindEventCommand(predicate, true).execute(model);
+                assertEquals(List.of(dinner, archivedDinner), model.getFilteredEventList(), keyword);
+                assertEquals(new CommandResult("2 event(s) listed!", false, false, true), archivedResult);
+            }
+        } finally {
+            Locale.setDefault(previousLocale);
+        }
     }
 
     private Model createModelWithEvents() {

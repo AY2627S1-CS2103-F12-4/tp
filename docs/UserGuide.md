@@ -298,6 +298,13 @@ Examples:
 Lists the people registered for the specified event, including their IDs, names and roles.
 Participants are ordered by the numeric part of their Person ID, for example `P1`, `P2`, `P10`.
 
+On success, the command clears any participant or role search and replaces the
+event-list filter. It selects the **Events** tab and the requested event, shows all
+its registrations under **Participants**, and hides **Clear search**. The event
+list shows all nonarchived events, or all events if the requested event is archived.
+An event with no registrations is still selected and shows an empty participant
+list. An unknown event ID preserves the current search and selection.
+
 Format: `list-participants EVENT_ID`
 
 Example: `list-participants E1`
@@ -414,6 +421,13 @@ replaces the search with an event-name filter, excluding archives unless
 `/include-archive` is supplied. These commands
 clear the participant rows and search context. Selecting an event after clearing the
 search shows all its registrations.
+
+`list-participants EVENT_ID` also clears either search and replaces the event-list
+filter. It selects the requested event and immediately shows all its registrations,
+even if that event was excluded by the previous search. The list shows all
+nonarchived events unless the requested event is archived, in which case it shows
+all events. Later edits do not reactivate the cleared search; enter a new
+`search-participant` or `search-role` command to search again.
 
 ### Marking attendance: `mark-participant`
 

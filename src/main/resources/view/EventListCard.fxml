@@ -15,6 +15,10 @@
     <HBox alignment="CENTER_LEFT">
       <Label fx:id="index" styleClass="cell_big_label" minWidth="-Infinity" />
       <Label fx:id="name" styleClass="cell_big_label" wrapText="true" />
+      <Label fx:id="archivedStatus" text="Archived" styleClass="archived-status" minWidth="-Infinity"
+             visible="false" managed="false">
+        <HBox.margin><Insets left="8" /></HBox.margin>
+      </Label>
     </HBox>
     <Label fx:id="eventId" styleClass="cell_small_label" />
     <Label fx:id="capacity" styleClass="cell_small_label" />

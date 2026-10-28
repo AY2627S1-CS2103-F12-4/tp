@@ -19,6 +19,8 @@ public class EventCard extends UiPart<Region> {
     @FXML
     private Label name;
     @FXML
+    private Label archivedStatus;
+    @FXML
     private Label eventId;
     @FXML
     private Label capacity;
@@ -59,7 +61,9 @@ public class EventCard extends UiPart<Region> {
         requireNonNull(archiveAction);
         requireNonNull(deleteAction);
         index.setText(displayedIndex + ". ");
-        name.setText(event.getDisplayName());
+        name.setText(event.getName());
+        archivedStatus.setVisible(event.isArchived());
+        archivedStatus.setManaged(event.isArchived());
         eventId.setText("Event ID: " + event.getId());
         capacity.setText("Capacity: " + event.getCapacity());
         description.setText(event.getDescription());

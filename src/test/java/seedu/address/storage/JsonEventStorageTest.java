@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -22,6 +23,49 @@ import seedu.address.testutil.TypicalPersons;
 public class JsonEventStorageTest {
     @TempDir
     public Path testFolder;
+
+    @Test
+    public void saveAndLoad_deletedHighestAndAllEvents_preservesRetiredIds() throws Exception {
+        JsonEventStorage storage = new JsonEventStorage(testFolder.resolve("events.json"));
+        EventList events = new EventList();
+        events.createEvent("First", 2, "");
+        events.createEvent("Second", 2, "");
+        events.removeEvent("E2");
+        storage.saveEvents(events.getEvents(), events.getNextId());
+        EventList loaded = storage.readEvents().orElseThrow();
+        assertEquals("E3", loaded.createEvent("Third", 2, "").getId());
+        loaded.removeEvent("E1");
+        loaded.removeEvent("E3");
+        storage.saveEvents(loaded.getEvents(), loaded.getNextId());
+        loaded = storage.readEvents().orElseThrow();
+        storage.saveEvents(loaded.getEvents(), loaded.getNextId());
+        assertEquals("E4", storage.readEvents().orElseThrow().createEvent("Fourth", 2, "").getId());
+    }
+
+    @Test
+    public void readEvents_legacyDocument_derivesNextIdAndSupportsLargeSequence() throws Exception {
+        Path path = testFolder.resolve("events.json");
+        Files.writeString(path, "{\"events\":[{\"id\":\"E7\",\"name\":\"Party\","
+                + "\"capacity\":2,\"description\":\"\"}]}");
+        JsonEventStorage storage = new JsonEventStorage(path);
+        EventList loaded = storage.readEvents().orElseThrow();
+        assertEquals("E8", loaded.createEvent("Next", 2, "").getId());
+        BigInteger largeId = new BigInteger("999999999999999999999999999999");
+        loaded.restoreNextId(largeId);
+        storage.saveEvents(loaded.getEvents(), loaded.getNextId());
+        assertEquals("E" + largeId, storage.readEvents().orElseThrow().createEvent("Large", 2, "").getId());
+    }
+
+    @Test
+    public void readEvents_invalidSequence_throwsDataLoadingException() throws Exception {
+        Path path = testFolder.resolve("events.json");
+        JsonEventStorage storage = new JsonEventStorage(path);
+        for (String id : List.of("0", "-1", "abc", "1.5", "1")) {
+            Files.writeString(path, "{\"nextEventId\":\"" + id + "\",\"events\":[{\"id\":\"E1\","
+                    + "\"name\":\"Party\",\"capacity\":2,\"description\":\"\"}]}");
+            assertThrows(DataLoadingException.class, storage::readEvents);
+        }
+    }
 
     @Test
     public void readEvents_missingFile_returnsEmpty() throws Exception {

@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +14,53 @@ import seedu.address.model.event.EventId;
 
 public class EditEventCommandParserTest {
     private final AddressBookParser parser = new AddressBookParser();
+
+    @Test
+    public void parse_unknownPrefixInFreeText_requiresConfirmationWithProposedValues() throws Exception {
+        for (String input : new String[] {"E1 /foo unexpected", "E1 Party /desc Venue /foo unexpected",
+            "E1 /desc /unknown", "E1 Party\t/foo unexpected /cap 20"}) {
+            EditEventCommand command = (EditEventCommand) parser.parseCommand("edit-event " + input);
+            String preview = command.getConfirmationMessage().orElseThrow();
+            assertTrue(preview.contains("Event ID: E1"));
+            assertTrue(preview.contains("/foo") || preview.contains("/unknown"));
+        }
+    }
+
+    @Test
+    public void parse_ordinarySlashesAndSupportedFields_doesNotRequireConfirmation() throws Exception {
+        for (String input : new String[] {"E1 AC/DC /desc https://example.com /home/user",
+            "E1 /cap 20 /desc", "E1 /desc Guests / volunteers"}) {
+            EditEventCommand command = (EditEventCommand) parser.parseCommand("edit-event " + input);
+            assertTrue(command.getConfirmationMessage().isEmpty());
+        }
+    }
+
+    @Test
+    public void parseAndExecute_unicodeWhitespaceName_preservesNameAndUpdatesOtherFields() throws Exception {
+        for (String whitespace : new String[] {"\u2003", "\u2002", "\u3000", "\u2002 \u2003\u3000"}) {
+            ModelManager model = new ModelManager();
+            model.createEvent("Main", 10, "Original");
+            parser.parseCommand("edit-event E1 " + whitespace + " /cap 2").execute(model);
+            assertEquals(new Event(new EventId("E1"), "Main", 2, "Original"), model.getEvents().getFirst());
+            parser.parseCommand("edit-event E1 " + whitespace + " /desc Updated").execute(model);
+            assertEquals(new Event(new EventId("E1"), "Main", 2, "Updated"), model.getEvents().getFirst());
+        }
+    }
+
+    @Test
+    public void parse_unicodeWhitespaceNameWithoutOtherFields_reportsNoChanges() {
+        for (String whitespace : new String[] {"\u2003", "\u2002", "\u3000"}) {
+            ParseException exception = assertThrows(ParseException.class, () ->
+                    parser.parseCommand("edit-event E1 " + whitespace));
+            assertEquals(EditEventCommand.MESSAGE_NO_CHANGES, exception.getMessage());
+        }
+    }
+
+    @Test
+    public void parse_unicodeWhitespaceAroundRealName_preservesInternalWhitespace() throws Exception {
+        assertEquals(new EditEventCommand(new EventId("E1"), "New\u2003Name", 2, null),
+                parser.parseCommand("edit-event E1 \u2002New\u2003Name\u3000 /cap 2"));
+    }
 
     @Test
     public void parseAndExecute_validCommand_updatesEvent() throws Exception {

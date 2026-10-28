@@ -7,6 +7,8 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -39,13 +41,19 @@ public class AddCommandParser implements Parser<AddCommand> {
                         PREFIX_ADDRESS,
                         PREFIX_TAG);
 
-        if (!arePrefixesPresent(
-                argMultimap,
-                PREFIX_NAME,
-                PREFIX_ADDRESS,
-                PREFIX_PHONE,
-                PREFIX_EMAIL)
-                || !argMultimap.getPreamble().isEmpty()) {
+        List<String> missingFields = Stream.of(
+                Map.entry(PREFIX_NAME, "n/NAME"),
+                Map.entry(PREFIX_PHONE, "p/PHONE"),
+                Map.entry(PREFIX_EMAIL, "e/EMAIL"),
+                Map.entry(PREFIX_ADDRESS, "a/ADDRESS"))
+                .filter(field -> argMultimap.getValue(field.getKey()).isEmpty())
+                .map(Map.Entry::getValue)
+                .toList();
+        if (!missingFields.isEmpty()) {
+            throw new ParseException(String.format(AddCommand.MESSAGE_MISSING_FIELDS,
+                    String.join(", ", missingFields), AddCommand.MESSAGE_USAGE));
+        }
+        if (!argMultimap.getPreamble().isEmpty()) {
 
             throw new ParseException(
                     String.format(
@@ -82,16 +90,4 @@ public class AddCommandParser implements Parser<AddCommand> {
                 tagList);
     }
 
-    /**
-     * Returns true if none of the prefixes contains empty {@code Optional}
-     * values in the given {@code ArgumentMultimap}.
-     */
-    private static boolean arePrefixesPresent(
-            ArgumentMultimap argumentMultimap,
-            Prefix... prefixes) {
-
-        return Stream.of(prefixes)
-                .allMatch(prefix ->
-                        argumentMultimap.getValue(prefix).isPresent());
-    }
 }

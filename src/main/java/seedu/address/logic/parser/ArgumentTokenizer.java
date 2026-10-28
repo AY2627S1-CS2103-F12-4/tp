@@ -3,7 +3,11 @@ package seedu.address.logic.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
  * Tokenizes arguments string of the form: {@code preamble <prefix>value <prefix>value ...}<br>
@@ -29,6 +33,24 @@ public class ArgumentTokenizer {
     }
 
     /**
+     * Tokenizes event/participant fields, rejecting attached suffixes that could be misspelled option names.
+     * Values must be separated from their prefixes by whitespace; an empty value is also allowed.
+     */
+    public static ArgumentMultimap tokenizeWithSeparatedPrefixes(String argsString, Prefix... prefixes)
+            throws ParseException {
+        for (Prefix prefix : prefixes) {
+            Matcher malformed = Pattern.compile("(?<!\\S)" + Pattern.quote(prefix.getPrefix()) + "\\S+")
+                    .matcher(argsString);
+            if (malformed.find()) {
+                throw new ParseException("Unsupported option '" + malformed.group() + "'. Use '"
+                        + prefix.getPrefix() + "' followed by whitespace and its value,"
+                        + " or leave the value empty where allowed.");
+            }
+        }
+        return tokenize(argsString, prefixes);
+    }
+
+    /**
      * Finds all zero-based prefix positions in the given arguments string.
      *
      * @param argsString Arguments string of the form: {@code preamble <prefix>value <prefix>value ...}
@@ -51,7 +73,8 @@ public class ArgumentTokenizer {
         while (prefixPosition != -1) {
             PrefixPosition extendedPrefix = new PrefixPosition(prefix, prefixPosition);
             positions.add(extendedPrefix);
-            prefixPosition = findPrefixPosition(argsString, prefix.getPrefix(), prefixPosition);
+            prefixPosition = findPrefixPosition(argsString, prefix.getPrefix(),
+                    prefixPosition + prefix.getPrefix().length());
         }
 
         return positions;
@@ -60,7 +83,9 @@ public class ArgumentTokenizer {
     /**
      * Returns the index of the first occurrence of {@code prefix} in
      * {@code argsString} starting from index {@code fromIndex}. An occurrence
-     * is valid if there is a whitespace before {@code prefix}. Returns -1 if no
+     * is valid if there is a whitespace before {@code prefix}. Slash-leading
+     * prefixes additionally require whitespace or the end of input after the prefix.
+     * Returns -1 if no
      * such occurrence can be found.
      *
      * E.g if {@code argsString} = "e/hip/900", {@code prefix} = "p/" and
@@ -70,6 +95,11 @@ public class ArgumentTokenizer {
      * {@code fromIndex} = 0, this method returns 5.
      */
     private static int findPrefixPosition(String argsString, String prefix, int fromIndex) {
+        if (prefix.startsWith("/")) {
+            Matcher matcher = Pattern.compile("(?<!\\S)" + Pattern.quote(prefix) + "(?=\\s|$)")
+                    .matcher(argsString);
+            return matcher.find(fromIndex) ? matcher.start() : -1;
+        }
         int prefixIndex = argsString.indexOf(" " + prefix, fromIndex);
         return prefixIndex == -1 ? -1
                 : prefixIndex + 1; // +1 as offset for whitespace

@@ -1,6 +1,7 @@
 package seedu.address.storage;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,9 @@ public interface Storage {
 
     /** Saves all events, independently of the UI filter. */
     void saveEvents(List<Event> events) throws IOException;
+
+    /** Saves events together with the next unused event ID number. */
+    void saveEvents(List<Event> events, BigInteger nextEventId) throws IOException;
 
     /**
      * Returns the file path of the UserPrefs data file.

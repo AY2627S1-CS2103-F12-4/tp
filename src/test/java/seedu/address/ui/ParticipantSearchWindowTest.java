@@ -186,7 +186,7 @@ public class ParticipantSearchWindowTest {
                     } else {
                         assertEquals(List.of("E1", "E2", "E3"),
                                 events(window).getItems().stream().map(Event::getId).toList());
-                        assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                        assertEquals("Archived (E3)", heading(window, "eventHeading"));
                         assertEquals(1, participants(window).getItems().size());
                         assertEquals("E3", participants(window).getItems().getFirst().getEvent().getId());
                     }

@@ -53,6 +53,10 @@ Name and Capacity when editing an event. The Add participant form's Person ID fi
 `P1`; enter roles and tags in their separate fields. Invalid submissions show an error and keep the form open for
 correction. Submitted commands also undergo the same validation as commands entered in the command box.
 
+Enter roles and tags as comma-separated values in their designated fields. Each value is validated before submission.
+Person-form addresses cannot contain `n/`, `p/`, `e/`, `a/` or `t/` immediately after a space, as those sequences are
+interpreted as command options. The form displays an error for these addresses.
+
 | Location | Buttons, from left to right | Behaviour |
 |---|---|---|
 | Top action bar | **+ Person**, **+ Event** | Opens a form for adding a person or event. |

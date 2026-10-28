@@ -86,7 +86,13 @@ public class AddressBookParser {
             case DeleteParticipantCommand.COMMAND_WORD -> new DeleteParticipantCommandParser().parse(arguments);
             case UnmarkParticipantCommand.COMMAND_WORD -> new UnmarkParticipantCommandParser().parse(arguments);
             case MarkParticipantCommand.COMMAND_WORD -> new MarkParticipantCommandParser().parse(arguments);
-            case ClearCommand.COMMAND_WORD -> new ClearCommand();
+            case ClearCommand.COMMAND_WORD -> {
+                if (!arguments.isBlank()) {
+                    throw new ParseException(String.format(
+                            MESSAGE_INVALID_COMMAND_FORMAT, ClearCommand.MESSAGE_USAGE));
+                }
+                yield new ClearCommand();
+            }
             case FindCommand.COMMAND_WORD -> new FindCommandParser().parse(arguments);
             case FindEventCommand.COMMAND_WORD -> new FindEventCommandParser().parse(arguments);
             case SearchRoleCommand.COMMAND_WORD -> new SearchRoleCommandParser().parse(arguments);

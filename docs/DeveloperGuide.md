@@ -162,6 +162,64 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### GUI form validation
+
+The toolbar and card buttons in `MainWindow` open form dialogs for adding or editing people, events and participations.
+The dialogs submit CLI command text through `CommandExecutor` to the same `Logic#execute` pipeline as `CommandBox`.
+This keeps command execution, domain checks and persistence shared between both input paths. However, a field value
+must be validated before it is inserted into command text: otherwise text such as `VIP /role Host` in a Tags field
+could be interpreted as a tag and an additional role.
+
+#### Submission flow
+
+The sequence diagram shows a successful Add person submission. It distinguishes the dialog instance and its
+`CommandSupplier` callback from the `<<class>>` participants receiving static `AddPersonDialog#buildCommand` and
+`DialogInputValidator#validatePerson` calls. Internal parser and tokenizer calls are omitted.
+
+<puml src="diagrams/FormSubmissionSequenceDiagram.puml" width="950" alt="Sequence diagram of a successful Add person form submission through field validation and LogicManager" />
+
+1. `FormDialog` checks every field marked required, rejecting empty or whitespace-only values and focusing the first
+   missing field. This also enforces Name and Capacity in the Edit event form, even though the CLI permits omitted
+   event fields.
+2. The dialog's `buildCommand` validates complete field values before adding CLI prefixes. `AddParticipantDialog`
+   uses `ParserUtil#parsePersonId` for the entire Person ID field. Both person dialogs use
+   `DialogInputValidator#validatePerson`; both participation dialogs use `DialogInputValidator#validateParticipation`.
+3. `DialogInputValidator` reuses `ParserUtil` to check person names, phones, emails and addresses, and each individual
+   role or tag. Comma-separated roles and tags are trimmed and empty entries are omitted, matching command construction.
+   Blank optional roles and tags are omitted by add forms; edit forms emit an empty prefix to clear the corresponding set.
+4. Only after these checks succeed does `CommandExecutor` execute the constructed command. The command parser and
+   model still enforce their normal constraints, including entity existence, duplicate registrations and event capacity.
+
+The shared `FormDialog.CommandSupplier` permits validation to throw `ParseException`. `FormDialog` displays parsing
+and command errors inline and consumes the submit event, keeping the dialog and its entered values open for correction.
+Validation failures before execution leave the model and stored data unchanged. A storage error after command execution
+can still leave an in-memory change; form validation does not roll back executed commands.
+
+The activity diagram shows the shared submit handler's error, retry and cancellation paths. Domain checks for event
+forms occur in the command pipeline; the extra validation before command construction applies to person and
+participation forms.
+
+<puml src="diagrams/FormValidationActivityDiagram.puml" width="850" alt="Activity diagram of required-field checks, field validation, command execution, error recovery and cancellation" />
+
+#### Literal addresses and command prefixes
+
+Addresses accept free-form text, so their domain validation alone cannot prevent extra CLI arguments.
+`validatePerson` also tokenizes the trimmed address with the person-command prefixes (`n/`, `p/`, `e/`, `a/`, `t/`).
+If tokenization extracts any option, the dialog rejects the address with a specific validation error. For example,
+`3 Main Street t/VIP` is rejected instead of saving a shortened address and an unintended tag.
+
+Using `ArgumentTokenizer` keeps this check aligned with the CLI's actual prefix recognition. Ordinary slashes such as
+`10 A/B Road`, prefixes at the start of an address such as `t/VIP Lane`, and other command families' prefixes remain
+literal address text. This restriction avoids silent data changes without changing the CLI syntax or execution API.
+
+#### Regression coverage
+
+`DialogInputValidatorTest` covers prefix boundaries, safe literal addresses and invalid values later in a CSV list.
+`FormDialogPartitionTest` exercises real JavaFX submissions, rejection without data changes, correction and retry,
+required fields and input boundaries. `MainWindowButtonSafetyTest` additionally checks rendered button routing,
+filtered or reused rows, cancellation and deletion scope. See the [testing guide](Testing.md#ui-button-test-design)
+for the case design and commands used to run these tests.
+
 ### Participant search
 
 Name and role searches share model state and the combined Events view:
@@ -190,8 +248,7 @@ single-event list containing E1. Calls within the mapper and predicate are
 omitted for clarity. `matchingEventPredicate` represents the
 lambda that checks whether an event's ID belongs to `matchingEventIds`.
 
-<puml src="diagrams/ParticipantSearchSequenceDiagram.puml" width="1100"
-  alt="Sequence of a scoped participant name search including archived events" />
+<puml src="diagrams/ParticipantSearchSequenceDiagram.puml" width="1100" alt="Sequence of a scoped participant name search including archived events" />
 
 Without `/event`, the command calls the global overload, which searches across
 events; without `/include-archive`, archived events are excluded. Role search
@@ -325,8 +382,7 @@ participations through `Logic`. When the selected event changes,
 `MainWindow` passes the corresponding `Participation` objects to
 `ParticipantListPanel`.
 
-<puml src="diagrams/ParticipantUiClassDiagram.puml" width="850"
-alt="Class diagram of the participant display in the Events tab" />
+<puml src="diagrams/ParticipantUiClassDiagram.puml" width="850" alt="Class diagram of the participant display in the Events tab" />
 
 `ParticipantListPanel` creates a `ParticipantCard` for each
 participation. Each card displays the linked person's ID and name,
@@ -341,8 +397,10 @@ ID, person ID, attendance state, tags and roles; it does not duplicate the full 
 At startup, people and events are loaded before participations. `JsonParticipationStorage` then resolves the stored IDs
 against the loaded `AddressBook` and `EventList` and constructs a `MapperManager`. Entries with invalid or unknown IDs
 are omitted, duplicate event-person pairs cause the participation file to be rejected, and invalid role or tag values
-are reported as data-loading errors. After a command executes successfully, `LogicManager` saves the current
-participations through the `ReadOnlyParticipations` interface.
+are reported as data-loading errors. After a command executes successfully, `LogicManager` saves participations through
+the `ReadOnlyParticipations` interface only if they differ from the initially loaded or last successfully saved snapshot.
+The comparison includes event and person IDs, attendance, roles and tags. Failed saves leave the snapshot unchanged so
+that subsequent successful commands retry saving pending changes.
 
 #### Design considerations
 

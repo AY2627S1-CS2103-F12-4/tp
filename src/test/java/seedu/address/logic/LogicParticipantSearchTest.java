@@ -187,6 +187,8 @@ public class LogicParticipantSearchTest {
 
     @Test
     public void execute_search_savedDataPreservedAndSearchStateNotPersisted() throws Exception {
+        new JsonParticipationStorage(temporaryFolder.resolve("participations.json"))
+                .saveParticipations(model.getParticipations());
         logic.execute("search-participant Missing /event E1");
         JsonAddressBookStorage peopleStorage = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         JsonEventStorage eventStorage = new JsonEventStorage(temporaryFolder.resolve("events.json"));

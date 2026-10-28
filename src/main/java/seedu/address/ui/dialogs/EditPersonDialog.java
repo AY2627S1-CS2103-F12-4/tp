@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Person;
 
 /** Collects replacement details for an existing person. */
@@ -45,7 +46,8 @@ public final class EditPersonDialog extends FormDialog {
     }
 
     static String buildCommand(int displayedIndex, String name, String phone, String email,
-            String address, String tags) {
+            String address, String tags) throws ParseException {
+        DialogInputValidator.validatePerson(name, phone, email, address, tags);
         String tagArguments = Arrays.stream(tags.split(","))
                 .map(String::trim)
                 .filter(tag -> !tag.isEmpty())

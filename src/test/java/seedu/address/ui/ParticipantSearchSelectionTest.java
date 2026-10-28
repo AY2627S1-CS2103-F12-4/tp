@@ -337,14 +337,22 @@ public class ParticipantSearchSelectionTest {
                 enterCommand(window, "list-event /include-archive");
                 events(window).getSelectionModel().select(2);
                 assertSelection(window, "E3", "P1");
+                Label archivedStatus = (Label) window.getParticipantListPanel().getRoot().lookup("#archivedStatus");
+                assertEquals("Archived", archivedStatus.getText());
+                assertTrue(archivedStatus.isVisible());
+                assertTrue(archivedStatus.isManaged());
 
                 enterCommand(window, "find-event Archived /include-archive");
 
                 assertEquals(List.of("E3"), eventIds(window));
                 assertParticipantPanelCleared(window);
+                assertFalse(archivedStatus.isVisible());
+                assertFalse(archivedStatus.isManaged());
                 events(window).getSelectionModel().select(0);
                 assertSelection(window, "E3", "P1");
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
+                assertTrue(archivedStatus.isVisible());
+                assertTrue(archivedStatus.isManaged());
                 assertEquals("Participants", heading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();

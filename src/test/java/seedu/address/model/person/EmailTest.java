@@ -67,6 +67,33 @@ public class EmailTest {
     }
 
     @Test
+    public void isValidEmail_adjacentSupportedSymbols_returnsTrue() {
+        String[] symbolSequences = {
+            "++", "+_", "+.", "+-", "_+", "__", "_.", "_-",
+            ".+", "._", ".-", "-+", "-_", "-.", "--", "+_.-++__"
+        };
+        for (String symbols : symbolSequences) {
+            String email = "alpha" + symbols + "tag@example.com";
+            assertTrue(Email.isValidEmail(email), email);
+        }
+    }
+
+    @Test
+    public void isValidEmail_specialCharactersAtLocalPartBoundaries_returnsFalse() {
+        for (String symbol : new String[] {"+", "_", ".", "-", "+_.-"}) {
+            assertFalse(Email.isValidEmail(symbol + "alpha@example.com"));
+            assertFalse(Email.isValidEmail("alpha" + symbol + "@example.com"));
+        }
+        assertFalse(Email.isValidEmail("+_.-@example.com"));
+    }
+
+    @Test
+    public void isValidEmail_consecutivePeriodsAmongOtherSymbols_returnsFalse() {
+        assertFalse(Email.isValidEmail("alpha+..tag@example.com"));
+        assertFalse(Email.isValidEmail("alpha..+tag@example.com"));
+    }
+
+    @Test
     public void equals() {
         Email email = new Email("valid@email");
 

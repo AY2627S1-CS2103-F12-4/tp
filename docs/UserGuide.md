@@ -123,6 +123,8 @@ Example: `delete 2`
 ### Creating an event: `add-event`
 
 Creates an event with a name, capacity and required `/desc` parameter. The description value may be empty.
+Event IDs are assigned automatically and are not reused after deletion, including
+after restarting the application.
 
 Format: `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION`
 

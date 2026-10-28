@@ -367,7 +367,7 @@ public class ModelManager implements Model {
                 .filter(event -> includeArchived || !event.isArchived())
                 .flatMap(event -> getParticipationsForEvent(event).stream()
                         .filter(predicate)
-                        .sorted(Comparator.comparing(participation -> participation.getPerson().getId().toString())))
+                        .sorted(Comparator.comparing(participation -> participation.getPerson().getId())))
                 .toList();
         Set<String> matchingEventIds = matches.stream()
                 .map(participation -> participation.getEvent().getId()).collect(Collectors.toSet());

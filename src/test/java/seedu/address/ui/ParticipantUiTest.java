@@ -256,12 +256,12 @@ public class ParticipantUiTest {
             throws Exception {
         runOnFxThread(() -> {
             Person laterPerson = new PersonBuilder(PERSON)
-                    .withId("P010")
+                    .withId("P10")
                     .withName("Later Person")
                     .build();
 
             Person earlierPerson = new PersonBuilder(PERSON)
-                    .withId("P002")
+                    .withId("P2")
                     .withName("Earlier Person")
                     .build();
 

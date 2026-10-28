@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,28 @@ public class ListParticipantsCommandTest {
             .build();
 
     private ModelManager model;
+
+    @Test
+    public void execute_twelveParticipants_listsAndSearchesInNumericIdOrder() throws Exception {
+        ModelManager roster = new ModelManager();
+        Event event = roster.createEvent("Main", 20, "");
+        for (int number = 12; number >= 1; number--) {
+            Person person = new PersonBuilder().withId("P" + number).withName("Guest " + number).build();
+            roster.addPerson(person);
+            roster.addParticipation(new EventId(event.getId()), person.getId(),
+                    Set.of(new ParticipationRole("Speaker")), Set.of());
+        }
+        List<String> expected = IntStream.rangeClosed(1, 12).mapToObj(number -> "P" + number).toList();
+        String feedback = new ListParticipantsCommand(new EventId(event.getId())).execute(roster).getFeedbackToUser();
+        assertEquals(expected, feedback.lines().skip(1).map(line -> line.substring(3, line.indexOf('-'))).toList());
+
+        roster.updateParticipantSearch("Guest");
+        assertEquals(expected, roster.getParticipantSearchResults().stream()
+                .map(participation -> participation.getPerson().getId().toString()).toList());
+        roster.updateParticipantRoleSearch("Speaker");
+        assertEquals(expected, roster.getParticipantSearchResults().stream()
+                .map(participation -> participation.getPerson().getId().toString()).toList());
+    }
 
     @BeforeEach
     public void setUp() {

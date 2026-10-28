@@ -48,8 +48,10 @@ Failed commands continue to show the specific error and usage guidance where app
 
 ### Using the GUI buttons
 
-The GUI buttons provide form-based shortcuts for common commands. Submitted forms use the same validation and show
-the same success or error messages as commands entered in the command box.
+The GUI buttons provide form-based shortcuts for common commands. Fields marked with `*` must be filled in, including
+Name and Capacity when editing an event. The Add participant form's Person ID field accepts only a person ID such as
+`P1`; enter roles and tags in their separate fields. Invalid submissions show an error and keep the form open for
+correction. Submitted commands also undergo the same validation as commands entered in the command box.
 
 | Location | Buttons, from left to right | Behaviour |
 |---|---|---|

@@ -43,6 +43,7 @@ Failed commands continue to show the specific error and usage guidance where app
 * `...` indicates an argument that can be repeated.
 * Event IDs (e.g., `E1`) and person IDs (e.g., `P1`) are different from the numbered indices displayed in person lists. Use the identifier required by each command.
 * Some person-editing commands accept prefixed arguments in any order. For event/participant commands, follow the order shown in the format.
+* Event/participant field prefixes (`/cap`, `/desc`, `/role`, `/tag`) must be followed by whitespace before a value, or by the end of input for an empty value where allowed. Misspelled or attached forms such as `/roles`, `/tags`, `/description` and `/cap10` produce an error without changing data. Person prefixes such as `n/` and `p/` still accept attached values.
 
 </box>
 

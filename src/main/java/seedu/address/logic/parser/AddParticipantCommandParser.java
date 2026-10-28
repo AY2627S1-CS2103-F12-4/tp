@@ -20,7 +20,8 @@ public class AddParticipantCommandParser implements Parser<AddParticipantCommand
 
     @Override
     public AddParticipantCommand parse(String args) throws ParseException {
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_ROLE, PREFIX_PARTICIPANT_TAG);
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenizeWithSeparatedPrefixes(
+                args, PREFIX_ROLE, PREFIX_PARTICIPANT_TAG);
         String preamble = argMultimap.getPreamble();
         String[] arguments = preamble.isEmpty() ? new String[0] : preamble.split("\\s+");
         if (arguments.length != 2) {

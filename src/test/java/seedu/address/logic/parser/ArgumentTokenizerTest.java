@@ -3,9 +3,12 @@ package seedu.address.logic.parser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+
+import seedu.address.logic.parser.exceptions.ParseException;
 
 public class ArgumentTokenizerTest {
 
@@ -13,6 +16,26 @@ public class ArgumentTokenizerTest {
     private final Prefix pSlash = new Prefix("p/");
     private final Prefix dashT = new Prefix("-t");
     private final Prefix hatQ = new Prefix("^Q");
+
+    @Test
+    public void tokenize_slashPrefixes_requireCompleteTokenAndAcceptWhitespace() {
+        Prefix role = new Prefix("/role");
+        ArgumentMultimap arguments = ArgumentTokenizer.tokenize(
+                " E1 P1 /roles Speaker\t/role\tHost /role", role);
+        assertPreamblePresent(arguments, "E1 P1 /roles Speaker");
+        assertArgumentPresent(arguments, role, "Host", "");
+    }
+
+    @Test
+    public void tokenizeWithSeparatedPrefixes_attachedValue_reportsCorrectPrefix() {
+        Prefix role = new Prefix("/role");
+        for (String input : new String[] {" E1 P1 /roles Speaker", " E1 P1 /roleSpeaker",
+            " E1 P1 /role Host /roles Speaker"}) {
+            ParseException exception = assertThrows(ParseException.class, () ->
+                    ArgumentTokenizer.tokenizeWithSeparatedPrefixes(input, role));
+            assertTrue(exception.getMessage().contains("Use '/role'"));
+        }
+    }
 
     @Test
     public void tokenize_emptyArgsString_noValues() {

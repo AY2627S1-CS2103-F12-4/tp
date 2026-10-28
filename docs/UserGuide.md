@@ -56,7 +56,7 @@ the same success or error messages as commands entered in the command box.
 |---|---|---|
 | Top action bar | **+ Person**, **+ Event** | Opens a form for adding a person or event. |
 | Each person in the People tab | **Edit**, **Delete** | **Edit** opens a pre-filled person form. **Delete** asks for confirmation, then deletes the person and their registrations from all events. |
-| Each event in the Events tab | **Add participant**, **Edit event**, **Archive** or **Unarchive**, **Delete** | **Add participant** registers a person by ID and accepts optional roles and event-specific tags. **Edit event** opens a pre-filled event form. **Archive** hides an active event from the event list; the button reads **Unarchive** for an archived event and restores it when selected. **Delete** asks for confirmation, then deletes the event and its registrations. |
+| Each event in the Events tab | **Add participant**, **Edit event**, **Archive** or **Unarchive**, **Delete** | **Add participant** registers a person by ID and accepts optional roles and event-specific tags. **Edit event** opens a pre-filled event form. **Archive** hides an active event from the event list; the button reads **Unarchive** for an archived event and restores it when selected. **Delete** asks for confirmation, then deletes the event and its registrations, as does the CLI command `del-event EVENT_ID`. |
 | Each participant shown for an event | **Edit participation**, **Delete** | **Edit participation** opens a pre-filled form that replaces the participant's roles and event-specific tags; leave a field blank to clear it. **Delete** asks for confirmation, then removes only that event registration. The person remains in the address book. |
 
 Select an event to display its participants and their action buttons. Closing a form or declining a deletion leaves
@@ -158,6 +158,25 @@ Examples:
 * `edit-event E1 /cap 80`
 * `edit-event E1 /desc`
 * `edit-event E1 Wedding Reception /cap 80 /desc Updated venue`
+
+### Deleting an event: `del-event`
+
+Deletes the event identified by its stable Event ID and all its registrations,
+including their roles, tags and attendance records. People remain in the address
+book, and other events and their registrations are preserved.
+
+Format: `del-event EVENT_ID`
+
+Example: `del-event E1`
+
+Use the Event ID rather than a displayed list index or event name. This identifies
+the intended event even when multiple events share a name. A nonexistent event ID
+produces an error without deleting anything.
+
+Deletion is permanent within the application. Unlike the GUI **Delete** button,
+the CLI command deletes immediately without asking for confirmation. To hide an
+event while retaining its registrations for later use, use `archive-event` instead;
+an archived event can be restored with `unarchive-event`.
 
 ### Archiving and restoring events
 
@@ -474,6 +493,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **Delete person** | `delete INDEX` |
 | **Add event** | `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION` |
 | **Edit event** | `edit-event EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]` |
+| **Delete event** | `del-event EVENT_ID` |
 | **Archive event** | `archive-event EVENT_ID` |
 | **Restore event** | `unarchive-event EVENT_ID` |
 | **List events** | `list-event [/include-archive]` |

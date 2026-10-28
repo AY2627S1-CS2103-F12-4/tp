@@ -37,6 +37,27 @@ public class JsonParticipationStorageTest {
     private EventList eventList;
     private Person person;
 
+    @Test
+    public void readParticipations_caseOnlyRoleDuplicates_collapsesLegacyValuesAndPreservesFirstSpelling()
+            throws Exception {
+        Path path = testFolder.resolve("legacy-roles.json");
+        Files.writeString(path, """
+                {"participations":[{
+                  "eventId":"E1", "personId":"P1", "isPresent":false,
+                  "tags":[], "roles":["Host", "host", "HOST", "Speaker"]
+                }]}
+                """);
+        JsonParticipationStorage storage = new JsonParticipationStorage(path);
+        ReadOnlyParticipations loaded = storage.readParticipations(eventList, addressBook).orElseThrow();
+        Participation participation = loaded.getParticipations().iterator().next();
+        assertEquals(2, participation.getRoles().size());
+        assertEquals(Set.of("Host", "Speaker"), participation.getRoles().stream()
+                .map(ParticipationRole::toString).collect(java.util.stream.Collectors.toSet()));
+        storage.saveParticipations(loaded);
+        assertEquals(loaded.getParticipations(), storage.readParticipations(eventList, addressBook)
+                .orElseThrow().getParticipations());
+    }
+
     @BeforeEach
     public void setUp() {
         person = new PersonBuilder().withId("P1").build();

@@ -53,4 +53,18 @@ public class ParticipationRoleTest {
         assertNotEquals(role, null);
         assertNotEquals(role, "Usher");
     }
+
+    @Test
+    public void equals_caseAndWhitespaceVariants_shareIdentityButPreserveDisplaySpelling() {
+        ParticipationRole role = new ParticipationRole("Lead Host");
+        ParticipationRole variant = new ParticipationRole("  LEAD   host ");
+        assertEquals(role, variant);
+        assertEquals(variant, role);
+        assertEquals(role.hashCode(), variant.hashCode());
+        assertEquals("Lead Host", role.toString());
+        assertEquals("LEAD host", variant.toString());
+        assertNotEquals(role, new ParticipationRole("Host"));
+        assertEquals(new ParticipationRole("INSTRUCTOR").hashCode(),
+                new ParticipationRole("instructor").hashCode());
+    }
 }

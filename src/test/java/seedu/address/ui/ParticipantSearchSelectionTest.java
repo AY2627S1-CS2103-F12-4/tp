@@ -344,7 +344,8 @@ public class ParticipantSearchSelectionTest {
                 assertParticipantPanelCleared(window);
                 events(window).getSelectionModel().select(0);
                 assertSelection(window, "E3", "P1");
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
+                assertTrue(window.getParticipantListPanel().getRoot().lookup("#archivedStatus").isVisible());
                 assertEquals("Participants", heading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();

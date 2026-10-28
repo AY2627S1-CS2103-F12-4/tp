@@ -279,6 +279,8 @@ contact details or attendance. Supply at least one `/role` or `/tag` field.
 An omitted field is preserved; supplied values replace the entire corresponding set.
 Use a single empty `/role` or `/tag` to clear that set. Do not mix an empty
 value with other values for the same field. Repeated identical values are deduplicated.
+Roles are also deduplicated ignoring case and repeated whitespace: `/role Host /role host`
+stores one role, preserving the first spelling (`Host`). Tags retain their existing case-sensitive behavior.
 
 Format: `edit-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...`
 

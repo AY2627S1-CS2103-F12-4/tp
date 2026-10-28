@@ -54,6 +54,20 @@ public class ParticipantCommandIntegrationTest {
     private JsonParticipationStorage participationStorage;
 
     @Test
+    public void execute_caseOnlyRoleDuplicates_addAndEditRetainFirstSpellingAndPersistOneRole() throws Exception {
+        logic.execute("add-participant E1 P1 /role Host /role host /role HOST");
+        Participation added = getOnlyStoredParticipation();
+        assertEquals(1, added.getRoles().size());
+        assertEquals("Host", added.getRoles().iterator().next().value);
+
+        logic.execute("edit-participant E1 P1 /role Lead Guest /role lead   guest /role LEAD GUEST");
+        Participation edited = getOnlyStoredParticipation();
+        assertEquals(1, edited.getRoles().size());
+        assertEquals("Lead Guest", edited.getRoles().iterator().next().value);
+        assertEquals(edited.getRoles(), model.getParticipationsForEvent(EVENT).iterator().next().getRoles());
+    }
+
+    @Test
     public void execute_mistypedOptions_rejectsWithoutChangingOrPersistingData() throws Exception {
         logic.execute("add-participant E1 P1 /role Host /tag VIP");
         var registrations = Set.copyOf(model.getParticipations().getParticipations());

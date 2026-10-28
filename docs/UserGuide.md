@@ -268,6 +268,7 @@ Examples:
 ### Listing participants in an event: `list-participants`
 
 Lists the people registered for the specified event, including their IDs, names and roles.
+Participants are ordered by the numeric part of their Person ID, for example `P1`, `P2`, `P10`.
 
 Format: `list-participants EVENT_ID`
 
@@ -353,7 +354,7 @@ event-list filters do not limit the search. Switching between the People and Eve
 tabs preserves it.
 
 Events follow their stored order. Matching registrations within each event are
-ordered lexicographically by Person ID (for example, `P1`, `P10`, `P2`). Search
+ordered by the numeric part of Person ID (for example, `P1`, `P2`, `P10`). Search
 feedback counts registrations across all matching events. Each registration counts
 once even when several roles match; the same person matching in two events counts
 as two registrations.

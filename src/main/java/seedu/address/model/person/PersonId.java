@@ -3,11 +3,13 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import java.math.BigInteger;
+
 /**
  * Represents a Person's unique ID.
  * Guarantees: immutable; is valid as declared in {@link #isValidPersonId(String)}
  */
-public class PersonId {
+public class PersonId implements Comparable<PersonId> {
 
     public static final String MESSAGE_CONSTRAINTS =
             "Person IDs should start with P followed by one or more digits.";
@@ -32,6 +34,14 @@ public class PersonId {
      */
     public static boolean isValidPersonId(String test) {
         return test != null && test.matches(VALIDATION_REGEX);
+    }
+
+    /** Orders IDs by their numeric part, breaking ties by the exact ID text. */
+    @Override
+    public int compareTo(PersonId other) {
+        requireNonNull(other);
+        int numericOrder = new BigInteger(value.substring(1)).compareTo(new BigInteger(other.value.substring(1)));
+        return numericOrder != 0 ? numericOrder : value.compareTo(other.value);
     }
 
     @Override

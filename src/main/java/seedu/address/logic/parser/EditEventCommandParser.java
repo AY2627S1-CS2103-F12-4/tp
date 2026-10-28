@@ -19,6 +19,9 @@ public class EditEventCommandParser implements Parser<EditEventCommand> {
         String[] preamble = arguments.getPreamble().split("\\s+", 2);
         EventId eventId = ParserUtil.parseEventId(preamble[0]);
         String name = preamble.length == 2 ? preamble[1].strip() : null;
+        if (name != null && name.isBlank()) {
+            name = null;
+        }
         if (name == null && arguments.getValue(PREFIX_CAPACITY).isEmpty()
                 && arguments.getValue(PREFIX_DESCRIPTION).isEmpty()) {
             throw new ParseException(EditEventCommand.MESSAGE_NO_CHANGES);

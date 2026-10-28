@@ -76,6 +76,9 @@ Adds a person to the address book. A person must exist before they can be regist
 
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]...`
 
+If required fields are omitted, the error lists all missing fields before showing
+the command usage. For example, omitting the name reports `Missing required fields: n/NAME.`
+
 Examples:
 * `add n/John Tan p/91234567 e/john@example.com a/Singapore`
 * `add n/Michael Lee p/92345678 e/michael@example.com a/Singapore t/VIP`

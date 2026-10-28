@@ -134,6 +134,8 @@ Updates an event identified by its stable Event ID. Supply at least one of a new
 capacity or description. Omitted fields retain their existing values; an empty
 `/desc` clears the description. The optional name appears directly after the ID,
 before any prefixed fields. Names may contain spaces and may match another event's name.
+An optional name containing only whitespace, including Unicode whitespace, is treated
+as omitted and preserves the current name. Supply another field to make an update.
 
 If a name or description contains a standalone token resembling an unsupported
 field prefix, such as `/foo` or `/unknown-option`, a confirmation dialog shows the

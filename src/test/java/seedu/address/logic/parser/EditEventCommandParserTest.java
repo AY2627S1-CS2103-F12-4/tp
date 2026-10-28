@@ -36,6 +36,33 @@ public class EditEventCommandParserTest {
     }
 
     @Test
+    public void parseAndExecute_unicodeWhitespaceName_preservesNameAndUpdatesOtherFields() throws Exception {
+        for (String whitespace : new String[] {"\u2003", "\u2002", "\u3000", "\u2002 \u2003\u3000"}) {
+            ModelManager model = new ModelManager();
+            model.createEvent("Main", 10, "Original");
+            parser.parseCommand("edit-event E1 " + whitespace + " /cap 2").execute(model);
+            assertEquals(new Event(new EventId("E1"), "Main", 2, "Original"), model.getEvents().getFirst());
+            parser.parseCommand("edit-event E1 " + whitespace + " /desc Updated").execute(model);
+            assertEquals(new Event(new EventId("E1"), "Main", 2, "Updated"), model.getEvents().getFirst());
+        }
+    }
+
+    @Test
+    public void parse_unicodeWhitespaceNameWithoutOtherFields_reportsNoChanges() {
+        for (String whitespace : new String[] {"\u2003", "\u2002", "\u3000"}) {
+            ParseException exception = assertThrows(ParseException.class, () ->
+                    parser.parseCommand("edit-event E1 " + whitespace));
+            assertEquals(EditEventCommand.MESSAGE_NO_CHANGES, exception.getMessage());
+        }
+    }
+
+    @Test
+    public void parse_unicodeWhitespaceAroundRealName_preservesInternalWhitespace() throws Exception {
+        assertEquals(new EditEventCommand(new EventId("E1"), "New\u2003Name", 2, null),
+                parser.parseCommand("edit-event E1 \u2002New\u2003Name\u3000 /cap 2"));
+    }
+
+    @Test
     public void parseAndExecute_validCommand_updatesEvent() throws Exception {
         ModelManager model = new ModelManager();
         model.addEvent(new Event(new EventId("E8"), "Welcome Party", 1, "Old"));

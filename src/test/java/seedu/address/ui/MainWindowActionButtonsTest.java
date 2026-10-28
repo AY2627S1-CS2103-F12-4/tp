@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.ListCell;
@@ -42,6 +44,78 @@ import seedu.address.storage.StorageManager;
 public class MainWindowActionButtonsTest {
     @TempDir
     public Path temporaryFolder;
+
+    @Test
+    public void editEvent_unknownPrefix_cancelPreservesDataAndInput() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event original = model.createEvent("Main", 10, "Original");
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> {
+                    try {
+                        DialogPane pane = showingDialogPane();
+                        assertEquals("eventEditConfirmationDialog", pane.getId());
+                        assertTrue(pane.getContentText().contains("New name: /foo unexpected"));
+                        assertEquals(original, model.getEvents().getFirst());
+                        ButtonType cancelType = pane.getButtonTypes().stream()
+                                .filter(type -> type.getButtonData() == ButtonData.CANCEL_CLOSE)
+                                .findFirst().orElseThrow();
+                        Button cancel = (Button) pane.lookupButton(cancelType);
+                        assertEquals("Cancel", cancel.getText());
+                        assertTrue(cancel.isDefaultButton());
+                        cancel.fire();
+                    } catch (Throwable throwable) {
+                        failure.set(throwable);
+                        closeShowingDialog();
+                    }
+                });
+                TextField input = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
+                input.setText("edit-event E1 /foo unexpected");
+                input.fireEvent(new ActionEvent());
+                throwFailure(failure);
+                assertEquals(original, model.getEvents().getFirst());
+                assertEquals("edit-event E1 /foo unexpected", input.getText());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void editEvent_unknownPrefix_confirmSavesLiteralText() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event original = model.createEvent("Main", 10, "Original");
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> {
+                    try {
+                        assertEquals(original, model.getEvents().getFirst());
+                        DialogPane pane = showingDialogPane();
+                        assertTrue(pane.getContentText().contains("New description: Venue /foo unexpected"));
+                        clickButton(pane, "Confirm edit");
+                    } catch (Throwable throwable) {
+                        failure.set(throwable);
+                        closeShowingDialog();
+                    }
+                });
+                TextField input = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
+                input.setText("edit-event E1 /desc Venue /foo unexpected");
+                input.fireEvent(new ActionEvent());
+                throwFailure(failure);
+                assertEquals(new Event(new EventId("E1"), "Main", 10, "Venue /foo unexpected"),
+                        model.getEvents().getFirst());
+                assertEquals("", input.getText());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
 
     @Test
     public void actionButtons_loaded_haveVisibleLabelsAndActions() throws Exception {

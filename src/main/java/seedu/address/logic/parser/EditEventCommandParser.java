@@ -12,7 +12,8 @@ import seedu.address.model.event.EventId;
 public class EditEventCommandParser implements Parser<EditEventCommand> {
     @Override
     public EditEventCommand parse(String args) throws ParseException {
-        ArgumentMultimap arguments = ArgumentTokenizer.tokenize(args, PREFIX_CAPACITY, PREFIX_DESCRIPTION);
+        ArgumentMultimap arguments = ArgumentTokenizer.tokenizeWithSeparatedPrefixes(
+                args, PREFIX_CAPACITY, PREFIX_DESCRIPTION);
         if (arguments.getPreamble().isBlank()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditEventCommand.MESSAGE_USAGE));
         }

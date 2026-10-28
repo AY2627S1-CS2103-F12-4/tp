@@ -86,7 +86,7 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "archive-event E1");
                 assertNull(events(window).getSelectionModel().getSelectedItem());
                 assertTrue(participants(window).getItems().isEmpty());
-                assertEquals(CONFERENCE.withArchived(true).getDisplayName() + " (E1)", heading(window, "eventHeading"));
+                assertEquals(CONFERENCE.withArchived(true).getName() + " (E1)", heading(window, "eventHeading"));
                 assertEquals("Matching \"Speaker\"", heading(window, "searchHeading"));
                 enterCommand(window, "unarchive-event E1");
                 assertEquals(List.of("E1/P1"), resultIds(window));
@@ -107,7 +107,7 @@ public class RoleSearchWindowTest {
                 assertNull(events(window).getSelectionModel().getSelectedItem());
                 assertTrue(participants(window).getItems().isEmpty());
                 enterCommand(window, "search-role Speaker /event E3");
-                assertEquals(ARCHIVED.getDisplayName() + " (E3)", heading(window, "eventHeading"));
+                assertEquals(ARCHIVED.getName() + " (E3)", heading(window, "eventHeading"));
                 assertTrue(events(window).getItems().isEmpty());
                 assertTrue(participants(window).getItems().isEmpty());
             } finally {
@@ -424,7 +424,7 @@ public class RoleSearchWindowTest {
 
                 events(window).getSelectionModel().select(2);
                 assertEquals(List.of("E3/P3"), resultIds(window));
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
                 assertEquals("Cara Lim", participants(window).getItems().getFirst().getPerson().getName().fullName);
                 assertEquals(Set.of(new ParticipationRole("Speaker")),
                         participants(window).getItems().getFirst().getRoles());
@@ -432,7 +432,7 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "search-role Speaker /event E99");
                 assertEquals("People", selectedTab(window));
                 assertEquals(List.of("E3/P3"), resultIds(window));
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
                 tabs(window).getSelectionModel().select(1);
                 assertEquals("E3", events(window).getSelectionModel().getSelectedItem().getId());
 
@@ -466,7 +466,7 @@ public class RoleSearchWindowTest {
                 assertTrue(events(window).getItems().isEmpty());
                 assertTrue(participants(window).getItems().isEmpty());
                 assertNull(events(window).getSelectionModel().getSelectedItem());
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
                 assertEquals("Matching \"Missing\"", heading(window, "searchHeading"));
 
                 enterCommand(window, "list-event /include-archive");
@@ -493,7 +493,7 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "archive-event E2");
                 assertEquals(List.of("E2/P1"), resultIds(window));
                 assertEquals("E2", events(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals("Workshop <archived> (E2)", heading(window, "eventHeading"));
+                assertEquals("Workshop (E2)", heading(window, "eventHeading"));
                 enterCommand(window, "unarchive-event E2");
                 assertEquals("E2", events(window).getSelectionModel().getSelectedItem().getId());
                 assertEquals("Workshop (E2)", heading(window, "eventHeading"));
@@ -502,7 +502,7 @@ public class RoleSearchWindowTest {
                 assertEquals(List.of("E1/P1"), resultIds(window));
                 enterCommand(window, "edit-participant E1 P1 /role Guest");
                 assertEquals(List.of("E3/P3"), resultIds(window));
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
                 enterCommand(window, "edit-participant E3 P3 /role Guest");
                 assertNull(events(window).getSelectionModel().getSelectedItem());
                 assertTrue(participants(window).getItems().isEmpty());
@@ -512,7 +512,7 @@ public class RoleSearchWindowTest {
                         Set.of(new ParticipationRole("Speaker")), null);
                 assertEquals(List.of("E3/P3"), resultIds(window));
                 assertEquals("E3", events(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }

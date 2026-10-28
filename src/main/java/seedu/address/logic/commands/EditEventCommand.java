@@ -4,6 +4,8 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -23,6 +25,8 @@ public class EditEventCommand extends Command {
     public static final String MESSAGE_NOT_FOUND = "Event %s does not exist.";
     public static final String MESSAGE_NO_CHANGES = "At least one event field must be provided.";
 
+    private static final Pattern LIKELY_PREFIX = Pattern.compile("(?<!\\S)/[A-Za-z][A-Za-z0-9-]*(?=\\s|$)");
+
     private final EventId eventId;
     private final String name;
     private final Integer capacity;
@@ -37,6 +41,27 @@ public class EditEventCommand extends Command {
         this.name = name;
         this.capacity = capacity;
         this.description = description;
+    }
+
+    /** Returns a preview when free-text fields contain standalone tokens resembling unsupported prefixes. */
+    public Optional<String> getConfirmationMessage() {
+        boolean suspiciousName = name != null && LIKELY_PREFIX.matcher(name).find();
+        boolean suspiciousDescription = description != null && LIKELY_PREFIX.matcher(description).find();
+        if (!suspiciousName && !suspiciousDescription) {
+            return Optional.empty();
+        }
+        String preview = "The name or description contains text resembling an unsupported field prefix."
+                + " Only /cap and /desc are supported.\n\nEvent ID: " + eventId;
+        if (name != null) {
+            preview += "\nNew name: " + name;
+        }
+        if (capacity != null) {
+            preview += "\nNew capacity: " + capacity;
+        }
+        if (description != null) {
+            preview += "\nNew description: " + description;
+        }
+        return Optional.of(preview + "\n\nContinue and save this text literally?");
     }
 
     @Override

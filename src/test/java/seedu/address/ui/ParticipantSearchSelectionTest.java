@@ -125,7 +125,7 @@ public class ParticipantSearchSelectionTest {
                 assertNull(events(window).getSelectionModel().getSelectedItem());
                 assertTrue(participants(window).getItems().isEmpty());
                 Event archived = model.getParticipantSearchEvent().orElseThrow();
-                assertEquals(archived.getDisplayName() + " (E3)", heading(window, "eventHeading"));
+                assertEquals(archived.getName() + " (E3)", heading(window, "eventHeading"));
                 enterCommand(window, "unarchive-event E3");
                 assertSelection(window, "E3", "P1");
             } finally {
@@ -316,7 +316,7 @@ public class ParticipantSearchSelectionTest {
 
                 events(window).getSelectionModel().select(2);
                 assertSelection(window, "E3", "P1");
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
                 assertEquals("John Doe", participants(window).getItems().getFirst().getPerson().getName().fullName);
                 tabs(window).getSelectionModel().select(0);
                 tabs(window).getSelectionModel().select(1);
@@ -331,7 +331,7 @@ public class ParticipantSearchSelectionTest {
                 assertTrue(events(window).getItems().isEmpty());
                 assertTrue(participants(window).getItems().isEmpty());
                 assertNull(events(window).getSelectionModel().getSelectedItem());
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -359,7 +359,7 @@ public class ParticipantSearchSelectionTest {
                 model.addPerson(missing);
                 model.addParticipation(archived, missing);
                 assertSelection(window, "E5", "P5");
-                assertEquals("Old Workshop <archived> (E5)", heading(window, "eventHeading"));
+                assertEquals("Old Workshop (E5)", heading(window, "eventHeading"));
                 model.removeParticipation(archived, missing);
                 assertEquals("All events", heading(window, "eventHeading"));
                 assertTrue(participants(window).getItems().isEmpty());
@@ -382,7 +382,7 @@ public class ParticipantSearchSelectionTest {
                 events(window).getSelectionModel().select(1);
                 enterCommand(window, "archive-event E2");
                 assertSelection(window, "E2", "P1", "P3");
-                assertEquals("Reception <archived> (E2)", heading(window, "eventHeading"));
+                assertEquals("Reception (E2)", heading(window, "eventHeading"));
                 assertEquals(List.of("E1", "E2", "E3"), eventIds(window));
                 enterCommand(window, "unarchive-event E2");
                 assertSelection(window, "E2", "P1", "P3");
@@ -394,7 +394,7 @@ public class ParticipantSearchSelectionTest {
                 assertSelection(window, "E1", "P1");
                 enterCommand(window, "del-event E1");
                 assertSelection(window, "E3", "P1");
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
                 enterCommand(window, "del-event E3");
                 assertTrue(participants(window).getItems().isEmpty());
                 assertNull(events(window).getSelectionModel().getSelectedItem());
@@ -422,7 +422,7 @@ public class ParticipantSearchSelectionTest {
 
                 events(window).getSelectionModel().select(2);
                 assertSelection(window, "E3", "P1");
-                assertEquals("Archived <archived> (E3)", heading(window, "eventHeading"));
+                assertEquals("Archived (E3)", heading(window, "eventHeading"));
                 assertEquals("Participants", heading(window, "searchHeading"));
                 enterCommand(window, "list-event");
                 assertEquals(List.of("E1", "E2", "E4"), eventIds(window));

@@ -3,11 +3,16 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox spacing="6" styleClass="background" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
   <padding><Insets top="5" right="5" bottom="5" left="5" /></padding>
-  <Label fx:id="eventHeading" text="Participant search" styleClass="label-bright" wrapText="true" />
+  <HBox alignment="CENTER_LEFT" spacing="8">
+    <Label fx:id="eventHeading" text="Participant search" styleClass="label-bright" wrapText="true" />
+    <Label fx:id="archivedStatus" text="Archived" styleClass="archived-status" minWidth="-Infinity"
+           visible="false" managed="false" />
+  </HBox>
   <Label fx:id="searchHeading"
          text="search-participant NAME [/event EVENTID] [/include-archive]&#10;search-role ROLE [/event EVENTID] [/include-archive]"
          styleClass="label-bright" wrapText="true" />

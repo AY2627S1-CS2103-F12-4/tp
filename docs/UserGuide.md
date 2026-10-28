@@ -43,6 +43,7 @@ Failed commands continue to show the specific error and usage guidance where app
 * `...` indicates an argument that can be repeated.
 * Event IDs (e.g., `E1`) and person IDs (e.g., `P1`) are different from the numbered indices displayed in person lists. Use the identifier required by each command.
 * Some person-editing commands accept prefixed arguments in any order. For event/participant commands, follow the order shown in the format.
+* Event/participant field prefixes (`/cap`, `/desc`, `/role`, `/tag`) must be followed by whitespace before a value, or by the end of input for an empty value where allowed. Misspelled or attached forms such as `/roles`, `/tags`, `/description` and `/cap10` produce an error without changing data. Person prefixes such as `n/` and `p/` still accept attached values.
 
 </box>
 
@@ -136,6 +137,15 @@ before any prefixed fields. Names may contain spaces and may match another event
 An optional name containing only whitespace, including Unicode whitespace, is treated
 as omitted and preserves the current name. Supply another field to make an update.
 
+If a name or description contains a standalone token resembling an unsupported
+field prefix, such as `/foo` or `/unknown-option`, a confirmation dialog shows the
+event ID and proposed field values before saving. Only `/cap` and `/desc` are
+supported fields. **Cancel** is selected by default; cancelling or closing the
+dialog leaves the event unchanged and keeps your command or form input for correction.
+Choose **Confirm edit** to save the suspicious text literally. Ordinary slashes in
+`AC/DC`, URLs such as `https://example.com`, and paths such as `/home/user` do not
+trigger this confirmation.
+
 The Event ID, registrations, roles, tags and attendance are preserved. Reducing
 capacity below the registration count does not remove existing participants.
 
@@ -160,8 +170,10 @@ Archived events are hidden by default, including after restarting the app. Add
 to include them. Restore an event by ID to
 show it in the default list again, subject to the current search filter.
 
-Archived event cards and participant-panel headings show `<archived>` after the
-event name. Archiving preserves IDs, registrations, roles, tags, and attendance.
+Archived event cards and participant-panel headings show a separate red `Archived`
+label after the event name. Text such as `<archived>` within a name remains ordinary
+name text and does not indicate archive status. Archiving preserves IDs,
+registrations, roles, tags, and attendance.
 Archive state is saved between sessions; the option to include archives in a list
 or search is not. Other event operations remain available by ID.
 

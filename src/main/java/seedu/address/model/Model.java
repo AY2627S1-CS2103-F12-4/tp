@@ -225,7 +225,7 @@ public interface Model {
     void showEvents(boolean includeArchived);
 
     /**
-     * Returns live, unmodifiable results in event insertion order, then lexicographic person-ID order.
+     * Returns live, unmodifiable results in event insertion order, then numeric person-ID order.
      *
      * @return The same observable view across searches and subsequent model changes.
      */

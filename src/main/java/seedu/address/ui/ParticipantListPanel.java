@@ -86,8 +86,7 @@ public class ParticipantListPanel extends UiPart<Region> {
                         .sorted(Comparator.comparing(
                                 participation -> participation
                                         .getPerson()
-                                        .getId()
-                                        .toString()))
+                                        .getId()))
                         .toList());
 
         participantListView.setItems(eventParticipants);

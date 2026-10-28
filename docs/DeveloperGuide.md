@@ -220,8 +220,9 @@ included. Invalid input preserves the previous archive visibility as well as the
 query and results. Name matching normalizes whitespace in both the query and full
 name. Role matching uses a substring within any single assigned role. Both predicates
 ignore case. Each registration appears
-once, retaining all its roles, in event insertion order and then lexicographic
-Person ID order within each event.
+once, retaining all its roles, in event insertion order and then numeric
+Person ID order within each event. `PersonId.compareTo` uses arbitrary-precision
+numbers and breaks numeric ties using the exact ID text, including leading zeros.
 
 The model publishes the search type, scope, query, archive visibility, and matching-event
 filter before notifying observers of the result rows. `getParticipantSearchResults()`

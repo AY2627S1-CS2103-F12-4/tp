@@ -14,7 +14,7 @@ import seedu.address.model.event.exceptions.EventNotFoundException;
 import seedu.address.model.mapper.Participation;
 
 /**
- * Lists all participants registered for an event.
+ * Lists all participants registered for an event, replacing active search and event filters.
  */
 public class ListParticipantsCommand extends Command {
 
@@ -29,9 +29,17 @@ public class ListParticipantsCommand extends Command {
             "Event %s does not exist.";
 
     private final EventId eventId;
+    private final boolean shouldResetFilters;
 
+    /** Creates a participant listing that replaces active search and event filters. */
     public ListParticipantsCommand(EventId eventId) {
+        this(eventId, true);
+    }
+
+    /** Creates a listing that can preserve filters when used to display event details. */
+    ListParticipantsCommand(EventId eventId, boolean shouldResetFilters) {
         this.eventId = requireNonNull(eventId);
+        this.shouldResetFilters = shouldResetFilters;
     }
 
     @Override
@@ -52,6 +60,9 @@ public class ListParticipantsCommand extends Command {
                     String.format(MESSAGE_EVENT_NOT_FOUND, eventId), e);
         }
 
+        if (shouldResetFilters) {
+            model.showEvents(event.isArchived());
+        }
         model.selectEvent(eventId);
 
         if (participants.isEmpty()) {

@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import seedu.address.logic.parser.exceptions.ParseException;
 
 /** Collects the parameters required to add a person. */
 public final class AddPersonDialog extends FormDialog {
@@ -30,7 +31,9 @@ public final class AddPersonDialog extends FormDialog {
                 name.getText(), phone.getText(), email.getText(), address.getText(), tags.getText()));
     }
 
-    static String buildCommand(String name, String phone, String email, String address, String tags) {
+    static String buildCommand(String name, String phone, String email, String address, String tags)
+            throws ParseException {
+        DialogInputValidator.validatePerson(name, phone, email, address, tags);
         String tagArguments = Arrays.stream(tags.split(","))
                 .map(String::trim)
                 .filter(tag -> !tag.isEmpty())

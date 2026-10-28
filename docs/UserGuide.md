@@ -49,8 +49,14 @@ Failed commands continue to show the specific error and usage guidance where app
 
 ### Using the GUI buttons
 
-The GUI buttons provide form-based shortcuts for common commands. Submitted forms use the same validation and show
-the same success or error messages as commands entered in the command box.
+The GUI buttons provide form-based shortcuts for common commands. Fields marked with `*` must be filled in, including
+Name and Capacity when editing an event. The Add participant form's Person ID field accepts only a person ID such as
+`P1`; enter roles and tags in their separate fields. Invalid submissions show an error and keep the form open for
+correction. Submitted commands also undergo the same validation as commands entered in the command box.
+
+Enter roles and tags as comma-separated values in their designated fields. Each value is validated before submission.
+Person-form addresses cannot contain `n/`, `p/`, `e/`, `a/` or `t/` immediately after a space, as those sequences are
+interpreted as command options. The form displays an error for these addresses.
 
 | Location | Buttons, from left to right | Behaviour |
 |---|---|---|
@@ -297,6 +303,13 @@ Examples:
 Lists the people registered for the specified event, including their IDs, names and roles.
 Participants are ordered by the numeric part of their Person ID, for example `P1`, `P2`, `P10`.
 
+On success, the command clears any participant or role search and replaces the
+event-list filter. It selects the **Events** tab and the requested event, shows all
+its registrations under **Participants**, and hides **Clear search**. The event
+list shows all nonarchived events, or all events if the requested event is archived.
+An event with no registrations is still selected and shows an empty participant
+list. An unknown event ID preserves the current search and selection.
+
 Format: `list-participants EVENT_ID`
 
 Example: `list-participants E1`
@@ -413,6 +426,13 @@ replaces the search with an event-name filter, excluding archives unless
 `/include-archive` is supplied. These commands
 clear the participant rows and search context. Selecting an event after clearing the
 search shows all its registrations.
+
+`list-participants EVENT_ID` also clears either search and replaces the event-list
+filter. It selects the requested event and immediately shows all its registrations,
+even if that event was excluded by the previous search. The list shows all
+nonarchived events unless the requested event is archived, in which case it shows
+all events. Later edits do not reactivate the cleared search; enter a new
+`search-participant` or `search-role` command to search again.
 
 ### Marking attendance: `mark-participant`
 

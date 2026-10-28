@@ -1,0 +1,36 @@
+@startuml
+!include style.puml
+skinparam ConditionEndStyle diamond
+skinparam ActivityFontSize 14
+skinparam ArrowFontSize 12
+skinparam ActivityBackgroundColor UI_COLOR_T1
+skinparam ActivityBorderColor UI_COLOR_T3
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor UI_COLOR_T3
+
+start
+:Open form and enter or edit values;
+
+while () is ([submit])
+    :Check required fields, then\nevaluate CommandSupplier;
+
+    if () then ([validation failed])
+        :Show validation error;
+
+    else ([else])
+        :Execute command via\nCommandExecutor;
+        if () then ([command failed])
+            :Show command error;
+
+        else ([else])
+            :Close form after success;
+            stop
+        endif
+    endif
+    :Consume submit event and keep entered values;
+    :Wait for correction or cancellation;
+endwhile ([cancel or close])
+
+:Close form without executing another command;
+stop
+@enduml

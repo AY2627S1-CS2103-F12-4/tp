@@ -655,6 +655,7 @@ public class MainWindow extends UiPart<Stage> {
 
             resultDisplay.setFeedbackToUser(
                     isParticipantSearchCommand(commandText)
+                            || commandText.stripLeading().split("\\s+", 2)[0].equals(EditEventCommand.COMMAND_WORD)
                             || FindEventCommand.MESSAGE_NO_MATCHES.equals(commandResult.getFeedbackToUser())
                             ? commandResult.getFeedbackToUser()
                             : CommandSuccessMessages.forCommand(

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 import static seedu.address.testutil.TypicalPersons.ALICE;
+import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.nio.file.Path;
 import java.util.Set;
@@ -29,6 +30,7 @@ import javafx.stage.Window;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.EditEventCommand;
 import seedu.address.model.ModelManager;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
@@ -44,6 +46,37 @@ import seedu.address.storage.StorageManager;
 public class MainWindowActionButtonsTest {
     @TempDir
     public Path temporaryFolder;
+
+    @Test
+    public void editEventCommand_overcapacity_displaysWarningAndClearsItWhenCapacityRestored() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event event = model.createEvent("Workshop", 20, "Learn Java");
+            model.addPerson(ALICE);
+            model.addPerson(BOB);
+            model.addParticipation(event, ALICE);
+            model.addParticipation(event, BOB);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                TextField input = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
+                TextArea feedback = (TextArea) window.getPrimaryStage().getScene().lookup("#resultDisplay");
+                input.setText("edit-event E1 /cap 1");
+                input.fireEvent(new ActionEvent());
+                assertTrue(feedback.getText().contains("Warning: 2 registrations exceed capacity 1."));
+                assertTrue(feedback.getText().contains("All existing registrations have been retained."));
+                assertEquals(2, model.getParticipationsForEvent(model.getEvents().getFirst()).size());
+                assertEquals(1, model.getEvents().getFirst().getCapacity());
+
+                input.setText("edit-event E1 /cap 2");
+                input.fireEvent(new ActionEvent());
+                assertEquals(String.format(EditEventCommand.MESSAGE_SUCCESS, "Workshop", "E1"), feedback.getText());
+                assertEquals(2, model.getParticipationsForEvent(model.getEvents().getFirst()).size());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
 
     @Test
     public void viewEvent_afterListingAnotherEvent_switchesSelectionAndParticipants() throws Exception {
@@ -364,6 +397,10 @@ public class MainWindowActionButtonsTest {
             ModelManager model = new ModelManager();
             Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
             model.addEvent(event);
+            model.addPerson(ALICE);
+            model.addPerson(BOB);
+            model.addParticipation(event, ALICE);
+            model.addParticipation(event, BOB);
             MainWindow window = createWindow(model);
             try {
                 window.show();
@@ -376,7 +413,7 @@ public class MainWindowActionButtonsTest {
                 AtomicReference<Throwable> failure = new AtomicReference<>();
                 Platform.runLater(() -> submitFormAndClick(failure, "Edit",
                         "Event name", "Advanced Workshop",
-                        "Maximum participants", "40",
+                        "Maximum participants", "1",
                         "Event description", "Advanced Java"));
 
                 Button editButton = (Button) cell.getGraphic().lookup("#editButton");
@@ -386,8 +423,12 @@ public class MainWindowActionButtonsTest {
                 Event editedEvent = model.getFilteredEventList().getFirst();
                 assertEquals("E1", editedEvent.getId());
                 assertEquals("Advanced Workshop", editedEvent.getName());
-                assertEquals(40, editedEvent.getCapacity());
+                assertEquals(1, editedEvent.getCapacity());
                 assertEquals("Advanced Java", editedEvent.getDescription());
+                TextArea feedback = (TextArea) window.getPrimaryStage().getScene().lookup("#resultDisplay");
+                assertTrue(feedback.getText().contains("Warning: 2 registrations exceed capacity 1."));
+                assertTrue(feedback.getText().contains("All existing registrations have been retained."));
+                assertEquals(2, model.getParticipationsForEvent(editedEvent).size());
             } finally {
                 window.getPrimaryStage().close();
             }

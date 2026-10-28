@@ -20,6 +20,8 @@ public class EditEventCommand extends Command {
             + "Parameters: EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]\n"
             + "Example: edit-event E1 Orientation /cap 100 /desc Welcome session";
     public static final String MESSAGE_SUCCESS = "Event updated: %1$s (%2$s)";
+    public static final String MESSAGE_OVERCAPACITY = "\nWarning: %1$d registrations exceed capacity %2$d."
+            + " All existing registrations have been retained.";
     public static final String MESSAGE_INVALID_CAPACITY = "Event capacity must be a positive integer";
 
     public static final String MESSAGE_NOT_FOUND = "Event %s does not exist.";
@@ -75,7 +77,12 @@ public class EditEventCommand extends Command {
                 capacity == null ? current.getCapacity() : capacity,
                 description == null ? current.getDescription() : description, current.isArchived());
         model.updateEvent(event);
-        return new CommandResult(String.format(MESSAGE_SUCCESS, event.getName(), event.getId()), false, false, true);
+        int registrationCount = model.getParticipationsForEvent(event).size();
+        String feedback = String.format(MESSAGE_SUCCESS, event.getName(), event.getId());
+        if (registrationCount > event.getCapacity()) {
+            feedback += String.format(MESSAGE_OVERCAPACITY, registrationCount, event.getCapacity());
+        }
+        return new CommandResult(feedback, false, false, true);
     }
 
     @Override

@@ -314,11 +314,40 @@ public class FormDialogPartitionTest {
                 new InvalidInput(Form.ADD_PARTICIPANT, 2, "VIP /role Host", Tag.MESSAGE_CONSTRAINTS),
                 new InvalidInput(Form.EDIT_PARTICIPANT, 0, "Host /tag VIP", ParticipationRole.MESSAGE_CONSTRAINTS),
                 new InvalidInput(Form.EDIT_PARTICIPANT, 1, "VIP /role Host", Tag.MESSAGE_CONSTRAINTS),
+                new InvalidInput(Form.ADD_PERSON, 0, "Charlie Tan t/VIP", Name.MESSAGE_CONSTRAINTS),
+                new InvalidInput(Form.ADD_PERSON, 1, "93456789 t/VIP", Phone.MESSAGE_CONSTRAINTS),
+                new InvalidInput(Form.ADD_PERSON, 2, "charlie@example.com t/VIP", Email.MESSAGE_CONSTRAINTS),
+                new InvalidInput(Form.EDIT_PERSON, 0, "Bob Updated t/VIP", Name.MESSAGE_CONSTRAINTS),
+                new InvalidInput(Form.EDIT_PERSON, 1, "92345678 t/VIP", Phone.MESSAGE_CONSTRAINTS),
+                new InvalidInput(Form.EDIT_PERSON, 2, "updated@example.com t/VIP", Email.MESSAGE_CONSTRAINTS),
                 new InvalidInput(Form.ADD_PERSON, 4, "VIP t/Guest", Tag.MESSAGE_CONSTRAINTS),
                 new InvalidInput(Form.EDIT_PERSON, 4, "VIP t/Guest", Tag.MESSAGE_CONSTRAINTS))
                 .map(input -> test(input.form + " options in field " + input.field,
                         fixture -> reject(input.form, fixture, replace(input.form.values, input.field, input.value),
                                 input.message)));
+    }
+
+    @TestFactory
+    public Stream<DynamicTest> fieldOptions_afterRejection_canBeCorrectedAndSaved() {
+        return Stream.of(Form.ADD_PERSON, Form.EDIT_PERSON, Form.ADD_PARTICIPANT, Form.EDIT_PARTICIPANT)
+                .map(form -> test(form + " correct injected option", fixture -> {
+                    Snapshot before = fixture.snapshot();
+                    boolean personForm = form == Form.ADD_PERSON || form == Form.EDIT_PERSON;
+                    int field = personForm ? 4 : form == Form.ADD_PARTICIPANT ? 1 : 0;
+                    String invalid = personForm ? "friend t/VIP" : "Host /tag VIP";
+                    String message = personForm ? Tag.MESSAGE_CONSTRAINTS : ParticipationRole.MESSAGE_CONSTRAINTS;
+                    interact(() -> form.open(fixture), pane -> {
+                        fill(pane, replace(form.values, field, invalid));
+                        click(pane, ButtonData.OK_DONE);
+                        assertError(pane, message);
+                        fixture.assertUnchanged(before);
+                        fill(pane, form.values);
+                        click(pane, ButtonData.OK_DONE);
+                        assertFalse(isShowing(pane));
+                    });
+                    assertNotEquals(before, fixture.snapshot());
+                    fixture.assertPersisted();
+                }));
     }
 
     @Test

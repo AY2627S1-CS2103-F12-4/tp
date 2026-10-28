@@ -30,14 +30,14 @@ public class AddPersonDialogTest {
             + "2. The local-part is followed by an '@' and then a domain name.";
 
     @Test
-    public void buildCommand_allFields_formatsExistingCliCommand() {
+    public void buildCommand_allFields_formatsExistingCliCommand() throws ParseException {
         assertEquals("add n/Alex Yeoh p/87438807 e/alex@example.com a/Blk 30 t/friend t/volunteer",
                 AddPersonDialog.buildCommand("Alex Yeoh", "87438807", "alex@example.com", "Blk 30",
                         "friend, volunteer"));
     }
 
     @Test
-    public void buildCommand_blankTags_omitsTagPrefixes() {
+    public void buildCommand_blankTags_omitsTagPrefixes() throws ParseException {
         assertEquals("add n/Alex Yeoh p/87438807 e/alex@example.com a/Blk 30",
                 AddPersonDialog.buildCommand("Alex Yeoh", "87438807", "alex@example.com", "Blk 30", " "));
     }

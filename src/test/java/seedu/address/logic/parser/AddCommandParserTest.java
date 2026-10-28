@@ -33,6 +33,9 @@ import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSucces
 import static seedu.address.testutil.TypicalPersons.AMY;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.Messages;
@@ -148,27 +151,45 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_compulsoryFieldMissing_failure() {
-        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
-
         // missing name prefix
         assertParseFailure(parser, VALID_NAME_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + ADDRESS_DESC_BOB,
-                expectedMessage);
+                String.format(AddCommand.MESSAGE_MISSING_FIELDS, "n/NAME", AddCommand.MESSAGE_USAGE));
 
         // missing phone prefix
         assertParseFailure(parser, NAME_DESC_BOB + VALID_PHONE_BOB + EMAIL_DESC_BOB + ADDRESS_DESC_BOB,
-                expectedMessage);
+                String.format(AddCommand.MESSAGE_MISSING_FIELDS, "p/PHONE", AddCommand.MESSAGE_USAGE));
 
         // missing email prefix
         assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + VALID_EMAIL_BOB + ADDRESS_DESC_BOB,
-                expectedMessage);
+                String.format(AddCommand.MESSAGE_MISSING_FIELDS, "e/EMAIL", AddCommand.MESSAGE_USAGE));
 
         // missing address prefix
         assertParseFailure(parser, NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + VALID_ADDRESS_BOB,
-                expectedMessage);
+                String.format(AddCommand.MESSAGE_MISSING_FIELDS, "a/ADDRESS", AddCommand.MESSAGE_USAGE));
 
         // all prefixes missing
         assertParseFailure(parser, VALID_NAME_BOB + VALID_PHONE_BOB + VALID_EMAIL_BOB + VALID_ADDRESS_BOB,
-                expectedMessage);
+                String.format(AddCommand.MESSAGE_MISSING_FIELDS,
+                        "n/NAME, p/PHONE, e/EMAIL, a/ADDRESS", AddCommand.MESSAGE_USAGE));
+    }
+
+    @Test
+    public void parse_missingFieldCombinations_reportsAllMissingFieldsInUsageOrder() {
+        List<String> values = List.of(NAME_DESC_BOB, PHONE_DESC_BOB, EMAIL_DESC_BOB, ADDRESS_DESC_BOB);
+        List<String> fields = List.of("n/NAME", "p/PHONE", "e/EMAIL", "a/ADDRESS");
+        for (int mask = 0; mask < 15; mask++) {
+            StringBuilder input = new StringBuilder();
+            List<String> missing = new ArrayList<>();
+            for (int field = 0; field < fields.size(); field++) {
+                if ((mask & (1 << field)) == 0) {
+                    missing.add(fields.get(field));
+                } else {
+                    input.append(values.get(field));
+                }
+            }
+            assertParseFailure(parser, input.toString(), String.format(AddCommand.MESSAGE_MISSING_FIELDS,
+                    String.join(", ", missing), AddCommand.MESSAGE_USAGE));
+        }
     }
 
     @Test

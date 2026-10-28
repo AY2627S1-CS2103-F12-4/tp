@@ -220,8 +220,9 @@ included. Invalid input preserves the previous archive visibility as well as the
 query and results. Name matching normalizes whitespace in both the query and full
 name. Role matching uses a substring within any single assigned role. Both predicates
 ignore case. Each registration appears
-once, retaining all its roles, in event insertion order and then lexicographic
-Person ID order within each event.
+once, retaining all its roles, in event insertion order and then numeric
+Person ID order within each event. `PersonId.compareTo` uses arbitrary-precision
+numbers and breaks numeric ties using the exact ID text, including leading zeros.
 
 The model publishes the search type, scope, query, archive visibility, and matching-event
 filter before notifying observers of the result rows. `getParticipantSearchResults()`
@@ -638,36 +639,41 @@ Use case ends.
 
 **Actor:** Event organiser
 
-**Preconditions:**
-* At least one event exists, and the event list is displayed.
+**Guarantees:**
 
-**Guarantee on success:**
-* A new participant with a unique ID is added to the specified event and saved to persistent storage.
+* A successful registration remains recorded with the supplied event-specific roles and tags, if any.
+* An unsuccessful request leaves existing registrations unchanged.
 
 **MSS**
 
-1. The organiser requests to add a participant to an event, providing the event index, participant name, and role.
-2. AttendPlusPlus validates the event index and participant details.
-3. AttendPlusPlus assigns a unique participant ID and adds the participant to the event.
-4. AttendPlusPlus saves the changes and refreshes the relevant GUI view.
-5. AttendPlusPlus displays a success message.
+1. The event organiser requests to register an existing person for an event, providing the Event ID, Person ID,
+   and optionally roles and tags for that event.
+2. AttendPlusPlus registers the person for the event, initially marked absent, with the supplied roles and tags, if any.
+3. AttendPlusPlus informs the event organiser that the person has been registered successfully.
 
 Use case ends.
 
 **Extensions**
 
-* 2a. The event index does not refer to an existing event.
-    * 2a1. AttendPlusPlus displays an error explaining that the event cannot be found.
+* 1a. The request has missing required details or invalid IDs, roles, or tags.
+    * 1a1. AttendPlusPlus informs the event organiser of the problem and the required details.
     * Use case ends.
 
-* 2b. The request has missing arguments, an invalid command format, or invalid participant details.
-    * 2b1. AttendPlusPlus displays an error explaining the problem and, where appropriate, the expected command format.
+* 1b. The specified event does not exist.
+    * 1b1. AttendPlusPlus informs the event organiser that the event cannot be found.
     * Use case ends.
 
-**Additional notes**
+* 1c. The specified person does not exist.
+    * 1c1. AttendPlusPlus informs the event organiser that the person cannot be found.
+    * Use case ends.
 
-* Invalid requests leave the current view and stored data unchanged.
-* Participants with identical names and roles are allowed and receive distinct IDs.
+* 1d. The person is already registered for the specified event.
+    * 1d1. AttendPlusPlus informs the event organiser that the person is already registered for the event.
+    * Use case ends.
+
+* 1e. The event is at full capacity.
+    * 1e1. AttendPlusPlus informs the event organiser that the event is at full capacity.
+    * Use case ends.
 
 ### Use case: UC04 - Create Event
 

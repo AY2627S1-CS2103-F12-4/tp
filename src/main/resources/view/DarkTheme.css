@@ -492,3 +492,11 @@
 #tags .event-tag {
     -fx-background-color: #8e5aa8;
 }
+
+.label.archived-status {
+    -fx-text-fill: white;
+    -fx-background-color: #a52d37;
+    -fx-padding: 1 5 1 5;
+    -fx-background-radius: 2;
+    -fx-font-size: 11;
+}

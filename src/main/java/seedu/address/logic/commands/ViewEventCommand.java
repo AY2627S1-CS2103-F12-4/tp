@@ -35,7 +35,7 @@ public class ViewEventCommand extends Command {
                 + "Description: " + event.getDescription() + "\n\n"
                 + participants;
         model.selectEvent(eventId);
-        return new CommandResult(details, false, false, true);
+        return new CommandResult(details, false, false, true, true);
     }
 
     @Override

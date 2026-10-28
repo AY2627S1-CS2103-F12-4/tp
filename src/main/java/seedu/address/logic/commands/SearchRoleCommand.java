@@ -34,7 +34,7 @@ public class SearchRoleCommand extends Command {
 
     private final Optional<EventId> eventId;
     private final String keyword;
-    private final boolean includeArchived;
+    private final boolean shouldIncludeArchived;
 
     /**
      * Creates a search for the specified event and complete role phrase.
@@ -50,8 +50,8 @@ public class SearchRoleCommand extends Command {
     }
 
     /** Creates a scoped role search with the requested archive visibility. */
-    public SearchRoleCommand(EventId eventId, String keyword, boolean includeArchived) {
-        this(Optional.of(eventId), keyword, includeArchived);
+    public SearchRoleCommand(EventId eventId, String keyword, boolean shouldIncludeArchived) {
+        this(Optional.of(eventId), keyword, shouldIncludeArchived);
     }
 
     /** Creates a role search across all nonarchived events. */
@@ -60,16 +60,16 @@ public class SearchRoleCommand extends Command {
     }
 
     /** Creates a global role search with the requested archive visibility. */
-    public SearchRoleCommand(String keyword, boolean includeArchived) {
-        this(Optional.empty(), keyword, includeArchived);
+    public SearchRoleCommand(String keyword, boolean shouldIncludeArchived) {
+        this(Optional.empty(), keyword, shouldIncludeArchived);
     }
 
-    private SearchRoleCommand(Optional<EventId> eventId, String keyword, boolean includeArchived) {
+    private SearchRoleCommand(Optional<EventId> eventId, String keyword, boolean shouldIncludeArchived) {
         String normalizedKeyword = StringUtil.normalizeWhitespace(keyword);
         checkArgument(!normalizedKeyword.isEmpty(), "Role search keyword must not be blank.");
         this.eventId = eventId;
         this.keyword = normalizedKeyword;
-        this.includeArchived = includeArchived;
+        this.shouldIncludeArchived = shouldIncludeArchived;
     }
 
     /**
@@ -85,17 +85,17 @@ public class SearchRoleCommand extends Command {
         if (eventId.isPresent()) {
             EventId scope = eventId.orElseThrow();
             try {
-                model.updateParticipantRoleSearch(scope, keyword, includeArchived);
+                model.updateParticipantRoleSearch(scope, keyword, shouldIncludeArchived);
             } catch (EventNotFoundException e) {
                 throw new CommandException(String.format(MESSAGE_EVENT_NOT_FOUND, scope), e);
             }
         } else {
-            model.updateParticipantRoleSearch(keyword, includeArchived);
+            model.updateParticipantRoleSearch(keyword, shouldIncludeArchived);
         }
 
         int registrationCount = model.getParticipantSearchResults().size();
         if (registrationCount == 0) {
-            String message = includeArchived ? MESSAGE_NO_MATCHES_INCLUDING_ARCHIVED : MESSAGE_NO_MATCHES;
+            String message = shouldIncludeArchived ? MESSAGE_NO_MATCHES_INCLUDING_ARCHIVED : MESSAGE_NO_MATCHES;
             return new CommandResult(String.format(message, keyword), false, false, true);
         }
 
@@ -114,7 +114,7 @@ public class SearchRoleCommand extends Command {
                 || other instanceof SearchRoleCommand otherCommand
                 && eventId.equals(otherCommand.eventId)
                 && keyword.equals(otherCommand.keyword)
-                && includeArchived == otherCommand.includeArchived;
+                && shouldIncludeArchived == otherCommand.shouldIncludeArchived;
     }
 
     /**
@@ -122,6 +122,6 @@ public class SearchRoleCommand extends Command {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(eventId, keyword, includeArchived);
+        return Objects.hash(eventId, keyword, shouldIncludeArchived);
     }
 }

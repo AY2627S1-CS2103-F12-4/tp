@@ -236,7 +236,7 @@ remaining query and event scope. Repeated, misplaced, or unsupported options and
 flag values are rejected. `SearchParticipantCommand` calls the global or scoped
 `Model#updateParticipantSearch` overload; `SearchRoleCommand` calls the
 corresponding `Model#updateParticipantRoleSearch` overload. Each passes the
-`includeArchived` boolean. Both commands report registration and event counts and
+`shouldIncludeArchived` boolean. Both commands report registration and event counts and
 request the Events tab through `CommandResult`. Empty-result feedback distinguishes
 searches that include archives from default searches. Command equality and hash
 codes include archive visibility.
@@ -315,7 +315,7 @@ and archive visibility, including person updates, registration and role changes,
 event edits, and archive changes. Deleting an event during a global search refreshes
 the remaining matches. Deleting the scoped event calls `clearParticipantSearch()`, which clears
 either search type and restores the ordinary nonarchived event list.
-`ListEventCommand` calls `showEvents(includeArchived)` to clear the search and list
+`ListEventCommand` calls `showEvents(shouldIncludeArchived)` to clear the search and list
 events with the requested archive visibility. `clearParticipantSearch()` delegates
 to `showEvents(false)`; `FindEventCommand` uses this default reset before applying
 its name predicate. Both reset paths clear the stored search archive flag, even
@@ -533,12 +533,12 @@ an archive field load as nonarchived. `Event#getDisplayName()` appends `<archive
 for display without modifying the stored name used for matching.
 
 The initial event view excludes archives. The overload
-`updateFilteredEventList(predicate, includeArchived)` combines archive visibility
+`updateFilteredEventList(predicate, shouldIncludeArchived)` combines archive visibility
 with the supplied predicate; its single-argument overload defaults to `false`.
 Search result collection uses the
 same archive policy so registration counts and displayed matching events agree.
 `list-event [/include-archive]` replaces the event filter through
-`showEvents(includeArchived)` and clears any participant search. Archive state is
+`showEvents(shouldIncludeArchived)` and clears any participant search. Archive state is
 persisted, while listing visibility and search context are transient and reset
 when the model is reconstructed.
 
@@ -548,7 +548,7 @@ archive flag before constructing the predicate, preserving the keyword's interna
 whitespace. Empty keywords, unknown options, duplicate flags, and misplaced flags
 are rejected before changing model state. `FindEventCommand` clears participant
 search and applies the predicate through
-`updateFilteredEventList(predicate, includeArchived)`. The existing constructor
+`updateFilteredEventList(predicate, shouldIncludeArchived)`. The existing constructor
 defaults to excluding archives. Each command replaces the previous keyword and
 archive scope; including archives does not include events that fail the predicate.
 The GUI success message displays the keyword without the archive flag.

@@ -35,7 +35,7 @@ public class SearchParticipantCommand extends Command {
 
     private final Optional<EventId> eventId;
     private final String keyword;
-    private final boolean includeArchived;
+    private final boolean shouldIncludeArchived;
 
     /**
      * Creates a search for {@code keyword} within the event identified by {@code eventId}.
@@ -51,8 +51,8 @@ public class SearchParticipantCommand extends Command {
     }
 
     /** Creates a scoped name search with the requested archive visibility. */
-    public SearchParticipantCommand(EventId eventId, String keyword, boolean includeArchived) {
-        this(Optional.of(eventId), keyword, includeArchived);
+    public SearchParticipantCommand(EventId eventId, String keyword, boolean shouldIncludeArchived) {
+        this(Optional.of(eventId), keyword, shouldIncludeArchived);
     }
 
     /** Creates a name search across all nonarchived events. */
@@ -61,16 +61,16 @@ public class SearchParticipantCommand extends Command {
     }
 
     /** Creates a global name search with the requested archive visibility. */
-    public SearchParticipantCommand(String keyword, boolean includeArchived) {
-        this(Optional.empty(), keyword, includeArchived);
+    public SearchParticipantCommand(String keyword, boolean shouldIncludeArchived) {
+        this(Optional.empty(), keyword, shouldIncludeArchived);
     }
 
-    private SearchParticipantCommand(Optional<EventId> eventId, String keyword, boolean includeArchived) {
+    private SearchParticipantCommand(Optional<EventId> eventId, String keyword, boolean shouldIncludeArchived) {
         String normalizedKeyword = StringUtil.normalizeWhitespace(keyword);
         checkArgument(!normalizedKeyword.isEmpty(), "Participant search names must not be blank.");
         this.eventId = eventId;
         this.keyword = normalizedKeyword;
-        this.includeArchived = includeArchived;
+        this.shouldIncludeArchived = shouldIncludeArchived;
     }
 
     /**
@@ -87,16 +87,16 @@ public class SearchParticipantCommand extends Command {
         requireNonNull(model);
         try {
             if (eventId.isPresent()) {
-                model.updateParticipantSearch(eventId.orElseThrow(), keyword, includeArchived);
+                model.updateParticipantSearch(eventId.orElseThrow(), keyword, shouldIncludeArchived);
             } else {
-                model.updateParticipantSearch(keyword, includeArchived);
+                model.updateParticipantSearch(keyword, shouldIncludeArchived);
             }
         } catch (EventNotFoundException e) {
             throw new CommandException(String.format(MESSAGE_EVENT_NOT_FOUND, eventId.orElseThrow()), e);
         }
         int matchCount = model.getParticipantSearchResults().size();
         if (matchCount == 0) {
-            String message = includeArchived ? MESSAGE_NO_MATCHES_INCLUDING_ARCHIVED : MESSAGE_NO_MATCHES;
+            String message = shouldIncludeArchived ? MESSAGE_NO_MATCHES_INCLUDING_ARCHIVED : MESSAGE_NO_MATCHES;
             return new CommandResult(String.format(message, keyword), false, false, true);
         }
         int eventCount = model.getFilteredEventList().size();
@@ -111,11 +111,11 @@ public class SearchParticipantCommand extends Command {
                 || other instanceof SearchParticipantCommand otherCommand
                 && eventId.equals(otherCommand.eventId)
                 && keyword.equals(otherCommand.keyword)
-                && includeArchived == otherCommand.includeArchived;
+                && shouldIncludeArchived == otherCommand.shouldIncludeArchived;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(eventId, keyword, includeArchived);
+        return Objects.hash(eventId, keyword, shouldIncludeArchived);
     }
 }

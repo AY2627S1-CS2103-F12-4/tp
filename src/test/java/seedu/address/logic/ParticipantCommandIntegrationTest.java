@@ -98,8 +98,8 @@ public class ParticipantCommandIntegrationTest {
         participationStorage.saveFailure = new AccessDeniedException("participations.json");
 
         logic.execute("list-event");
-        assertTrue(logic.execute("help").isShowHelp());
-        assertTrue(logic.execute("exit").isExit());
+        assertTrue(logic.execute("help").shouldShowHelp());
+        assertTrue(logic.execute("exit").shouldExit());
         assertEquals(0, participationStorage.saveAttempts);
     }
 
@@ -110,8 +110,8 @@ public class ParticipantCommandIntegrationTest {
         logic = createLogic();
         participationStorage.saveFailure = new AccessDeniedException("participations.json");
 
-        assertTrue(logic.execute("help").isShowHelp());
-        assertTrue(logic.execute("exit").isExit());
+        assertTrue(logic.execute("help").shouldShowHelp());
+        assertTrue(logic.execute("exit").shouldExit());
         assertEquals(1, participationStorage.saveAttempts);
         assertFalse(getOnlyStoredParticipation().isPresent());
     }
@@ -177,8 +177,8 @@ public class ParticipantCommandIntegrationTest {
         assertEquals(4, participationStorage.saveAttempts);
 
         participationStorage.saveFailure = saveFailure;
-        assertTrue(logic.execute("help").isShowHelp());
-        assertTrue(logic.execute("exit").isExit());
+        assertTrue(logic.execute("help").shouldShowHelp());
+        assertTrue(logic.execute("exit").shouldExit());
         assertEquals(4, participationStorage.saveAttempts);
     }
 

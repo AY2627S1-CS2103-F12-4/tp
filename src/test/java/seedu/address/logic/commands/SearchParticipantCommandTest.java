@@ -136,7 +136,7 @@ public class SearchParticipantCommandTest {
     public void execute_eventDisappearsDuringSearch_throwsCommandException() {
         ModelManager unavailableEventModel = new ModelManager() {
             @Override
-            public void updateParticipantSearch(EventId eventId, String keyword, boolean includeArchived) {
+            public void updateParticipantSearch(EventId eventId, String keyword, boolean shouldIncludeArchived) {
                 throw new EventNotFoundException();
             }
         };
@@ -229,17 +229,17 @@ public class SearchParticipantCommandTest {
         CommandResult result = new AddressBookParser()
                 .parseCommand("search-participant Michael /event E1").execute(model);
         assertEquals("2 matching registrations across 1 event for \"Michael\".", result.getFeedbackToUser());
-        assertFalse(result.isExit());
-        assertFalse(result.isShowHelp());
-        assertFalse(result.isShowParticipants());
+        assertFalse(result.shouldExit());
+        assertFalse(result.shouldShowHelp());
+        assertFalse(result.shouldShowParticipants());
     }
 
     @Test
     public void execute_zeroOneAndMultipleMatches_alwaysRequestsEventView() throws Exception {
         for (String keyword : List.of("Missing", "Michael Tan", "Michael")) {
             CommandResult result = new SearchParticipantCommand(FIRST_EVENT, keyword).execute(model);
-            assertFalse(result.isShowParticipants());
-            assertTrue(result.isShowEvents());
+            assertFalse(result.shouldShowParticipants());
+            assertTrue(result.shouldShowEvents());
         }
     }
 
@@ -264,8 +264,8 @@ public class SearchParticipantCommandTest {
         assertEquals("3 matching registrations across 2 events for \"Michael\".", result.getFeedbackToUser());
         assertEquals(List.of(WEDDING, WORKSHOP), model.getFilteredEventList());
         assertEquals(3, model.getParticipantSearchResults().size());
-        assertTrue(result.isShowEvents());
-        assertFalse(result.isShowParticipants());
+        assertTrue(result.shouldShowEvents());
+        assertFalse(result.shouldShowParticipants());
     }
 
     @Test
@@ -300,9 +300,9 @@ public class SearchParticipantCommandTest {
         assertEquals("3 matching registrations across 2 events for \"Michael\".", result.getFeedbackToUser());
         assertEquals(List.of(WEDDING.withArchived(true), WORKSHOP), model.getFilteredEventList());
         assertEquals(3, model.getParticipantSearchResults().size());
-        assertTrue(result.isShowEvents());
-        assertFalse(result.isShowHelp());
-        assertFalse(result.isExit());
+        assertTrue(result.shouldShowEvents());
+        assertFalse(result.shouldShowHelp());
+        assertFalse(result.shouldExit());
 
         CommandResult defaultResult = parser.parseCommand("search-participant Michael").execute(model);
         assertEquals("1 matching registration across 1 event for \"Michael\".", defaultResult.getFeedbackToUser());
@@ -339,7 +339,7 @@ public class SearchParticipantCommandTest {
                     result.getFeedbackToUser());
             assertTrue(model.getParticipantSearchResults().isEmpty());
             assertTrue(model.getFilteredEventList().isEmpty());
-            assertTrue(result.isShowEvents());
+            assertTrue(result.shouldShowEvents());
         }
     }
 

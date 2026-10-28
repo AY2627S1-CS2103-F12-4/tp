@@ -132,8 +132,8 @@ public class ListParticipantsCommandTest {
                                     .execute(testModel);
 
                     assertEquals(expected, result.getFeedbackToUser());
-                    assertTrue(result.isShowParticipants());
-                    assertFalse(result.isShowEvents());
+                    assertTrue(result.shouldShowParticipants());
+                    assertFalse(result.shouldShowEvents());
                     assertEquals(
                             EVENT_ID.toString(),
                             testModel.getSelectedEvent()
@@ -205,7 +205,7 @@ public class ListParticipantsCommandTest {
                         + "（Tags:None）",
                 result.getFeedbackToUser());
 
-        assertTrue(result.isShowParticipants());
+        assertTrue(result.shouldShowParticipants());
         assertEquals(
                 EVENT_ID.toString(),
                 model.getSelectedEvent().orElseThrow().getId());
@@ -234,7 +234,7 @@ public class ListParticipantsCommandTest {
 
             CommandResult result = parser.parseCommand("list-participants E2").execute(model);
 
-            assertTrue(result.isShowParticipants());
+            assertTrue(result.shouldShowParticipants());
             assertTrue(result.getFeedbackToUser().contains("2 participants found in Concert."));
             assertTrue(result.getFeedbackToUser().contains("[Y]P1-Alice Tan-roles:Speaker"));
             assertTrue(result.getFeedbackToUser().contains("P2-Bob Lim"));
@@ -262,7 +262,7 @@ public class ListParticipantsCommandTest {
         CommandResult result = new ListParticipantsCommand(OTHER_EVENT_ID).execute(model);
 
         assertEquals("No participants found in Concert.", result.getFeedbackToUser());
-        assertTrue(result.isShowParticipants());
+        assertTrue(result.shouldShowParticipants());
         assertEquals(OTHER_EVENT, model.getSelectedEvent().orElseThrow());
         assertEquals(List.of(EVENT, OTHER_EVENT), model.getFilteredEventList());
         assertTrue(model.getParticipantSearchKeyword().isEmpty());
@@ -282,7 +282,7 @@ public class ListParticipantsCommandTest {
         CommandResult result = new ListParticipantsCommand(OTHER_EVENT_ID).execute(model);
 
         assertTrue(result.getFeedbackToUser().contains("Bob Lim"));
-        assertTrue(result.isShowParticipants());
+        assertTrue(result.shouldShowParticipants());
         assertEquals(archived, model.getSelectedEvent().orElseThrow());
         assertEquals(List.of(EVENT, archived), model.getFilteredEventList());
         assertTrue(model.getParticipantSearchKeyword().isEmpty());
@@ -347,8 +347,8 @@ public class ListParticipantsCommandTest {
         assertTrue(feedback.contains("P2"));
         assertTrue(feedback.contains("Bob Lim"));
 
-        assertTrue(result.isShowParticipants());
-        assertFalse(result.isShowEvents());
+        assertTrue(result.shouldShowParticipants());
+        assertFalse(result.shouldShowEvents());
         assertEquals(
                 EVENT_ID.toString(),
                 model.getSelectedEvent().orElseThrow().getId());
@@ -365,8 +365,8 @@ public class ListParticipantsCommandTest {
         assertEquals(
                 "No participants found in Workshop.",
                 result.getFeedbackToUser());
-        assertTrue(result.isShowParticipants());
-        assertFalse(result.isShowEvents());
+        assertTrue(result.shouldShowParticipants());
+        assertFalse(result.shouldShowEvents());
         assertEquals(
                 EVENT_ID.toString(),
                 model.getSelectedEvent().orElseThrow().getId());

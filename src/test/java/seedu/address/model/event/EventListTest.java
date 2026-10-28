@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,42 @@ public class EventListTest {
     private static final EventId ID = new EventId("E1");
     private static final EventId OTHER_ID = new EventId("E2");
     private static final Event EVENT = new Event(ID, "Workshop", 10, "Description");
+
+    @Test
+    public void restoreNextId_lowerOrNullSequence_preservesRetiredIdsAndEvents() {
+        EventList events = new EventList();
+        Event first = events.createEvent("First", 10, "");
+        Event second = events.createEvent("Second", 10, "");
+        events.removeEvent(second.getId());
+
+        for (BigInteger invalid : List.of(BigInteger.valueOf(-1), BigInteger.ZERO,
+                BigInteger.ONE, BigInteger.TWO)) {
+            assertThrows(IllegalArgumentException.class, () -> events.restoreNextId(invalid));
+            assertEquals(BigInteger.valueOf(3), events.getNextId());
+            assertEquals(List.of(first), events.getEvents());
+        }
+        assertThrows(NullPointerException.class, () -> events.restoreNextId(null));
+        assertEquals(BigInteger.valueOf(3), events.getNextId());
+        assertEquals(List.of(first), events.getEvents());
+        assertEquals("E3", events.createEvent("Next", 10, "").getId());
+    }
+
+    @Test
+    public void restoreNextId_sameOrHigherSequence_preservesEventsAndUsesRestoredId() {
+        EventList events = new EventList();
+        events.addEvent(EVENT);
+        events.restoreNextId(BigInteger.TWO);
+        assertEquals(BigInteger.TWO, events.getNextId());
+        assertEquals(List.of(EVENT), events.getEvents());
+        assertEquals("E2", events.createEvent("Second", 10, "").getId());
+
+        List<Event> beforeRestore = events.getEvents();
+        events.restoreNextId(BigInteger.TEN);
+        assertEquals(beforeRestore, events.getEvents());
+        assertEquals(BigInteger.TEN, events.getNextId());
+        assertEquals("E10", events.createEvent("Restored", 10, "").getId());
+        assertEquals(BigInteger.valueOf(11), events.getNextId());
+    }
 
     @Test
     public void createEvent_assignsSequentialIdsAndRegistersEvents() {

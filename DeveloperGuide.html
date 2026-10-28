@@ -477,36 +477,41 @@ Use case ends.
 
 **Actor:** Event organiser
 
-**Preconditions:**
-* At least one event exists, and the event list is displayed.
+**Guarantees:**
 
-**Guarantee on success:**
-* A new participant with a unique ID is added to the specified event and saved to persistent storage.
+* A successful registration remains recorded with the supplied event-specific roles and tags, if any.
+* An unsuccessful request leaves existing registrations unchanged.
 
 **MSS**
 
-1. The organiser requests to add a participant to an event, providing the event index, participant name, and role.
-2. AttendPlusPlus validates the event index and participant details.
-3. AttendPlusPlus assigns a unique participant ID and adds the participant to the event.
-4. AttendPlusPlus saves the changes and refreshes the relevant GUI view.
-5. AttendPlusPlus displays a success message.
+1. The event organiser requests to register an existing person for an event, providing the Event ID, Person ID,
+   and optionally roles and tags for that event.
+2. AttendPlusPlus registers the person for the event, initially marked absent, with the supplied roles and tags, if any.
+3. AttendPlusPlus informs the event organiser that the person has been registered successfully.
 
 Use case ends.
 
 **Extensions**
 
-* 2a. The event index does not refer to an existing event.
-    * 2a1. AttendPlusPlus displays an error explaining that the event cannot be found.
+* 1a. The request has missing required details or invalid IDs, roles, or tags.
+    * 1a1. AttendPlusPlus informs the event organiser of the problem and the required details.
     * Use case ends.
 
-* 2b. The request has missing arguments, an invalid command format, or invalid participant details.
-    * 2b1. AttendPlusPlus displays an error explaining the problem and, where appropriate, the expected command format.
+* 1b. The specified event does not exist.
+    * 1b1. AttendPlusPlus informs the event organiser that the event cannot be found.
     * Use case ends.
 
-**Additional notes**
+* 1c. The specified person does not exist.
+    * 1c1. AttendPlusPlus informs the event organiser that the person cannot be found.
+    * Use case ends.
 
-* Invalid requests leave the current view and stored data unchanged.
-* Participants with identical names and roles are allowed and receive distinct IDs.
+* 1d. The person is already registered for the specified event.
+    * 1d1. AttendPlusPlus informs the event organiser that the person is already registered for the event.
+    * Use case ends.
+
+* 1e. The event is at full capacity.
+    * 1e1. AttendPlusPlus informs the event organiser that the event is at full capacity.
+    * Use case ends.
 
 ### Use case: UC04 - Create Event
 
@@ -612,7 +617,7 @@ testers are expected to do more *exploratory* testing.
    1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
 
 1. _{ more test cases … }_
-</archived></archived></div> <nav id="page-nav" data-v-6b1b63d2><!--[--><div class="nav-component slim-scroll"><nav id="mb-page-nav" class="nav nav-pills flex-column my-0 small no-flex-wrap" data-v-6b1b63d2><!--[--><a class="nav-link py-1" href="#attendplusplus-developer-guide">AttendPlusPlus Developer Guide‎</a> <nav class="nav nav-pills flex-column my-0 nested no-flex-wrap"><a class="nav-link py-1" href="#acknowledgements">Acknowledgements‎</a> <a class="nav-link py-1" href="#setting-up-getting-started">Setting up, getting started‎</a> <a class="nav-link py-1" href="#design">Design‎</a> <nav class="nav nav-pills flex-column my-0 nested no-flex-wrap"><a class="nav-link py-1" href="#architecture">Architecture‎</a> <a class="nav-link py-1" href="#ui-component">UI component‎</a> <a class="nav-link py-1" href="#logic-component">Logic component‎</a> <a class="nav-link py-1" href="#model-component">Model component‎</a> <a class="nav-link py-1" href="#storage-component">Storage component‎</a> <a class="nav-link py-1" href="#common-classes">Common classes‎</a></nav> <a class="nav-link py-1" href="#implementation">Implementation‎</a> <nav class="nav nav-pills flex-column my-0 nested no-flex-wrap"><a class="nav-link py-1" href="#participant-search">Participant search‎</a></nav></nav><!--]--><!--v-if--></nav></div><!--]--><!--v-if--></nav> <div class="scroll-top-button fa-lg d-print-none" style="display:none;bottom:2%;right:2%;position:fixed;" aria-hidden="true"><!--[--><i class="fas fa-arrow-circle-up"></i><!--]--></div></div> <footer><div class="text-center"><small>[<span><strong>Powered by</strong></span> <img src="https://markbind.org/favicon.ico" width="30"> <a href="https://markbind.org/">MarkBind 7.2.1</a>, generated on Wed, 28 Oct 2026, 15:39:10 GMT+8]</small></div></footer><!--]--></div>
+</archived></archived></div> <nav id="page-nav" data-v-6b1b63d2><!--[--><div class="nav-component slim-scroll"><nav id="mb-page-nav" class="nav nav-pills flex-column my-0 small no-flex-wrap" data-v-6b1b63d2><!--[--><a class="nav-link py-1" href="#attendplusplus-developer-guide">AttendPlusPlus Developer Guide‎</a> <nav class="nav nav-pills flex-column my-0 nested no-flex-wrap"><a class="nav-link py-1" href="#acknowledgements">Acknowledgements‎</a> <a class="nav-link py-1" href="#setting-up-getting-started">Setting up, getting started‎</a> <a class="nav-link py-1" href="#design">Design‎</a> <nav class="nav nav-pills flex-column my-0 nested no-flex-wrap"><a class="nav-link py-1" href="#architecture">Architecture‎</a> <a class="nav-link py-1" href="#ui-component">UI component‎</a> <a class="nav-link py-1" href="#logic-component">Logic component‎</a> <a class="nav-link py-1" href="#model-component">Model component‎</a> <a class="nav-link py-1" href="#storage-component">Storage component‎</a> <a class="nav-link py-1" href="#common-classes">Common classes‎</a></nav> <a class="nav-link py-1" href="#implementation">Implementation‎</a> <nav class="nav nav-pills flex-column my-0 nested no-flex-wrap"><a class="nav-link py-1" href="#participant-search">Participant search‎</a></nav></nav><!--]--><!--v-if--></nav></div><!--]--><!--v-if--></nav> <div class="scroll-top-button fa-lg d-print-none" style="display:none;bottom:2%;right:2%;position:fixed;" aria-hidden="true"><!--[--><i class="fas fa-arrow-circle-up"></i><!--]--></div></div> <footer><div class="text-center"><small>[<span><strong>Powered by</strong></span> <img src="https://markbind.org/favicon.ico" width="30"> <a href="https://markbind.org/">MarkBind 7.2.1</a>, generated on Wed, 28 Oct 2026, 15:40:30 GMT+8]</small></div></footer><!--]--></div>
 </body><script src="/tp/markbind/js/bootstrap-utility.min.js"></script>
 <script src="/tp/markbind/js/polyfill.min.js"></script>
 <script src="/tp/markbind/js/vue.global.prod.min.js"></script>

@@ -46,6 +46,40 @@ public class MainWindowActionButtonsTest {
     public Path temporaryFolder;
 
     @Test
+    public void viewEvent_afterListingAnotherEvent_switchesSelectionAndParticipants() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event first = model.createEvent("Workshop", 10, "First");
+            Event second = model.createEvent("Workshop", 10, "Second");
+            model.addPerson(ALICE);
+            model.addParticipation(first, ALICE);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                TextField command = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
+                command.setText("list-participants E1");
+                command.fireEvent(new ActionEvent());
+                assertEquals(first, eventListView(window).getSelectionModel().getSelectedItem());
+                assertEquals(1, participantListView(window).getItems().size());
+
+                command.setText("view-event E2");
+                command.fireEvent(new ActionEvent());
+                assertEquals(second, model.getSelectedEvent().orElseThrow());
+                assertEquals(second, eventListView(window).getSelectionModel().getSelectedItem());
+                assertTrue(participantListView(window).getItems().isEmpty());
+
+                command.setText("view-event E1");
+                command.fireEvent(new ActionEvent());
+                assertEquals(first, eventListView(window).getSelectionModel().getSelectedItem());
+                assertEquals(Set.copyOf(model.getParticipationsForEvent(first)),
+                        Set.copyOf(participantListView(window).getItems()));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
     public void editEvent_unknownPrefix_cancelPreservesDataAndInput() throws Exception {
         runOnFxThread(() -> {
             ModelManager model = new ModelManager();

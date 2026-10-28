@@ -587,7 +587,33 @@ public class ParticipantUiTest {
                 .map(node -> (Label) node)
                 .toList();
     }
+    @Test
+    public void card_contactDetailsAndAttendance_displaysValues() throws Exception {
+        runOnFxThread(() -> {
+            ParticipantCard absentCard = new ParticipantCard(PARTICIPATION);
 
+            assertEquals(
+                    "Phone: " + PERSON.getPhone(),
+                    labelText(absentCard, "phone"));
+            assertEquals(
+                    "Email: " + PERSON.getEmail(),
+                    labelText(absentCard, "email"));
+            assertEquals(
+                    "Address: " + PERSON.getAddress(),
+                    labelText(absentCard, "address"));
+            assertEquals("Present: No", labelText(absentCard, "attendance"));
+
+            Participation presentParticipation = new Participation(
+                    EVENT, PERSON, true, Set.of(), Set.of());
+
+            ParticipantCard presentCard =
+                    new ParticipantCard(presentParticipation);
+
+            assertEquals(
+                    "Present: Yes",
+                    labelText(presentCard, "attendance"));
+        });
+    }
     @SuppressWarnings("unchecked")
     private ListView<Participation> listView(
             ParticipantListPanel panel) {

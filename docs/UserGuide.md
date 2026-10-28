@@ -158,8 +158,10 @@ Archived events are hidden by default, including after restarting the app. Add
 to include them. Restore an event by ID to
 show it in the default list again, subject to the current search filter.
 
-Archived event cards and participant-panel headings show `<archived>` after the
-event name. Archiving preserves IDs, registrations, roles, tags, and attendance.
+Archived event cards and participant-panel headings show a separate red `Archived`
+label after the event name. Text such as `<archived>` within a name remains ordinary
+name text and does not indicate archive status. Archiving preserves IDs,
+registrations, roles, tags, and attendance.
 Archive state is saved between sessions; the option to include archives in a list
 or search is not. Other event operations remain available by ID.
 

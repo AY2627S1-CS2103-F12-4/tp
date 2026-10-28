@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -42,6 +43,33 @@ public class ParticipantUiTest {
 
     private static final Participation PARTICIPATION =
             new Participation(EVENT, PERSON);
+
+    @Test
+    public void panel_archiveStatus_showsSeparateLabelAndClearsItWhenContextChanges() throws Exception {
+        runOnFxThread(() -> {
+            Event event = new Event(new EventId("E1"), "Training <archived>", 10, "");
+            ParticipantListPanel panel = new ParticipantListPanel(FXCollections.observableArrayList());
+            Label status = (Label) panel.getRoot().lookup("#archivedStatus");
+            assertFalse(status.isVisible());
+            panel.showParticipantsForEvent(event.withArchived(true), Set.of());
+            assertEquals("Training <archived> (E1)", labelText(panel, "eventHeading"));
+            assertEquals("Archived", status.getText());
+            assertTrue(status.isVisible());
+            assertTrue(status.isManaged());
+            panel.showParticipantsForEvent(event, Set.of());
+            assertFalse(status.isVisible());
+            assertFalse(status.isManaged());
+            panel.setSearchContext(event.withArchived(true), "Guest");
+            assertTrue(status.isVisible());
+            panel.setSearchContext("Guest", true);
+            assertFalse(status.isVisible());
+            assertFalse(status.isManaged());
+            panel.setSearchContext(event.withArchived(true), "Guest");
+            panel.clearSearchContext();
+            assertFalse(status.isVisible());
+            assertFalse(status.isManaged());
+        });
+    }
 
     @Test
     public void card_nameAndStableId_displaysExactValues() throws Exception {

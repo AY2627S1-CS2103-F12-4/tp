@@ -103,10 +103,10 @@ public class ParticipantSearchTest {
     }
 
     @Test
-    public void updateParticipantSearch_sortsIdsLexicographically() {
+    public void updateParticipantSearch_sortsIdsNumerically() {
         model.addParticipation(FIRST_EVENT, JORDAN);
         model.updateParticipantSearch(FIRST_EVENT_ID, "a");
-        assertEquals(List.of("P1", "P10", "P2"), resultIds());
+        assertEquals(List.of("P1", "P2", "P10"), resultIds());
     }
 
     @Test
@@ -163,8 +163,8 @@ public class ParticipantSearchTest {
         assertEquals(List.of("P2"), resultIds());
         Person renamedJordan = new PersonBuilder(JORDAN).withName("Michael Jordan").build();
         model.setPerson(JORDAN, renamedJordan);
-        assertEquals(List.of("P10", "P2"), resultIds());
-        assertEquals("Michael Jordan", model.getParticipantSearchResults().getFirst().getPerson().getName().fullName);
+        assertEquals(List.of("P2", "P10"), resultIds());
+        assertEquals("Michael Jordan", model.getParticipantSearchResults().get(1).getPerson().getName().fullName);
     }
 
     @Test

@@ -71,9 +71,23 @@ public class EditEventCommandTest {
             model.addPerson(person);
             model.addParticipation(new EventId(event.getId()), person.getId());
         }
-        new EditEventCommand(new EventId("E1"), "Party", 1, "New").execute(model);
+        CommandResult result = new EditEventCommand(new EventId("E1"), "Party", 1, "New").execute(model);
+        assertEquals(String.format(EditEventCommand.MESSAGE_SUCCESS, "Party", "E1")
+                + String.format(EditEventCommand.MESSAGE_OVERCAPACITY, 2, 1), result.getFeedbackToUser());
         assertEquals(2, model.getParticipationsForEvent(event).size());
         assertEquals(1, model.getEvents().get(0).getCapacity());
+
+        // Further edits must continue to alert the organiser while the event remains overbooked.
+        CommandResult renamed = new EditEventCommand(new EventId("E1"), "Renamed", null, null).execute(model);
+        assertEquals(String.format(EditEventCommand.MESSAGE_SUCCESS, "Renamed", "E1")
+                + String.format(EditEventCommand.MESSAGE_OVERCAPACITY, 2, 1), renamed.getFeedbackToUser());
+
+        for (int newCapacity : List.of(2, 3)) {
+            CommandResult increased = new EditEventCommand(new EventId("E1"), null, newCapacity, null).execute(model);
+            assertEquals(String.format(EditEventCommand.MESSAGE_SUCCESS, "Renamed", "E1"),
+                    increased.getFeedbackToUser());
+            assertEquals(2, model.getParticipationsForEvent(model.getEvents().get(0)).size());
+        }
     }
 
     @Test

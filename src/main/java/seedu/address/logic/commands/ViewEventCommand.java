@@ -27,7 +27,8 @@ public class ViewEventCommand extends Command {
                 .filter(candidate -> candidate.getId().equals(eventId.toString()))
                 .findFirst()
                 .orElseThrow(() -> new CommandException(String.format(MESSAGE_EVENT_NOT_FOUND, eventId)));
-        String participants = new ListParticipantsCommand(eventId).execute(model).getFeedbackToUser();
+        // Reuse the participant listing without replacing the current event and search filters.
+        String participants = new ListParticipantsCommand(eventId, false).execute(model).getFeedbackToUser();
         String details = "Event Details\n"
                 + "Event ID: " + event.getId() + "\n"
                 + "Name: " + event.getDisplayName() + "\n"
@@ -35,7 +36,7 @@ public class ViewEventCommand extends Command {
                 + "Description: " + event.getDescription() + "\n\n"
                 + participants;
         model.selectEvent(eventId);
-        return new CommandResult(details, false, false, true);
+        return new CommandResult(details, false, false, true, true);
     }
 
     @Override

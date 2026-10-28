@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -42,6 +43,33 @@ public class ParticipantUiTest {
 
     private static final Participation PARTICIPATION =
             new Participation(EVENT, PERSON);
+
+    @Test
+    public void panel_archiveStatus_showsSeparateLabelAndClearsItWhenContextChanges() throws Exception {
+        runOnFxThread(() -> {
+            Event event = new Event(new EventId("E1"), "Training <archived>", 10, "");
+            ParticipantListPanel panel = new ParticipantListPanel(FXCollections.observableArrayList());
+            Label status = (Label) panel.getRoot().lookup("#archivedStatus");
+            assertFalse(status.isVisible());
+            panel.showParticipantsForEvent(event.withArchived(true), Set.of());
+            assertEquals("Training <archived> (E1)", labelText(panel, "eventHeading"));
+            assertEquals("Archived", status.getText());
+            assertTrue(status.isVisible());
+            assertTrue(status.isManaged());
+            panel.showParticipantsForEvent(event, Set.of());
+            assertFalse(status.isVisible());
+            assertFalse(status.isManaged());
+            panel.setSearchContext(event.withArchived(true), "Guest");
+            assertTrue(status.isVisible());
+            panel.setSearchContext("Guest", true);
+            assertFalse(status.isVisible());
+            assertFalse(status.isManaged());
+            panel.setSearchContext(event.withArchived(true), "Guest");
+            panel.clearSearchContext();
+            assertFalse(status.isVisible());
+            assertFalse(status.isManaged());
+        });
+    }
 
     @Test
     public void card_nameAndStableId_displaysExactValues() throws Exception {
@@ -228,12 +256,12 @@ public class ParticipantUiTest {
             throws Exception {
         runOnFxThread(() -> {
             Person laterPerson = new PersonBuilder(PERSON)
-                    .withId("P010")
+                    .withId("P10")
                     .withName("Later Person")
                     .build();
 
             Person earlierPerson = new PersonBuilder(PERSON)
-                    .withId("P002")
+                    .withId("P2")
                     .withName("Earlier Person")
                     .build();
 
@@ -559,7 +587,33 @@ public class ParticipantUiTest {
                 .map(node -> (Label) node)
                 .toList();
     }
+    @Test
+    public void card_contactDetailsAndAttendance_displaysValues() throws Exception {
+        runOnFxThread(() -> {
+            ParticipantCard absentCard = new ParticipantCard(PARTICIPATION);
 
+            assertEquals(
+                    "Phone: " + PERSON.getPhone(),
+                    labelText(absentCard, "phone"));
+            assertEquals(
+                    "Email: " + PERSON.getEmail(),
+                    labelText(absentCard, "email"));
+            assertEquals(
+                    "Address: " + PERSON.getAddress(),
+                    labelText(absentCard, "address"));
+            assertEquals("Present: No", labelText(absentCard, "attendance"));
+
+            Participation presentParticipation = new Participation(
+                    EVENT, PERSON, true, Set.of(), Set.of());
+
+            ParticipantCard presentCard =
+                    new ParticipantCard(presentParticipation);
+
+            assertEquals(
+                    "Present: Yes",
+                    labelText(presentCard, "attendance"));
+        });
+    }
     @SuppressWarnings("unchecked")
     private ListView<Participation> listView(
             ParticipantListPanel panel) {

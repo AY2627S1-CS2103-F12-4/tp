@@ -3,6 +3,7 @@ package seedu.address.model;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.math.BigInteger;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -368,7 +369,7 @@ public class ModelManager implements Model {
                 .filter(event -> shouldIncludeArchived || !event.isArchived())
                 .flatMap(event -> getParticipationsForEvent(event).stream()
                         .filter(predicate)
-                        .sorted(Comparator.comparing(participation -> participation.getPerson().getId().toString())))
+                        .sorted(Comparator.comparing(participation -> participation.getPerson().getId())))
                 .toList();
         Set<String> matchingEventIds = matches.stream()
                 .map(participation -> participation.getEvent().getId()).collect(Collectors.toSet());
@@ -505,6 +506,11 @@ public class ModelManager implements Model {
         }
         observableEvents.setAll(eventList.getEvents());
         refreshParticipantSearch();
+    }
+
+    @Override
+    public BigInteger getNextEventId() {
+        return eventList.getNextId();
     }
 
     @Override

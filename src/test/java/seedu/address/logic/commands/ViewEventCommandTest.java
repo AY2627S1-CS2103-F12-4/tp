@@ -32,7 +32,7 @@ public class ViewEventCommandTest {
         assertEquals(List.of(second), model.getFilteredEventList());
         assertEquals(List.of(first, second), model.getEvents());
         assertEquals(new CommandResult("Event Details\nEvent ID: E1\nName: Workshop\nCapacity: 10\n"
-                + "Description: Learn Java\n\nNo participants found in Workshop.", false, false, true), result);
+                + "Description: Learn Java\n\nNo participants found in Workshop.", false, false, true, true), result);
     }
 
     @Test

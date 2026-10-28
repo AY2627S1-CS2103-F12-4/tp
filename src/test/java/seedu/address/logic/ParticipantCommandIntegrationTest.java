@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
 import java.util.Set;
 
@@ -51,7 +53,33 @@ public class ParticipantCommandIntegrationTest {
     private EventList eventList;
     private Logic logic;
     private Model model;
-    private JsonParticipationStorage participationStorage;
+    private ParticipationStorageStub participationStorage;
+
+    @Test
+    public void execute_mistypedOptions_rejectsWithoutChangingOrPersistingData() throws Exception {
+        logic.execute("add-participant E1 P1 /role Host /tag VIP");
+        var registrations = Set.copyOf(model.getParticipations().getParticipations());
+        var stored = participationStorage.readParticipations(eventList, addressBook).orElseThrow();
+        for (String command : new String[] {
+            "edit-participant E1 P1 /roles Speaker",
+            "edit-participant E1 P1 /tags",
+            "edit-participant E1 P1 /role Speaker /tags Guest",
+            "edit-participant E1 P1 /roleSpeaker",
+            "edit-event E1 /description Updated venue",
+            "edit-event E1 Renamed /desc Venue /description Updated",
+            "edit-event E1 /capacity 20",
+            "edit-event E1 /cap20",
+            "add-participant E1 P1 /roles Speaker",
+            "add-participant E1 P1 /tags VIP",
+            "add-event Party /capacity 20 /desc Venue",
+            "add-event Party /cap 20 /description Venue"}) {
+            assertThrows(ParseException.class, () -> logic.execute(command));
+            assertEquals(java.util.List.of(EVENT), model.getEvents());
+            assertEquals(registrations, model.getParticipations().getParticipations());
+            assertEquals(stored.getParticipations(), participationStorage.readParticipations(eventList, addressBook)
+                    .orElseThrow().getParticipations());
+        }
+    }
 
     @BeforeEach
     public void setUp() {
@@ -61,13 +89,97 @@ public class ParticipantCommandIntegrationTest {
         eventList.addEvent(EVENT);
         model = new ModelManager(addressBook, new UserPrefs(), eventList, Set::of);
 
-        JsonAddressBookStorage addressBookStorage =
-                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
-        JsonUserPrefsStorage userPrefsStorage =
-                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
-        participationStorage = new JsonParticipationStorage(temporaryFolder.resolve("participations.json"));
-        logic = new LogicManager(model,
-                new StorageManager(addressBookStorage, userPrefsStorage, participationStorage));
+        participationStorage = new ParticipationStorageStub(temporaryFolder.resolve("participations.json"));
+        logic = createLogic();
+    }
+
+    @Test
+    public void execute_unchangedParticipations_allowsHelpAndExitWithReadOnlyStorage() throws Exception {
+        participationStorage.saveFailure = new AccessDeniedException("participations.json");
+
+        logic.execute("list-event");
+        assertTrue(logic.execute("help").shouldShowHelp());
+        assertTrue(logic.execute("exit").shouldExit());
+        assertEquals(0, participationStorage.saveAttempts);
+    }
+
+    @Test
+    public void execute_loadedParticipations_allowsHelpAndExitWithReadOnlyStorage() throws Exception {
+        model.addParticipation(EVENT_ID, PERSON_ID);
+        participationStorage.saveParticipations(model.getParticipations());
+        logic = createLogic();
+        participationStorage.saveFailure = new AccessDeniedException("participations.json");
+
+        assertTrue(logic.execute("help").shouldShowHelp());
+        assertTrue(logic.execute("exit").shouldExit());
+        assertEquals(1, participationStorage.saveAttempts);
+        assertFalse(getOnlyStoredParticipation().isPresent());
+    }
+
+    @Test
+    public void execute_unchangedParticipationDetails_doesNotSave() throws Exception {
+        logic.execute("add-participant E1 P1 /role Host /tag VIP");
+        participationStorage.saveFailure = new AccessDeniedException("participations.json");
+
+        logic.execute("edit-participant E1 P1 /role Host /tag VIP");
+        logic.execute("edit 1 n/Updated Person");
+        logic.execute("edit-event E1 Updated Workshop");
+        logic.execute("archive-event E1");
+
+        assertEquals(1, participationStorage.saveAttempts);
+        assertEquals(Set.of(new ParticipationRole("Host")), getOnlyStoredParticipation().getRoles());
+        assertEquals(Set.of(new Tag("VIP")), getOnlyStoredParticipation().getTags());
+    }
+
+    @Test
+    public void execute_editAndUnmarkParticipant_persistsChanges() throws Exception {
+        logic.execute("add-participant E1 P1 /role Host /tag VIP");
+
+        logic.execute("edit-participant E1 P1 /role Speaker");
+        assertEquals(Set.of(new ParticipationRole("Speaker")), getOnlyStoredParticipation().getRoles());
+        logic.execute("edit-participant E1 P1 /tag Guest");
+        assertEquals(Set.of(new Tag("Guest")), getOnlyStoredParticipation().getTags());
+        logic.execute("mark-participant E1 P1");
+        assertTrue(getOnlyStoredParticipation().isPresent());
+        logic.execute("unmark-participant E1 P1");
+        assertFalse(getOnlyStoredParticipation().isPresent());
+        assertEquals(5, participationStorage.saveAttempts);
+    }
+
+    @Test
+    public void execute_deleteEventAndPerson_persistsCascadingRemovals() throws Exception {
+        model.addEvent(new Event(new EventId("E2"), "Concert", 10, "Live music"));
+        logic.execute("add-participant E1 P1");
+        logic.execute("add-participant E2 P1");
+
+        logic.execute("del-event E1");
+        assertEquals("E2", getOnlyStoredParticipation().getEvent().getId());
+        logic.execute("delete 1");
+        assertTrue(readStoredParticipations().isEmpty());
+        assertEquals(4, participationStorage.saveAttempts);
+    }
+
+    @Test
+    public void execute_participationSaveFailure_retriesUntilSaved() throws Exception {
+        logic.execute("add-participant E1 P1");
+        IOException saveFailure = new AccessDeniedException("participations.json");
+        participationStorage.saveFailure = saveFailure;
+        String expectedMessage = String.format(LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, saveFailure.getMessage());
+
+        assertThrows(CommandException.class, expectedMessage, () -> logic.execute("mark-participant E1 P1"));
+        assertFalse(getOnlyStoredParticipation().isPresent());
+        assertThrows(CommandException.class, expectedMessage, () -> logic.execute("list-event"));
+        assertEquals(3, participationStorage.saveAttempts);
+
+        participationStorage.saveFailure = null;
+        logic.execute("list-event");
+        assertTrue(getOnlyStoredParticipation().isPresent());
+        assertEquals(4, participationStorage.saveAttempts);
+
+        participationStorage.saveFailure = saveFailure;
+        assertTrue(logic.execute("help").shouldShowHelp());
+        assertTrue(logic.execute("exit").shouldExit());
+        assertEquals(4, participationStorage.saveAttempts);
     }
 
     @Test
@@ -175,6 +287,33 @@ public class ParticipantCommandIntegrationTest {
         assertThrows(ParseException.class, EventId.MESSAGE_CONSTRAINTS, () -> logic.execute("add-participant 1 P1"));
         assertTrue(readStoredParticipations().isEmpty());
         assertTrue(model.getParticipations().getParticipations().isEmpty());
+    }
+
+    private Logic createLogic() {
+        return new LogicManager(model, new StorageManager(
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json")),
+                new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json")), participationStorage));
+    }
+
+    /**
+     * Writes real participation files, with controllable write failures and a save-attempt count.
+     */
+    private static class ParticipationStorageStub extends JsonParticipationStorage {
+        private int saveAttempts;
+        private IOException saveFailure;
+
+        ParticipationStorageStub(Path filePath) {
+            super(filePath);
+        }
+
+        @Override
+        public void saveParticipations(ReadOnlyParticipations participations) throws IOException {
+            saveAttempts++;
+            if (saveFailure != null) {
+                throw saveFailure;
+            }
+            super.saveParticipations(participations);
+        }
     }
 
     private Participation getOnlyStoredParticipation() throws Exception {

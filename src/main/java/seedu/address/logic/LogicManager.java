@@ -35,6 +35,7 @@ public class LogicManager implements Logic {
     private final Model model;
     private final Storage storage;
     private final AddressBookParser addressBookParser;
+    private Set<Participation> savedParticipations;
 
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
@@ -43,6 +44,7 @@ public class LogicManager implements Logic {
         this.model = model;
         this.storage = storage;
         addressBookParser = new AddressBookParser();
+        savedParticipations = model.getParticipations().getParticipations();
     }
 
     @Override
@@ -55,8 +57,12 @@ public class LogicManager implements Logic {
 
         try {
             storage.saveAddressBook(model.getAddressBook());
-            storage.saveEvents(model.getEvents());
-            storage.saveParticipations(model.getParticipations());
+            storage.saveEvents(model.getEvents(), model.getNextEventId());
+            Set<Participation> participations = model.getParticipations().getParticipations();
+            if (!savedParticipations.equals(participations)) {
+                storage.saveParticipations(() -> participations);
+                savedParticipations = participations;
+            }
         } catch (AccessDeniedException e) {
             throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, e.getMessage()), e);
         } catch (IOException ioe) {

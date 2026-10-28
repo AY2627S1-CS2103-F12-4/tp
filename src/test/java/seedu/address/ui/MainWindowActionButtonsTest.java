@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 import static seedu.address.testutil.TypicalPersons.ALICE;
+import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.nio.file.Path;
 import java.util.Set;
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.ListCell;
@@ -27,6 +30,7 @@ import javafx.stage.Window;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
 import seedu.address.logic.Messages;
+import seedu.address.logic.commands.EditEventCommand;
 import seedu.address.model.ModelManager;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
@@ -42,6 +46,143 @@ import seedu.address.storage.StorageManager;
 public class MainWindowActionButtonsTest {
     @TempDir
     public Path temporaryFolder;
+
+    @Test
+    public void editEventCommand_overcapacity_displaysWarningAndClearsItWhenCapacityRestored() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event event = model.createEvent("Workshop", 20, "Learn Java");
+            model.addPerson(ALICE);
+            model.addPerson(BOB);
+            model.addParticipation(event, ALICE);
+            model.addParticipation(event, BOB);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                TextField input = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
+                TextArea feedback = (TextArea) window.getPrimaryStage().getScene().lookup("#resultDisplay");
+                input.setText("edit-event E1 /cap 1");
+                input.fireEvent(new ActionEvent());
+                assertTrue(feedback.getText().contains("Warning: 2 registrations exceed capacity 1."));
+                assertTrue(feedback.getText().contains("All existing registrations have been retained."));
+                assertEquals(2, model.getParticipationsForEvent(model.getEvents().getFirst()).size());
+                assertEquals(1, model.getEvents().getFirst().getCapacity());
+
+                input.setText("edit-event E1 /cap 2");
+                input.fireEvent(new ActionEvent());
+                assertEquals(String.format(EditEventCommand.MESSAGE_SUCCESS, "Workshop", "E1"), feedback.getText());
+                assertEquals(2, model.getParticipationsForEvent(model.getEvents().getFirst()).size());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void viewEvent_afterListingAnotherEvent_switchesSelectionAndParticipants() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event first = model.createEvent("Workshop", 10, "First");
+            Event second = model.createEvent("Workshop", 10, "Second");
+            model.addPerson(ALICE);
+            model.addParticipation(first, ALICE);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                TextField command = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
+                command.setText("list-participants E1");
+                command.fireEvent(new ActionEvent());
+                assertEquals(first, eventListView(window).getSelectionModel().getSelectedItem());
+                assertEquals(1, participantListView(window).getItems().size());
+
+                command.setText("view-event E2");
+                command.fireEvent(new ActionEvent());
+                assertEquals(second, model.getSelectedEvent().orElseThrow());
+                assertEquals(second, eventListView(window).getSelectionModel().getSelectedItem());
+                assertTrue(participantListView(window).getItems().isEmpty());
+
+                command.setText("view-event E1");
+                command.fireEvent(new ActionEvent());
+                assertEquals(first, eventListView(window).getSelectionModel().getSelectedItem());
+                assertEquals(Set.copyOf(model.getParticipationsForEvent(first)),
+                        Set.copyOf(participantListView(window).getItems()));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void editEvent_unknownPrefix_cancelPreservesDataAndInput() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event original = model.createEvent("Main", 10, "Original");
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> {
+                    try {
+                        DialogPane pane = showingDialogPane();
+                        assertEquals("eventEditConfirmationDialog", pane.getId());
+                        assertTrue(pane.getContentText().contains("New name: /foo unexpected"));
+                        assertEquals(original, model.getEvents().getFirst());
+                        ButtonType cancelType = pane.getButtonTypes().stream()
+                                .filter(type -> type.getButtonData() == ButtonData.CANCEL_CLOSE)
+                                .findFirst().orElseThrow();
+                        Button cancel = (Button) pane.lookupButton(cancelType);
+                        assertEquals("Cancel", cancel.getText());
+                        assertTrue(cancel.isDefaultButton());
+                        cancel.fire();
+                    } catch (Throwable throwable) {
+                        failure.set(throwable);
+                        closeShowingDialog();
+                    }
+                });
+                TextField input = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
+                input.setText("edit-event E1 /foo unexpected");
+                input.fireEvent(new ActionEvent());
+                throwFailure(failure);
+                assertEquals(original, model.getEvents().getFirst());
+                assertEquals("edit-event E1 /foo unexpected", input.getText());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void editEvent_unknownPrefix_confirmSavesLiteralText() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            Event original = model.createEvent("Main", 10, "Original");
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                AtomicReference<Throwable> failure = new AtomicReference<>();
+                Platform.runLater(() -> {
+                    try {
+                        assertEquals(original, model.getEvents().getFirst());
+                        DialogPane pane = showingDialogPane();
+                        assertTrue(pane.getContentText().contains("New description: Venue /foo unexpected"));
+                        clickButton(pane, "Confirm edit");
+                    } catch (Throwable throwable) {
+                        failure.set(throwable);
+                        closeShowingDialog();
+                    }
+                });
+                TextField input = (TextField) window.getPrimaryStage().getScene().lookup("#commandTextField");
+                input.setText("edit-event E1 /desc Venue /foo unexpected");
+                input.fireEvent(new ActionEvent());
+                throwFailure(failure);
+                assertEquals(new Event(new EventId("E1"), "Main", 10, "Venue /foo unexpected"),
+                        model.getEvents().getFirst());
+                assertEquals("", input.getText());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
 
     @Test
     public void actionButtons_loaded_haveVisibleLabelsAndActions() throws Exception {
@@ -256,6 +397,10 @@ public class MainWindowActionButtonsTest {
             ModelManager model = new ModelManager();
             Event event = new Event(new EventId("E1"), "Workshop", 20, "Learn Java");
             model.addEvent(event);
+            model.addPerson(ALICE);
+            model.addPerson(BOB);
+            model.addParticipation(event, ALICE);
+            model.addParticipation(event, BOB);
             MainWindow window = createWindow(model);
             try {
                 window.show();
@@ -268,7 +413,7 @@ public class MainWindowActionButtonsTest {
                 AtomicReference<Throwable> failure = new AtomicReference<>();
                 Platform.runLater(() -> submitFormAndClick(failure, "Edit",
                         "Event name", "Advanced Workshop",
-                        "Maximum participants", "40",
+                        "Maximum participants", "1",
                         "Event description", "Advanced Java"));
 
                 Button editButton = (Button) cell.getGraphic().lookup("#editButton");
@@ -278,8 +423,12 @@ public class MainWindowActionButtonsTest {
                 Event editedEvent = model.getFilteredEventList().getFirst();
                 assertEquals("E1", editedEvent.getId());
                 assertEquals("Advanced Workshop", editedEvent.getName());
-                assertEquals(40, editedEvent.getCapacity());
+                assertEquals(1, editedEvent.getCapacity());
                 assertEquals("Advanced Java", editedEvent.getDescription());
+                TextArea feedback = (TextArea) window.getPrimaryStage().getScene().lookup("#resultDisplay");
+                assertTrue(feedback.getText().contains("Warning: 2 registrations exceed capacity 1."));
+                assertTrue(feedback.getText().contains("All existing registrations have been retained."));
+                assertEquals(2, model.getParticipationsForEvent(editedEvent).size());
             } finally {
                 window.getPrimaryStage().close();
             }

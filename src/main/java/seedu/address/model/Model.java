@@ -1,5 +1,6 @@
 package seedu.address.model;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -224,7 +225,7 @@ public interface Model {
     void showEvents(boolean shouldIncludeArchived);
 
     /**
-     * Returns live, unmodifiable results in event insertion order, then lexicographic person-ID order.
+     * Returns live, unmodifiable results in event insertion order, then numeric person-ID order.
      *
      * @return The same observable view across searches and subsequent model changes.
      */
@@ -301,6 +302,9 @@ public interface Model {
 
     /** Returns a snapshot of all events, including those hidden by the active filter. */
     List<Event> getEvents();
+
+    /** Returns the next event ID number, retaining the sequence after deletions. */
+    BigInteger getNextEventId();
 
     /** Selects the stored event with this ID, leaving the current selection unchanged on failure. */
     void selectEvent(EventId eventId);

@@ -27,9 +27,22 @@
     <Label fx:id="personId"
            styleClass="cell_small_label" />
 
+    <Label fx:id="phone"
+           styleClass="cell_small_label" />
+
+    <Label fx:id="email"
+           styleClass="cell_small_label" />
+
+    <Label fx:id="address"
+           styleClass="cell_small_label"
+           wrapText="true" />
+
     <Label fx:id="roles"
            styleClass="cell_small_label"
            wrapText="true" />
+
+    <Label fx:id="attendance"
+           styleClass="cell_small_label" />
   </VBox>
 
   <Button fx:id="editButton"

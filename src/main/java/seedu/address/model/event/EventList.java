@@ -17,6 +17,20 @@ public class EventList {
     private final Map<String, Event> events = new LinkedHashMap<>();
     private BigInteger nextId = BigInteger.ONE;
 
+    /** Returns the next unused ID number, including IDs retired by deletion. */
+    public BigInteger getNextId() {
+        return nextId;
+    }
+
+    /** Restores the saved sequence without allowing existing or retired IDs to be reused. */
+    public void restoreNextId(BigInteger savedNextId) {
+        requireNonNull(savedNextId);
+        if (savedNextId.compareTo(nextId) < 0) {
+            throw new IllegalArgumentException("Next event ID must not precede the current sequence.");
+        }
+        nextId = savedNextId;
+    }
+
     /**
      * Creates and adds an event with an automatically assigned ID.
      * Failed validation leaves the collection and next ID unchanged.

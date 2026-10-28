@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import seedu.address.logic.commands.EditParticipantCommand;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.mapper.Participation;
 
 /** Collects replacement roles and tags for an existing participation. */
@@ -40,7 +41,8 @@ public final class EditParticipantDialog extends FormDialog {
                 buildCommand(eventId, personId, roles.getText(), tags.getText()));
     }
 
-    static String buildCommand(String eventId, String personId, String roles, String tags) {
+    static String buildCommand(String eventId, String personId, String roles, String tags) throws ParseException {
+        DialogInputValidator.validateParticipation(roles, tags);
         return EditParticipantCommand.COMMAND_WORD + " " + eventId + " " + personId
                 + formatArguments(roles, PREFIX_ROLE.toString())
                 + formatArguments(tags, PREFIX_PARTICIPANT_TAG.toString());

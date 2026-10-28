@@ -4,6 +4,8 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -18,10 +20,14 @@ public class EditEventCommand extends Command {
             + "Parameters: EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]\n"
             + "Example: edit-event E1 Orientation /cap 100 /desc Welcome session";
     public static final String MESSAGE_SUCCESS = "Event updated: %1$s (%2$s)";
+    public static final String MESSAGE_OVERCAPACITY = "\nWarning: %1$d registrations exceed capacity %2$d."
+            + " All existing registrations have been retained.";
     public static final String MESSAGE_INVALID_CAPACITY = "Event capacity must be a positive integer";
 
     public static final String MESSAGE_NOT_FOUND = "Event %s does not exist.";
     public static final String MESSAGE_NO_CHANGES = "At least one event field must be provided.";
+
+    private static final Pattern LIKELY_PREFIX = Pattern.compile("(?<!\\S)/[A-Za-z][A-Za-z0-9-]*(?=\\s|$)");
 
     private final EventId eventId;
     private final String name;
@@ -39,6 +45,27 @@ public class EditEventCommand extends Command {
         this.description = description;
     }
 
+    /** Returns a preview when free-text fields contain standalone tokens resembling unsupported prefixes. */
+    public Optional<String> getConfirmationMessage() {
+        boolean suspiciousName = name != null && LIKELY_PREFIX.matcher(name).find();
+        boolean suspiciousDescription = description != null && LIKELY_PREFIX.matcher(description).find();
+        if (!suspiciousName && !suspiciousDescription) {
+            return Optional.empty();
+        }
+        String preview = "The name or description contains text resembling an unsupported field prefix."
+                + " Only /cap and /desc are supported.\n\nEvent ID: " + eventId;
+        if (name != null) {
+            preview += "\nNew name: " + name;
+        }
+        if (capacity != null) {
+            preview += "\nNew capacity: " + capacity;
+        }
+        if (description != null) {
+            preview += "\nNew description: " + description;
+        }
+        return Optional.of(preview + "\n\nContinue and save this text literally?");
+    }
+
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
@@ -50,7 +77,12 @@ public class EditEventCommand extends Command {
                 capacity == null ? current.getCapacity() : capacity,
                 description == null ? current.getDescription() : description, current.isArchived());
         model.updateEvent(event);
-        return new CommandResult(String.format(MESSAGE_SUCCESS, event.getName(), event.getId()), false, false, true);
+        int registrationCount = model.getParticipationsForEvent(event).size();
+        String feedback = String.format(MESSAGE_SUCCESS, event.getName(), event.getId());
+        if (registrationCount > event.getCapacity()) {
+            feedback += String.format(MESSAGE_OVERCAPACITY, registrationCount, event.getCapacity());
+        }
+        return new CommandResult(feedback, false, false, true);
     }
 
     @Override

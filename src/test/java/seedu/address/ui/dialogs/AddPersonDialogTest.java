@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.DialogPane;
@@ -31,14 +30,14 @@ public class AddPersonDialogTest {
             + "2. The local-part is followed by an '@' and then a domain name.";
 
     @Test
-    public void buildCommand_allFields_formatsExistingCliCommand() {
+    public void buildCommand_allFields_formatsExistingCliCommand() throws ParseException {
         assertEquals("add n/Alex Yeoh p/87438807 e/alex@example.com a/Blk 30 t/friend t/volunteer",
                 AddPersonDialog.buildCommand("Alex Yeoh", "87438807", "alex@example.com", "Blk 30",
                         "friend, volunteer"));
     }
 
     @Test
-    public void buildCommand_blankTags_omitsTagPrefixes() {
+    public void buildCommand_blankTags_omitsTagPrefixes() throws ParseException {
         assertEquals("add n/Alex Yeoh p/87438807 e/alex@example.com a/Blk 30",
                 AddPersonDialog.buildCommand("Alex Yeoh", "87438807", "alex@example.com", "Blk 30", " "));
     }
@@ -115,6 +114,13 @@ public class AddPersonDialogTest {
 
     private void submitInvalidFormAndCheckLayout(AtomicReference<Throwable> failure) {
         DialogPane dialogPane = showingDialogPane();
+        GridPane form = (GridPane) dialogPane.lookup(".dialog-form");
+        List<TextField> fields = form.getChildren().stream().filter(TextField.class::isInstance)
+                .map(TextField.class::cast).toList();
+        List<String> values = List.of("Alice Tan", "91234567", "alice@example.com", "1 Main Street");
+        for (int i = 0; i < values.size(); i++) {
+            fields.get(i).setText(values.get(i));
+        }
         double initialDialogWidth = dialogPane.getScene().getWindow().getWidth();
         Button addButton = (Button) dialogPane.getButtonTypes().stream()
                 .filter(buttonType -> buttonType.getText().equals("Add"))
@@ -126,7 +132,6 @@ public class AddPersonDialogTest {
         Platform.runLater(() -> {
             try {
                 Bounds buttonBounds = addButton.localToScene(addButton.getBoundsInLocal());
-                Node form = dialogPane.lookup(".dialog-form");
                 Bounds formBounds = form.localToScene(form.getBoundsInLocal());
                 Label errorLabel = (Label) dialogPane.lookup(".validation-error-label");
                 Bounds errorBounds = errorLabel.localToScene(errorLabel.getBoundsInLocal());

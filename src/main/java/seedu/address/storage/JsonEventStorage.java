@@ -3,6 +3,7 @@ package seedu.address.storage;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -41,8 +42,15 @@ public class JsonEventStorage {
 
     /** Saves the complete collection, overwriting the previous event document. */
     public void saveEvents(List<Event> events) throws IOException {
+        EventList snapshot = new EventList();
+        events.forEach(snapshot::addEvent);
+        saveEvents(events, snapshot.getNextId());
+    }
+
+    /** Saves the events and the sequence needed to avoid reusing deleted IDs after restart. */
+    public void saveEvents(List<Event> events, BigInteger nextEventId) throws IOException {
         requireNonNull(events);
-        JsonSerializableEvents document = JsonSerializableEvents.fromEvents(events);
+        JsonSerializableEvents document = JsonSerializableEvents.fromEvents(events, nextEventId);
         FileUtil.createIfMissing(filePath);
         JsonUtil.saveJsonFile(document, filePath);
     }

@@ -43,19 +43,26 @@ Failed commands continue to show the specific error and usage guidance where app
 * `...` indicates an argument that can be repeated.
 * Event IDs (e.g., `E1`) and person IDs (e.g., `P1`) are different from the numbered indices displayed in person lists. Use the identifier required by each command.
 * Some person-editing commands accept prefixed arguments in any order. For event/participant commands, follow the order shown in the format.
+* Event/participant field prefixes (`/cap`, `/desc`, `/role`, `/tag`) must be followed by whitespace before a value, or by the end of input for an empty value where allowed. Misspelled or attached forms such as `/roles`, `/tags`, `/description` and `/cap10` produce an error without changing data. Person prefixes such as `n/` and `p/` still accept attached values.
 
 </box>
 
 ### Using the GUI buttons
 
-The GUI buttons provide form-based shortcuts for common commands. Submitted forms use the same validation and show
-the same success or error messages as commands entered in the command box.
+The GUI buttons provide form-based shortcuts for common commands. Fields marked with `*` must be filled in, including
+Name and Capacity when editing an event. The Add participant form's Person ID field accepts only a person ID such as
+`P1`; enter roles and tags in their separate fields. Invalid submissions show an error and keep the form open for
+correction. Submitted commands also undergo the same validation as commands entered in the command box.
+
+Enter roles and tags as comma-separated values in their designated fields. Each value is validated before submission.
+Person-form addresses cannot contain `n/`, `p/`, `e/`, `a/` or `t/` immediately after a space, as those sequences are
+interpreted as command options. The form displays an error for these addresses.
 
 | Location | Buttons, from left to right | Behaviour |
 |---|---|---|
 | Top action bar | **+ Person**, **+ Event** | Opens a form for adding a person or event. |
 | Each person in the People tab | **Edit**, **Delete** | **Edit** opens a pre-filled person form. **Delete** asks for confirmation, then deletes the person and their registrations from all events. |
-| Each event in the Events tab | **Add participant**, **Edit event**, **Archive** or **Unarchive**, **Delete** | **Add participant** registers a person by ID and accepts optional roles and event-specific tags. **Edit event** opens a pre-filled event form. **Archive** hides an active event from the event list; the button reads **Unarchive** for an archived event and restores it when selected. **Delete** asks for confirmation, then deletes the event and its registrations. |
+| Each event in the Events tab | **Add participant**, **Edit event**, **Archive** or **Unarchive**, **Delete** | **Add participant** registers a person by ID and accepts optional roles and event-specific tags. **Edit event** opens a pre-filled event form. **Archive** hides an active event from the event list; the button reads **Unarchive** for an archived event and restores it when selected. **Delete** asks for confirmation, then deletes the event and its registrations, as does the CLI command `del-event EVENT_ID`. |
 | Each participant shown for an event | **Edit participation**, **Delete** | **Edit participation** opens a pre-filled form that replaces the participant's roles and event-specific tags; leave a field blank to clear it. **Delete** asks for confirmation, then removes only that event registration. The person remains in the address book. |
 
 Select an event to display its participants and their action buttons. Closing a form or declining a deletion leaves
@@ -75,9 +82,16 @@ Adds a person to the address book. A person must exist before they can be regist
 
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]...`
 
+Names must start with an alphanumeric character and may contain alphanumeric characters, spaces,
+hyphens (`-`), and straight apostrophes (`'`).
+
+If required fields are omitted, the error lists all missing fields before showing
+the command usage. For example, omitting the name reports `Missing required fields: n/NAME.`
+
 Examples:
 * `add n/John Tan p/91234567 e/john@example.com a/Singapore`
 * `add n/Michael Lee p/92345678 e/michael@example.com a/Singapore t/VIP`
+* `add n/Mary-Jane O'Connor p/91234568 e/mary@example.com a/2 Main Street`
 
 ### Listing all people: `list`
 
@@ -93,6 +107,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...`
 
 * `INDEX` is the positive integer shown in the currently displayed person list (1, 2, 3, ...).
 * Provide at least one field to update.
+* Names follow the same rules as for `add`.
 * Providing tags replaces the person's existing tags; `t/` clears all tags.
 
 Examples:
@@ -122,6 +137,8 @@ Example: `delete 2`
 ### Creating an event: `add-event`
 
 Creates an event with a name, capacity and required `/desc` parameter. The description value may be empty.
+Event IDs are assigned automatically and are not reused after deletion, including
+after restarting the application.
 
 Format: `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION`
 
@@ -133,6 +150,17 @@ Updates an event identified by its stable Event ID. Supply at least one of a new
 capacity or description. Omitted fields retain their existing values; an empty
 `/desc` clears the description. The optional name appears directly after the ID,
 before any prefixed fields. Names may contain spaces and may match another event's name.
+An optional name containing only whitespace, including Unicode whitespace, is treated
+as omitted and preserves the current name. Supply another field to make an update.
+
+If a name or description contains a standalone token resembling an unsupported
+field prefix, such as `/foo` or `/unknown-option`, a confirmation dialog shows the
+event ID and proposed field values before saving. Only `/cap` and `/desc` are
+supported fields. **Cancel** is selected by default; cancelling or closing the
+dialog leaves the event unchanged and keeps your command or form input for correction.
+Choose **Confirm edit** to save the suspicious text literally. Ordinary slashes in
+`AC/DC`, URLs such as `https://example.com`, and paths such as `/home/user` do not
+trigger this confirmation.
 
 The Event ID, registrations, roles, tags and attendance are preserved. Reducing
 capacity below the registration count does not remove existing participants.
@@ -144,6 +172,25 @@ Examples:
 * `edit-event E1 /cap 80`
 * `edit-event E1 /desc`
 * `edit-event E1 Wedding Reception /cap 80 /desc Updated venue`
+
+### Deleting an event: `del-event`
+
+Deletes the event identified by its stable Event ID and all its registrations,
+including their roles, tags and attendance records. People remain in the address
+book, and other events and their registrations are preserved.
+
+Format: `del-event EVENT_ID`
+
+Example: `del-event E1`
+
+Use the Event ID rather than a displayed list index or event name. This identifies
+the intended event even when multiple events share a name. A nonexistent event ID
+produces an error without deleting anything.
+
+Deletion is permanent within the application. Unlike the GUI **Delete** button,
+the CLI command deletes immediately without asking for confirmation. To hide an
+event while retaining its registrations for later use, use `archive-event` instead;
+an archived event can be restored with `unarchive-event`.
 
 ### Archiving and restoring events
 
@@ -158,8 +205,10 @@ Archived events are hidden by default, including after restarting the app. Add
 to include them. Restore an event by ID to
 show it in the default list again, subject to the current search filter.
 
-Archived event cards and participant-panel headings show `<archived>` after the
-event name. Archiving preserves IDs, registrations, roles, tags, and attendance.
+Archived event cards and participant-panel headings show a separate red `Archived`
+label after the event name. Text such as `<archived>` within a name remains ordinary
+name text and does not indicate archive status. Archiving preserves IDs,
+registrations, roles, tags, and attendance.
 Archive state is saved between sessions; the option to include archives in a list
 or search is not. Other event operations remain available by ID.
 
@@ -252,6 +301,14 @@ Examples:
 ### Listing participants in an event: `list-participants`
 
 Lists the people registered for the specified event, including their IDs, names and roles.
+Participants are ordered by the numeric part of their Person ID, for example `P1`, `P2`, `P10`.
+
+On success, the command clears any participant or role search and replaces the
+event-list filter. It selects the **Events** tab and the requested event, shows all
+its registrations under **Participants**, and hides **Clear search**. The event
+list shows all nonarchived events, or all events if the requested event is archived.
+An event with no registrations is still selected and shows an empty participant
+list. An unknown event ID preserves the current search and selection.
 
 Format: `list-participants EVENT_ID`
 
@@ -337,7 +394,7 @@ event-list filters do not limit the search. Switching between the People and Eve
 tabs preserves it.
 
 Events follow their stored order. Matching registrations within each event are
-ordered lexicographically by Person ID (for example, `P1`, `P10`, `P2`). Search
+ordered by the numeric part of Person ID (for example, `P1`, `P2`, `P10`). Search
 feedback counts registrations across all matching events. Each registration counts
 once even when several roles match; the same person matching in two events counts
 as two registrations.
@@ -369,6 +426,13 @@ replaces the search with an event-name filter, excluding archives unless
 `/include-archive` is supplied. These commands
 clear the participant rows and search context. Selecting an event after clearing the
 search shows all its registrations.
+
+`list-participants EVENT_ID` also clears either search and replaces the event-list
+filter. It selects the requested event and immediately shows all its registrations,
+even if that event was excluded by the previous search. The list shows all
+nonarchived events unless the requested event is archived, in which case it shows
+all events. Later edits do not reactivate the cleared search; enter a new
+`search-participant` or `search-role` command to search again.
 
 ### Marking attendance: `mark-participant`
 
@@ -458,6 +522,7 @@ Application data is stored in JSON files. Editing these files manually can cause
 | **Delete person** | `delete INDEX` |
 | **Add event** | `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION` |
 | **Edit event** | `edit-event EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]` |
+| **Delete event** | `del-event EVENT_ID` |
 | **Archive event** | `archive-event EVENT_ID` |
 | **Restore event** | `unarchive-event EVENT_ID` |
 | **List events** | `list-event [/include-archive]` |

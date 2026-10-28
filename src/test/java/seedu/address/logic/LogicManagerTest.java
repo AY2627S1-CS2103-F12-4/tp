@@ -11,6 +11,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
 import java.util.List;
@@ -73,9 +74,43 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_deleteAndRestart_doesNotReuseEventId() throws Exception {
+        JsonAddressBookStorage people = new JsonAddressBookStorage(temporaryFolder.resolve("restart-people.json"));
+        JsonEventStorage events = new JsonEventStorage(temporaryFolder.resolve("restart-events.json"));
+        StorageManager storage = new StorageManager(people,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("restart-prefs.json")), events);
+        Logic firstSession = new LogicManager(new ModelManager(), storage);
+        firstSession.execute("add-event Reuse A /cap 2 /desc first");
+        firstSession.execute("add-event Reuse B /cap 2 /desc second");
+        firstSession.execute("del-event E2");
+        ModelManager reloaded = new ModelManager(new seedu.address.model.AddressBook(), new UserPrefs(),
+                storage.readEvents().orElseThrow());
+        new LogicManager(reloaded, storage).execute("add-event Reuse C /cap 2 /desc third");
+        assertEquals(List.of("E1", "E3"), reloaded.getEvents().stream().map(Event::getId).toList());
+        assertEquals(new BigInteger("4"), storage.readEvents().orElseThrow().getNextId());
+    }
+
+    @Test
     public void execute_validCommand_success() throws Exception {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand, ListCommand.MESSAGE_SUCCESS, model);
+    }
+
+    @Test
+    public void execute_addAndEditPunctuatedName_preservesSavedPerson() throws Exception {
+        logic.execute("add n/Mary-Jane O'Connor p/91234568 e/mary@example.com a/2 Main Street");
+        Person addedPerson = model.getFilteredPersonList().get(0);
+        assertEquals("Mary-Jane O'Connor", addedPerson.getName().fullName);
+
+        logic.execute("edit 1 n/Anne-Marie O'Neill");
+        Person editedPerson = model.getFilteredPersonList().get(0);
+        assertEquals("Anne-Marie O'Neill", editedPerson.getName().fullName);
+        assertEquals(addedPerson.getId(), editedPerson.getId());
+
+        JsonAddressBookStorage storage =
+                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        Model reloadedModel = new ModelManager(storage.readAddressBook().orElseThrow(), new UserPrefs());
+        assertEquals(List.of(editedPerson), reloadedModel.getFilteredPersonList());
     }
 
     @Test
@@ -98,7 +133,7 @@ public class LogicManagerTest {
                 new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         JsonEventStorage failingStorage = new JsonEventStorage(temporaryFolder.resolve("events.json")) {
             @Override
-            public void saveEvents(List<Event> events) throws IOException {
+            public void saveEvents(List<Event> events, BigInteger nextEventId) throws IOException {
                 throw DUMMY_IO_EXCEPTION;
             }
         };

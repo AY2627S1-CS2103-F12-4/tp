@@ -11,7 +11,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class AddEventCommandParser implements Parser<AddEventCommand> {
     @Override
     public AddEventCommand parse(String args) throws ParseException {
-        ArgumentMultimap arguments = ArgumentTokenizer.tokenize(args, PREFIX_CAPACITY, PREFIX_DESCRIPTION);
+        ArgumentMultimap arguments = ArgumentTokenizer.tokenizeWithSeparatedPrefixes(
+                args, PREFIX_CAPACITY, PREFIX_DESCRIPTION);
         if (arguments.getPreamble().isBlank()
                 || arguments.getValue(PREFIX_CAPACITY).isEmpty()
                 || arguments.getValue(PREFIX_DESCRIPTION).isEmpty()) {

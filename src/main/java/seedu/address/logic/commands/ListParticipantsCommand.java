@@ -66,7 +66,7 @@ public class ListParticipantsCommand extends Command {
         String details = participants.stream()
                 .sorted(Comparator.comparing(
                         participation -> participation.getPerson()
-                                .getId().toString()))
+                                .getId()))
                 .map(this::formatParticipation)
                 .collect(Collectors.joining("\n"));
 

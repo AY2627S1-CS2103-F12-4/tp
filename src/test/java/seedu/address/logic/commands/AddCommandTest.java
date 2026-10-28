@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -206,6 +207,11 @@ public class AddCommandTest {
 
         @Override
         public Event deleteEvent(EventId eventId) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public BigInteger getNextEventId() {
             throw new AssertionError("This method should not be called.");
         }
 

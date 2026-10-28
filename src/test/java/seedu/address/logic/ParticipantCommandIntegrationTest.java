@@ -55,6 +55,32 @@ public class ParticipantCommandIntegrationTest {
     private Model model;
     private ParticipationStorageStub participationStorage;
 
+    @Test
+    public void execute_mistypedOptions_rejectsWithoutChangingOrPersistingData() throws Exception {
+        logic.execute("add-participant E1 P1 /role Host /tag VIP");
+        var registrations = Set.copyOf(model.getParticipations().getParticipations());
+        var stored = participationStorage.readParticipations(eventList, addressBook).orElseThrow();
+        for (String command : new String[] {
+            "edit-participant E1 P1 /roles Speaker",
+            "edit-participant E1 P1 /tags",
+            "edit-participant E1 P1 /role Speaker /tags Guest",
+            "edit-participant E1 P1 /roleSpeaker",
+            "edit-event E1 /description Updated venue",
+            "edit-event E1 Renamed /desc Venue /description Updated",
+            "edit-event E1 /capacity 20",
+            "edit-event E1 /cap20",
+            "add-participant E1 P1 /roles Speaker",
+            "add-participant E1 P1 /tags VIP",
+            "add-event Party /capacity 20 /desc Venue",
+            "add-event Party /cap 20 /description Venue"}) {
+            assertThrows(ParseException.class, () -> logic.execute(command));
+            assertEquals(java.util.List.of(EVENT), model.getEvents());
+            assertEquals(registrations, model.getParticipations().getParticipations());
+            assertEquals(stored.getParticipations(), participationStorage.readParticipations(eventList, addressBook)
+                    .orElseThrow().getParticipations());
+        }
+    }
+
     @BeforeEach
     public void setUp() {
         addressBook = new AddressBook();

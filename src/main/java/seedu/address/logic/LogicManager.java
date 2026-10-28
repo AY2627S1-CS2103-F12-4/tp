@@ -57,7 +57,7 @@ public class LogicManager implements Logic {
 
         try {
             storage.saveAddressBook(model.getAddressBook());
-            storage.saveEvents(model.getEvents());
+            storage.saveEvents(model.getEvents(), model.getNextEventId());
             Set<Participation> participations = model.getParticipations().getParticipations();
             if (!savedParticipations.equals(participations)) {
                 storage.saveParticipations(() -> participations);

@@ -2,6 +2,7 @@ package seedu.address.model.event;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.Locale;
 import java.util.function.Predicate;
 
 /**
@@ -20,8 +21,8 @@ public class EventNameContainsKeywordPredicate implements Predicate<Event> {
     @Override
     public boolean test(Event event) {
         String name = event.getName();
-        String nameLowerCase = name.toLowerCase();
-        String keywordLowerCase = this.keyword.toLowerCase();
+        String nameLowerCase = name.toLowerCase(Locale.ROOT);
+        String keywordLowerCase = this.keyword.toLowerCase(Locale.ROOT);
         return nameLowerCase.contains(keywordLowerCase);
     }
 

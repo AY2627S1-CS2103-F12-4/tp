@@ -23,12 +23,14 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteEventCommand;
 import seedu.address.logic.commands.DeleteParticipantCommand;
+import seedu.address.logic.commands.EditEventCommand;
 import seedu.address.logic.commands.FindEventCommand;
 import seedu.address.logic.commands.ListEventCommand;
 import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.commands.SearchRoleCommand;
 import seedu.address.logic.commands.UnarchiveEventCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
 import seedu.address.model.mapper.Participation;
@@ -40,6 +42,7 @@ import seedu.address.ui.dialogs.DeleteConfirmationDialog;
 import seedu.address.ui.dialogs.EditEventDialog;
 import seedu.address.ui.dialogs.EditParticipantDialog;
 import seedu.address.ui.dialogs.EditPersonDialog;
+import seedu.address.ui.dialogs.EventEditConfirmationDialog;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -270,6 +273,14 @@ public class MainWindow extends UiPart<Stage> {
         isUpdatingParticipantPanel = true;
 
         try {
+            String commandWord = commandText.trim().split("\\s+", 2)[0];
+            if (commandWord.equals(FindEventCommand.COMMAND_WORD)
+                    || commandWord.equals(ListEventCommand.COMMAND_WORD)) {
+                eventListPanel.clearSelection();
+                clearParticipantPanel();
+                return;
+            }
+
             boolean startsSearch =
                     isParticipantSearchCommand(commandText);
 
@@ -628,6 +639,14 @@ public class MainWindow extends UiPart<Stage> {
         isExecutingCommand = true;
 
         try {
+            if (commandText.stripLeading().split("\\s+", 2)[0].equals(EditEventCommand.COMMAND_WORD)) {
+                EditEventCommand edit = (EditEventCommand) new AddressBookParser().parseCommand(commandText);
+                Optional<String> preview = edit.getConfirmationMessage();
+                if (preview.isPresent()
+                        && !new EventEditConfirmationDialog(primaryStage, preview.orElseThrow()).showAndWait()) {
+                    throw new CommandException("Event edit cancelled. Your input has been kept.");
+                }
+            }
             CommandResult commandResult = logic.execute(commandText);
 
             logger.info(
@@ -636,6 +655,7 @@ public class MainWindow extends UiPart<Stage> {
 
             resultDisplay.setFeedbackToUser(
                     isParticipantSearchCommand(commandText)
+                            || commandText.stripLeading().split("\\s+", 2)[0].equals(EditEventCommand.COMMAND_WORD)
                             || FindEventCommand.MESSAGE_NO_MATCHES.equals(commandResult.getFeedbackToUser())
                             ? commandResult.getFeedbackToUser()
                             : CommandSuccessMessages.forCommand(

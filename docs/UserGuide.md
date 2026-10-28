@@ -82,12 +82,16 @@ Adds a person to the address book. A person must exist before they can be regist
 
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]...`
 
+Names must start with an alphanumeric character and may contain alphanumeric characters, spaces,
+hyphens (`-`), and straight apostrophes (`'`).
+
 If required fields are omitted, the error lists all missing fields before showing
 the command usage. For example, omitting the name reports `Missing required fields: n/NAME.`
 
 Examples:
 * `add n/John Tan p/91234567 e/john@example.com a/Singapore`
 * `add n/Michael Lee p/92345678 e/michael@example.com a/Singapore t/VIP`
+* `add n/Mary-Jane O'Connor p/91234568 e/mary@example.com a/2 Main Street`
 
 ### Listing all people: `list`
 
@@ -103,6 +107,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...`
 
 * `INDEX` is the positive integer shown in the currently displayed person list (1, 2, 3, ...).
 * Provide at least one field to update.
+* Names follow the same rules as for `add`.
 * Providing tags replaces the person's existing tags; `t/` clears all tags.
 
 Examples:

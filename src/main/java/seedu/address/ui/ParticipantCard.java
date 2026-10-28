@@ -12,11 +12,12 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Region;
 import seedu.address.model.mapper.Participation;
+import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 
 /**
- * Displays a participant's stable person ID, full name, tags,
- * event-specific roles, and actions.
+ * Displays a participant's stable person ID, full name, contact details,
+ * attendance status, tags, event-specific roles, and actions.
  */
 public class ParticipantCard extends UiPart<Region> {
 
@@ -33,6 +34,18 @@ public class ParticipantCard extends UiPart<Region> {
 
     @FXML
     private Label roles;
+
+    @FXML
+    private Label phone;
+
+    @FXML
+    private Label email;
+
+    @FXML
+    private Label address;
+
+    @FXML
+    private Label attendance;
 
     @FXML
     private Button editButton;
@@ -60,17 +73,24 @@ public class ParticipantCard extends UiPart<Region> {
         requireNonNull(editAction);
         requireNonNull(deleteAction);
 
-        personId.setText(
-                "Person ID: " + participation.getPerson().getId());
-
-        name.setText(
-                participation.getPerson().getName().fullName);
-
-        roles.setText(formatRoles(participation));
+        displayParticipantDetails(participation);
         displayTags(participation);
 
         editButton.setOnAction(event -> editAction.run());
         deleteButton.setOnAction(event -> deleteAction.run());
+    }
+
+    private void displayParticipantDetails(Participation participation) {
+        Person person = participation.getPerson();
+
+        name.setText(person.getName().fullName);
+        personId.setText("Person ID: " + person.getId());
+        phone.setText("Phone: " + person.getPhone());
+        email.setText("Email: " + person.getEmail());
+        address.setText("Address: " + person.getAddress());
+        roles.setText(formatRoles(participation));
+        attendance.setText(
+                "Present: " + (participation.isPresent() ? "Yes" : "No"));
     }
 
     private String formatRoles(Participation participation) {

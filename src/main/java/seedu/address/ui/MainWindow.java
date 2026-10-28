@@ -29,6 +29,7 @@ import seedu.address.logic.commands.ListEventCommand;
 import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.commands.SearchRoleCommand;
 import seedu.address.logic.commands.UnarchiveEventCommand;
+import seedu.address.logic.commands.ViewParticipantCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -657,6 +658,8 @@ public class MainWindow extends UiPart<Stage> {
                     isParticipantSearchCommand(commandText)
                             || commandText.stripLeading().split("\\s+", 2)[0].equals(EditEventCommand.COMMAND_WORD)
                             || FindEventCommand.MESSAGE_NO_MATCHES.equals(commandResult.getFeedbackToUser())
+                            || commandText.stripLeading().split("\\s+", 2)[0]
+                            .equals(ViewParticipantCommand.COMMAND_WORD)
                             ? commandResult.getFeedbackToUser()
                             : CommandSuccessMessages.forCommand(
                             commandText));

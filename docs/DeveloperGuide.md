@@ -820,7 +820,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
 
    1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
+      Expected: The first contact is deleted from the list. The status message shows `Person deleted successfully.`
 
    1. Test case: `delete 0`<br>
       Expected: No person is deleted. The status message shows error details.

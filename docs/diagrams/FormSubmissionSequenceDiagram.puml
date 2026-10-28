@@ -1,0 +1,38 @@
+@startuml
+!include style.puml
+
+actor "Organiser" as User
+participant ":AddPersonDialog" as Dialog UI_COLOR
+participant "supplier\n:CommandSupplier" as Supplier UI_COLOR
+participant "AddPersonDialog" as Builder <<class>> UI_COLOR
+participant "DialogInputValidator" as Validator <<class>> UI_COLOR
+participant "commandExecutor\n:CommandExecutor" as Executor UI_COLOR
+participant ":LogicManager" as Logic LOGIC_COLOR
+
+User -> Dialog : submit form
+activate Dialog
+
+Dialog -> Supplier : get()
+activate Supplier
+Supplier -> Builder : buildCommand(name,\nphone, email,\naddress, tags)
+activate Builder
+Builder -> Validator : validatePerson(name,\nphone, email,\naddress, tags)
+activate Validator
+Validator --> Builder : returns normally
+deactivate Validator
+Builder --> Supplier : commandText
+deactivate Builder
+Supplier --> Dialog : commandText
+deactivate Supplier
+
+Dialog -> Executor : execute(commandText)
+activate Executor
+Executor -> Logic : execute(commandText)
+activate Logic
+Logic --> Executor : CommandResult
+deactivate Logic
+Executor --> Dialog : returns normally
+deactivate Executor
+Dialog --> User : form closes
+deactivate Dialog
+@enduml

@@ -419,7 +419,7 @@ public class SearchRoleCommandIntegrationTest {
     }
 
     @Test
-    public void execute_participationSaveFailure_reportsErrorWithoutChangingData() throws Exception {
+    public void execute_unchangedParticipations_doesNotAttemptFailingSave() throws Exception {
         IOException saveFailure = new IOException("Cannot save participations");
         JsonParticipationStorage failingStorage = new JsonParticipationStorage(storage.getParticipationFilePath()) {
             @Override
@@ -432,9 +432,8 @@ public class SearchRoleCommandIntegrationTest {
                 new JsonUserPrefsStorage(storage.getUserPrefsFilePath()),
                 new JsonEventStorage(storage.getEventFilePath()), failingStorage);
         logic = new LogicManager(model, storageWithSaveFailure);
-        String expectedMessage = String.format(LogicManager.FILE_OPS_ERROR_FORMAT, saveFailure.getMessage());
-
-        assertThrows(CommandException.class, expectedMessage, () -> logic.execute("search-role Best Man /event E1"));
+        CommandResult result = logic.execute("search-role Best Man /event E1");
+        assertEquals(BEST_MAN_RESULT, result.getFeedbackToUser());
         assertMemoryAndStorageUnchanged();
     }
 

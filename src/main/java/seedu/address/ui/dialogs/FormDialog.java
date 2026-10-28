@@ -1,6 +1,7 @@
 package seedu.address.ui.dialogs;
 
-import java.util.function.Supplier;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -24,6 +25,7 @@ abstract class FormDialog {
     private final Label requiredFieldNote = new Label("* Required");
     private final Label validationErrorLabel = new Label();
     private final ButtonType submitButton;
+    private final Map<TextField, String> requiredFields = new LinkedHashMap<>();
 
     FormDialog(Stage owner, String title, String header) {
         this(owner, title, header, "Add");
@@ -64,16 +66,23 @@ abstract class FormDialog {
         form.add(new Label(labelText + (isRequired ? " *" : "")), 0, row);
         form.add(field, 1, row);
         if (isRequired) {
+            requiredFields.put(field, labelText);
             requiredFieldNote.setManaged(true);
             requiredFieldNote.setVisible(true);
         }
         return field;
     }
 
-    void showAndWait(TextField initialFocus, CommandExecutor commandExecutor, Supplier<String> commandSupplier) {
+    void showAndWait(TextField initialFocus, CommandExecutor commandExecutor, CommandSupplier commandSupplier) {
         Button submitButtonNode = (Button) dialog.getDialogPane().lookupButton(submitButton);
         submitButtonNode.addEventFilter(ActionEvent.ACTION, event -> {
             try {
+                for (Map.Entry<TextField, String> requiredField : requiredFields.entrySet()) {
+                    if (requiredField.getKey().getText().isBlank()) {
+                        requiredField.getKey().requestFocus();
+                        throw new ParseException(requiredField.getValue() + " is required.");
+                    }
+                }
                 commandExecutor.execute(commandSupplier.get());
             } catch (CommandException | ParseException exception) {
                 validationErrorLabel.setText(exception.getMessage());
@@ -85,5 +94,11 @@ abstract class FormDialog {
         });
         dialog.setOnShown(event -> initialFocus.requestFocus());
         dialog.showAndWait();
+    }
+
+    /** Supplies a command after validating the form's field values. */
+    @FunctionalInterface
+    interface CommandSupplier {
+        String get() throws ParseException;
     }
 }

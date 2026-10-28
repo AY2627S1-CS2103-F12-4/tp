@@ -1,5 +1,6 @@
 package seedu.address.model;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -301,6 +302,9 @@ public interface Model {
 
     /** Returns a snapshot of all events, including those hidden by the active filter. */
     List<Event> getEvents();
+
+    /** Returns the next event ID number, retaining the sequence after deletions. */
+    BigInteger getNextEventId();
 
     /** Selects the stored event with this ID, leaving the current selection unchanged on failure. */
     void selectEvent(EventId eventId);

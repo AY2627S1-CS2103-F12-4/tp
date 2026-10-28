@@ -1,6 +1,7 @@
 package seedu.address.storage;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -74,6 +75,11 @@ public class StorageManager implements Storage {
     @Override
     public void saveEvents(List<Event> events) throws IOException {
         eventStorage.saveEvents(events);
+    }
+
+    @Override
+    public void saveEvents(List<Event> events, BigInteger nextEventId) throws IOException {
+        eventStorage.saveEvents(events, nextEventId);
     }
 
     // ================ UserPrefs methods ==============================

@@ -134,6 +134,15 @@ capacity or description. Omitted fields retain their existing values; an empty
 `/desc` clears the description. The optional name appears directly after the ID,
 before any prefixed fields. Names may contain spaces and may match another event's name.
 
+If a name or description contains a standalone token resembling an unsupported
+field prefix, such as `/foo` or `/unknown-option`, a confirmation dialog shows the
+event ID and proposed field values before saving. Only `/cap` and `/desc` are
+supported fields. **Cancel** is selected by default; cancelling or closing the
+dialog leaves the event unchanged and keeps your command or form input for correction.
+Choose **Confirm edit** to save the suspicious text literally. Ordinary slashes in
+`AC/DC`, URLs such as `https://example.com`, and paths such as `/home/user` do not
+trigger this confirmation.
+
 The Event ID, registrations, roles, tags and attendance are preserved. Reducing
 capacity below the registration count does not remove existing participants.
 

@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +14,26 @@ import seedu.address.model.event.EventId;
 
 public class EditEventCommandParserTest {
     private final AddressBookParser parser = new AddressBookParser();
+
+    @Test
+    public void parse_unknownPrefixInFreeText_requiresConfirmationWithProposedValues() throws Exception {
+        for (String input : new String[] {"E1 /foo unexpected", "E1 Party /desc Venue /foo unexpected",
+            "E1 /desc /unknown", "E1 Party\t/foo unexpected /cap 20"}) {
+            EditEventCommand command = (EditEventCommand) parser.parseCommand("edit-event " + input);
+            String preview = command.getConfirmationMessage().orElseThrow();
+            assertTrue(preview.contains("Event ID: E1"));
+            assertTrue(preview.contains("/foo") || preview.contains("/unknown"));
+        }
+    }
+
+    @Test
+    public void parse_ordinarySlashesAndSupportedFields_doesNotRequireConfirmation() throws Exception {
+        for (String input : new String[] {"E1 AC/DC /desc https://example.com /home/user",
+            "E1 /cap 20 /desc", "E1 /desc Guests / volunteers"}) {
+            EditEventCommand command = (EditEventCommand) parser.parseCommand("edit-event " + input);
+            assertTrue(command.getConfirmationMessage().isEmpty());
+        }
+    }
 
     @Test
     public void parseAndExecute_validCommand_updatesEvent() throws Exception {

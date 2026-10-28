@@ -106,6 +106,7 @@
         "deleting-a-person-delete": "Deleting a person: delete",
         "creating-an-event-add-event": "Creating an event: add-event",
         "editing-an-event-edit-event": "Editing an event: edit-event",
+        "deleting-an-event-del-event": "Deleting an event: del-event",
         "archiving-and-restoring-events": "Archiving and restoring events",
         "listing-events-list-event": "Listing events: list-event",
         "finding-events-by-name-find-event": "Finding events by name: find-event",

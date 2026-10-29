@@ -360,6 +360,7 @@ public class ModelManager implements Model {
 
     private void applyParticipantSearch(List<Event> events, EventId eventId, String keyword,
             ParticipantSearchType searchType, boolean shouldIncludeArchived) {
+        assert searchType != null : "Participant searches must have a search type.";
         String normalizedKeyword = StringUtil.normalizeWhitespace(keyword);
         Predicate<Participation> predicate = switch (searchType) {
             case NAME -> new ParticipantNameContainsKeywordPredicate(normalizedKeyword);
@@ -434,6 +435,8 @@ public class ModelManager implements Model {
         if (participantSearchType == null) {
             return;
         }
+        assert participantSearchKeyword != null : "An active participant search must have a keyword.";
+        assert !participantSearchKeyword.isBlank() : "An active participant search keyword must not be blank.";
         logger.finer("Refreshing active participant search");
         if (participantSearchEventId == null) {
             applyParticipantSearch(eventList.getEvents(), null, participantSearchKeyword, participantSearchType,

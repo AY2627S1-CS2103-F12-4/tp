@@ -5,6 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
+import static seedu.address.ui.SearchUiTestUtil.enterCommand;
+import static seedu.address.ui.SearchUiTestUtil.getEvents;
+import static seedu.address.ui.SearchUiTestUtil.getFeedback;
+import static seedu.address.ui.SearchUiTestUtil.getHeading;
+import static seedu.address.ui.SearchUiTestUtil.getParticipants;
+import static seedu.address.ui.SearchUiTestUtil.getSelectedTabName;
+import static seedu.address.ui.SearchUiTestUtil.getTabs;
+import static seedu.address.ui.SearchUiTestUtil.prepareEventTab;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -13,13 +21,9 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
@@ -47,20 +51,20 @@ public class ParticipantSearchWindowTest {
             MainWindow window = createWindow();
             try {
                 enterCommand(window, "search-participant John /event E1");
-                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
-                assertEquals(1, participants(window).getItems().size());
-                assertEquals("birthday (E1)", heading(window, "eventHeading"));
-                assertEquals("Matching \"John\"", heading(window, "searchHeading"));
-                assertEquals(1, events(window).getItems().size());
-                assertEquals("1 matching registration across 1 event for \"John\".", feedback(window));
+                assertEquals("Events", getSelectedTabName(window));
+                assertEquals(1, getParticipants(window).getItems().size());
+                assertEquals("birthday (E1)", getHeading(window, "eventHeading"));
+                assertEquals("Matching \"John\"", getHeading(window, "searchHeading"));
+                assertEquals(1, getEvents(window).getItems().size());
+                assertEquals("1 matching registration across 1 event for \"John\".", getFeedback(window));
                 enterCommand(window, "find-event birthday");
-                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
+                assertEquals("Events", getSelectedTabName(window));
                 enterCommand(window, "search-participant Missing /event E1");
-                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
-                assertTrue(participants(window).getItems().isEmpty());
-                assertTrue(events(window).getItems().isEmpty());
-                assertEquals("No matching registrations for \"Missing\" in nonarchived events.", feedback(window));
-                assertEquals("Matching \"Missing\"", heading(window, "searchHeading"));
+                assertEquals("Events", getSelectedTabName(window));
+                assertTrue(getParticipants(window).getItems().isEmpty());
+                assertTrue(getEvents(window).getItems().isEmpty());
+                assertEquals("No matching registrations for \"Missing\" in nonarchived events.", getFeedback(window));
+                assertEquals("Matching \"Missing\"", getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -89,9 +93,9 @@ public class ParticipantSearchWindowTest {
                     clearSearchButton.fire();
 
                     assertFalse(clearSearchButton.isVisible());
-                    assertEquals("Listing events...", feedback(window));
-                    assertEquals(1, events(window).getItems().size());
-                    assertTrue(participants(window).getItems().isEmpty());
+                    assertEquals("Listing events...", getFeedback(window));
+                    assertEquals(1, getEvents(window).getItems().size());
+                    assertTrue(getParticipants(window).getItems().isEmpty());
                 }
             } finally {
                 window.getPrimaryStage().close();
@@ -110,41 +114,41 @@ public class ParticipantSearchWindowTest {
                 enterCommand(window, "add-participant E1 P1 /role Host");
                 enterCommand(window, "add-participant E2 P1 /role Speaker");
                 enterCommand(window, "search-participant Alex /event E1");
-                assertEquals(List.of("E1"), events(window).getItems().stream().map(Event::getId).toList());
+                assertEquals(List.of("E1"), getEvents(window).getItems().stream().map(Event::getId).toList());
                 Button clearSearchButton = (Button) window.getPrimaryStage().getScene().lookup("#clearSearchButton");
                 assertTrue(clearSearchButton.isVisible());
 
-                tabs(window).getSelectionModel().select(0);
+                getTabs(window).getSelectionModel().select(0);
                 enterCommand(window, "list-participants E2");
 
-                assertEquals("Events", selectedTabName(window));
-                assertEquals(List.of("E1", "E2"), events(window).getItems().stream().map(Event::getId).toList());
-                assertEquals("E2", events(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals("Other (E2)", heading(window, "eventHeading"));
-                assertEquals("Participants", heading(window, "searchHeading"));
-                assertEquals(1, participants(window).getItems().size());
-                Participation displayed = participants(window).getItems().getFirst();
+                assertEquals("Events", getSelectedTabName(window));
+                assertEquals(List.of("E1", "E2"), getEvents(window).getItems().stream().map(Event::getId).toList());
+                assertEquals("E2", getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Other (E2)", getHeading(window, "eventHeading"));
+                assertEquals("Participants", getHeading(window, "searchHeading"));
+                assertEquals(1, getParticipants(window).getItems().size());
+                Participation displayed = getParticipants(window).getItems().getFirst();
                 assertEquals("E2", displayed.getEvent().getId());
                 assertEquals("P1", displayed.getPerson().getId().toString());
                 assertEquals("Alex Yeoh", displayed.getPerson().getName().fullName);
                 assertEquals(Set.of(new ParticipationRole("Speaker")), displayed.getRoles());
-                assertEquals("Listing participants...", feedback(window));
+                assertEquals("Listing participants...", getFeedback(window));
                 assertFalse(clearSearchButton.isVisible());
                 assertFalse(clearSearchButton.isManaged());
 
                 enterCommand(window, "edit-participant E2 P1 /role Guest");
-                assertEquals("E2", events(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals("Participants", heading(window, "searchHeading"));
+                assertEquals("E2", getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Participants", getHeading(window, "searchHeading"));
                 assertEquals(Set.of(new ParticipationRole("Guest")),
-                        participants(window).getItems().getFirst().getRoles());
+                        getParticipants(window).getItems().getFirst().getRoles());
                 assertFalse(clearSearchButton.isVisible());
 
                 enterCommand(window, "search-participant Alex /event E1");
-                assertEquals(List.of("E1"), events(window).getItems().stream().map(Event::getId).toList());
-                assertEquals("E1", events(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals("Matching \"Alex\"", heading(window, "searchHeading"));
-                assertEquals(1, participants(window).getItems().size());
-                assertEquals("E1", participants(window).getItems().getFirst().getEvent().getId());
+                assertEquals(List.of("E1"), getEvents(window).getItems().stream().map(Event::getId).toList());
+                assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Matching \"Alex\"", getHeading(window, "searchHeading"));
+                assertEquals(1, getParticipants(window).getItems().size());
+                assertEquals("E1", getParticipants(window).getItems().getFirst().getEvent().getId());
                 assertTrue(clearSearchButton.isVisible());
             } finally {
                 window.getPrimaryStage().close();
@@ -161,34 +165,34 @@ public class ParticipantSearchWindowTest {
                 enterCommand(window, "add-event Archived /cap 10 /desc Archived event");
                 enterCommand(window, "add-participant E3 P1 /role Host");
                 enterCommand(window, "archive-event E3");
-                assertEquals(List.of("E1", "E2"), events(window).getItems().stream().map(Event::getId).toList());
+                assertEquals(List.of("E1", "E2"), getEvents(window).getItems().stream().map(Event::getId).toList());
 
                 for (String target : List.of("E2", "E3")) {
                     enterCommand(window, "search-participant Missing /event E1");
-                    assertTrue(events(window).getItems().isEmpty());
+                    assertTrue(getEvents(window).getItems().isEmpty());
 
                     enterCommand(window, "list-participants " + target);
 
-                    assertEquals("Events", selectedTabName(window));
-                    assertEquals(target, events(window).getSelectionModel().getSelectedItem().getId());
-                    assertEquals("Participants", heading(window, "searchHeading"));
+                    assertEquals("Events", getSelectedTabName(window));
+                    assertEquals(target, getEvents(window).getSelectionModel().getSelectedItem().getId());
+                    assertEquals("Participants", getHeading(window, "searchHeading"));
                     Button clearSearchButton = (Button) window.getPrimaryStage()
                             .getScene().lookup("#clearSearchButton");
                     assertFalse(clearSearchButton.isVisible());
                     assertFalse(clearSearchButton.isManaged());
                     if (target.equals("E2")) {
                         assertEquals(List.of("E1", "E2"),
-                                events(window).getItems().stream().map(Event::getId).toList());
-                        assertEquals("Empty (E2)", heading(window, "eventHeading"));
-                        assertTrue(participants(window).getItems().isEmpty());
-                        Label placeholder = (Label) participants(window).getPlaceholder();
+                                getEvents(window).getItems().stream().map(Event::getId).toList());
+                        assertEquals("Empty (E2)", getHeading(window, "eventHeading"));
+                        assertTrue(getParticipants(window).getItems().isEmpty());
+                        Label placeholder = (Label) getParticipants(window).getPlaceholder();
                         assertEquals("No participants found for this event.", placeholder.getText());
                     } else {
                         assertEquals(List.of("E1", "E2", "E3"),
-                                events(window).getItems().stream().map(Event::getId).toList());
-                        assertEquals("Archived (E3)", heading(window, "eventHeading"));
-                        assertEquals(1, participants(window).getItems().size());
-                        assertEquals("E3", participants(window).getItems().getFirst().getEvent().getId());
+                                getEvents(window).getItems().stream().map(Event::getId).toList());
+                        assertEquals("Archived (E3)", getHeading(window, "eventHeading"));
+                        assertEquals(1, getParticipants(window).getItems().size());
+                        assertEquals("E3", getParticipants(window).getItems().getFirst().getEvent().getId());
                     }
                 }
             } finally {
@@ -203,14 +207,14 @@ public class ParticipantSearchWindowTest {
             MainWindow window = createWindow();
             try {
                 enterCommand(window, "search-participant John /event E1");
-                tabs(window).getSelectionModel().select(0);
+                getTabs(window).getSelectionModel().select(0);
                 enterCommand(window, "search-participant John /event E99");
-                assertEquals("People", tabs(window).getSelectionModel().getSelectedItem().getText());
-                assertEquals(1, participants(window).getItems().size());
-                assertEquals("Matching \"John\"", heading(window, "searchHeading"));
+                assertEquals("People", getSelectedTabName(window));
+                assertEquals(1, getParticipants(window).getItems().size());
+                assertEquals("Matching \"John\"", getHeading(window, "searchHeading"));
                 enterCommand(window, "search-participant John /event");
-                assertEquals("People", tabs(window).getSelectionModel().getSelectedItem().getText());
-                assertEquals(1, participants(window).getItems().size());
+                assertEquals("People", getSelectedTabName(window));
+                assertEquals(1, getParticipants(window).getItems().size());
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -224,15 +228,16 @@ public class ParticipantSearchWindowTest {
             MainWindow window = createWindow();
 
             try {
-                events(window).getSelectionModel().select(0);
+                getTabs(window).getSelectionModel().select(1);
+                getEvents(window).getSelectionModel().select(0);
 
-                assertEquals(1, participants(window).getItems().size());
+                assertEquals(1, getParticipants(window).getItems().size());
                 assertEquals(
                         "birthday (E1)",
-                        heading(window, "eventHeading"));
+                        getHeading(window, "eventHeading"));
                 assertEquals(
                         "Participants",
-                        heading(window, "searchHeading"));
+                        getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -246,18 +251,19 @@ public class ParticipantSearchWindowTest {
             MainWindow window = createWindow();
 
             try {
-                ListView<Event> eventList = events(window);
+                getTabs(window).getSelectionModel().select(1);
+                ListView<Event> eventList = getEvents(window);
 
                 eventList.getSelectionModel().select(0);
                 eventList.getSelectionModel().clearSelection();
 
-                assertTrue(participants(window).getItems().isEmpty());
+                assertTrue(getParticipants(window).getItems().isEmpty());
                 assertEquals(
                         "Participants",
-                        heading(window, "eventHeading"));
+                        getHeading(window, "eventHeading"));
                 assertEquals(
                         "Select an event to view its participants.",
-                        heading(window, "searchHeading"));
+                        getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -271,20 +277,21 @@ public class ParticipantSearchWindowTest {
             MainWindow window = createWindow();
 
             try {
-                events(window).getSelectionModel().select(0);
+                getTabs(window).getSelectionModel().select(1);
+                getEvents(window).getSelectionModel().select(0);
 
-                assertEquals(1, participants(window).getItems().size());
+                assertEquals(1, getParticipants(window).getItems().size());
 
                 enterCommand(window, "del-participant E1 P1");
 
-                assertEquals("Events", selectedTabName(window));
-                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals("Events", getSelectedTabName(window));
+                assertTrue(getParticipants(window).getItems().isEmpty());
                 assertEquals(
                         "birthday (E1)",
-                        heading(window, "eventHeading"));
+                        getHeading(window, "eventHeading"));
                 assertEquals(
                         "Participants",
-                        heading(window, "searchHeading"));
+                        getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -298,23 +305,24 @@ public class ParticipantSearchWindowTest {
             MainWindow window = createWindow();
 
             try {
-                ListView<Event> eventList = events(window);
+                getTabs(window).getSelectionModel().select(1);
+                ListView<Event> eventList = getEvents(window);
 
                 eventList.getSelectionModel().select(0);
 
-                assertEquals(1, participants(window).getItems().size());
+                assertEquals(1, getParticipants(window).getItems().size());
 
                 enterCommand(window, "del-event E1");
 
-                assertEquals("Events", selectedTabName(window));
+                assertEquals("Events", getSelectedTabName(window));
                 assertTrue(eventList.getItems().isEmpty());
-                assertTrue(participants(window).getItems().isEmpty());
+                assertTrue(getParticipants(window).getItems().isEmpty());
                 assertEquals(
                         "Participants",
-                        heading(window, "eventHeading"));
+                        getHeading(window, "eventHeading"));
                 assertEquals(
                         "Select an event to view its participants.",
-                        heading(window, "searchHeading"));
+                        getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -332,29 +340,29 @@ public class ParticipantSearchWindowTest {
                         window,
                         "search-participant Missing /event E1");
 
-                assertTrue(participants(window).getItems().isEmpty());
+                assertTrue(getParticipants(window).getItems().isEmpty());
                 assertEquals(
                         "Matching \"Missing\"",
-                        heading(window, "searchHeading"));
+                        getHeading(window, "searchHeading"));
 
                 enterCommand(window, "list-event");
-                events(window).getSelectionModel().select(0);
+                getEvents(window).getSelectionModel().select(0);
 
-                assertEquals(1, participants(window).getItems().size());
+                assertEquals(1, getParticipants(window).getItems().size());
                 assertEquals(
                         "Participants",
-                        heading(window, "searchHeading"));
+                        getHeading(window, "searchHeading"));
 
                 enterCommand(window, "list");
 
-                assertEquals("People", selectedTabName(window));
-                assertEquals(1, participants(window).getItems().size());
+                assertEquals("People", getSelectedTabName(window));
+                assertEquals(1, getParticipants(window).getItems().size());
                 assertEquals(
                         "birthday (E1)",
-                        heading(window, "eventHeading"));
+                        getHeading(window, "eventHeading"));
                 assertEquals(
                         "Participants",
-                        heading(window, "searchHeading"));
+                        getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -373,8 +381,8 @@ public class ParticipantSearchWindowTest {
                         "search-participant John /event E1");
                 enterCommand(window, "del-participant E1 P1");
 
-                assertEquals("Events", selectedTabName(window));
-                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals("Events", getSelectedTabName(window));
+                assertTrue(getParticipants(window).getItems().isEmpty());
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -393,14 +401,14 @@ public class ParticipantSearchWindowTest {
                         "search-participant John /event E1");
                 enterCommand(window, "del-event E1");
 
-                assertEquals("Events", selectedTabName(window));
-                assertTrue(participants(window).getItems().isEmpty());
+                assertEquals("Events", getSelectedTabName(window));
+                assertTrue(getParticipants(window).getItems().isEmpty());
                 assertEquals(
                         "Participants",
-                        heading(window, "eventHeading"));
+                        getHeading(window, "eventHeading"));
                 assertEquals(
                         "Select an event to view its participants.",
-                        heading(window, "searchHeading"));
+                        getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -413,22 +421,22 @@ public class ParticipantSearchWindowTest {
             MainWindow window = createWindow();
             try {
                 enterCommand(window, "search-participant John   Doe");
-                assertEquals("Events", tabs(window).getSelectionModel().getSelectedItem().getText());
-                assertEquals("birthday (E1)", heading(window, "eventHeading"));
-                assertEquals("E1", events(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals("Matching \"John Doe\"", heading(window, "searchHeading"));
-                assertEquals(1, participants(window).getItems().size());
-                assertEquals(1, events(window).getItems().size());
+                assertEquals("Events", getSelectedTabName(window));
+                assertEquals("birthday (E1)", getHeading(window, "eventHeading"));
+                assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Matching \"John Doe\"", getHeading(window, "searchHeading"));
+                assertEquals(1, getParticipants(window).getItems().size());
+                assertEquals(1, getEvents(window).getItems().size());
 
-                tabs(window).getSelectionModel().select(0);
-                tabs(window).getSelectionModel().select(1);
-                assertEquals(1, participants(window).getItems().size());
-                assertEquals("Matching \"John Doe\"", heading(window, "searchHeading"));
+                getTabs(window).getSelectionModel().select(0);
+                getTabs(window).getSelectionModel().select(1);
+                assertEquals(1, getParticipants(window).getItems().size());
+                assertEquals("Matching \"John Doe\"", getHeading(window, "searchHeading"));
 
                 enterCommand(window, "list-event");
-                assertTrue(participants(window).getItems().isEmpty());
-                assertEquals("Participants", heading(window, "eventHeading"));
-                assertEquals(1, events(window).getItems().size());
+                assertTrue(getParticipants(window).getItems().isEmpty());
+                assertEquals("Participants", getHeading(window, "eventHeading"));
+                assertEquals(1, getEvents(window).getItems().size());
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -474,64 +482,7 @@ public class ParticipantSearchWindowTest {
                 temporaryFolder.resolve("people.json"));
 
         window.fillInnerParts();
+        prepareEventTab(window);
         return window;
-    }
-
-    private void enterCommand(
-            MainWindow window,
-            String command) {
-        TextField input = (TextField) window.getPrimaryStage()
-                .getScene()
-                .lookup("#commandTextField");
-
-        input.setText(command);
-        input.fireEvent(new ActionEvent());
-    }
-
-    private String selectedTabName(MainWindow window) {
-        return tabs(window)
-                .getSelectionModel()
-                .getSelectedItem()
-                .getText();
-    }
-
-    private TabPane tabs(MainWindow window) {
-        return (TabPane) window.getPrimaryStage()
-                .getScene()
-                .lookup("#listTabs");
-    }
-
-    @SuppressWarnings("unchecked")
-    private ListView<Event> events(MainWindow window) {
-        TabPane tabPane = tabs(window);
-        tabPane.getSelectionModel().select(1);
-
-        window.getPrimaryStage()
-                .getScene()
-                .getRoot()
-                .applyCss();
-
-        return (ListView<Event>) window.getPrimaryStage()
-                .getScene()
-                .lookup("#eventListView");
-    }
-
-    @SuppressWarnings("unchecked")
-    private ListView<Participation> participants(MainWindow window) {
-        return (ListView<Participation>) window.getParticipantListPanel()
-                .getRoot()
-                .lookup("#participantListView");
-    }
-
-    private String feedback(MainWindow window) {
-        return ((TextArea) window.getPrimaryStage().getScene().lookup("#resultDisplay")).getText();
-    }
-
-    private String heading(MainWindow window, String id) {
-        Label heading = (Label) window.getParticipantListPanel()
-                .getRoot()
-                .lookup("#" + id);
-
-        return heading.getText();
     }
 }

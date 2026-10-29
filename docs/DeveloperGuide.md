@@ -722,6 +722,9 @@ Use case ends.
 1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
 2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
 3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
+4.  AttendPlusPlus enforces one running instance per data folder with an exclusive operating-system file lock.
+    A second instance using that folder exits before loading preferences or data or opening a window.
+    Independent concurrent instances require separate working folders and data files.
 
 
 ### Glossary

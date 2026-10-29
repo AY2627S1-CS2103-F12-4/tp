@@ -37,7 +37,8 @@ public class EditEventCommandParserTest {
 
     @Test
     public void parseAndExecute_unicodeWhitespaceName_preservesNameAndUpdatesOtherFields() throws Exception {
-        for (String whitespace : new String[] {"\u2003", "\u2002", "\u3000", "\u2002 \u2003\u3000"}) {
+        for (String whitespace : new String[] {"\u2003", "\u2002", "\u3000", "\u00a0", "\u2007", "\u202f",
+            "\u2002 \u2003\u3000", "\u00a0 \t\u2007\u202f"}) {
             ModelManager model = new ModelManager();
             model.createEvent("Main", 10, "Original");
             parser.parseCommand("edit-event E1 " + whitespace + " /cap 2").execute(model);
@@ -49,7 +50,8 @@ public class EditEventCommandParserTest {
 
     @Test
     public void parse_unicodeWhitespaceNameWithoutOtherFields_reportsNoChanges() {
-        for (String whitespace : new String[] {"\u2003", "\u2002", "\u3000"}) {
+        for (String whitespace : new String[] {"\u2003", "\u2002", "\u3000", "\u00a0", "\u2007", "\u202f",
+            "\u00a0 \t\u2007\u202f"}) {
             ParseException exception = assertThrows(ParseException.class, () ->
                     parser.parseCommand("edit-event E1 " + whitespace));
             assertEquals(EditEventCommand.MESSAGE_NO_CHANGES, exception.getMessage());
@@ -60,6 +62,15 @@ public class EditEventCommandParserTest {
     public void parse_unicodeWhitespaceAroundRealName_preservesInternalWhitespace() throws Exception {
         assertEquals(new EditEventCommand(new EventId("E1"), "New\u2003Name", 2, null),
                 parser.parseCommand("edit-event E1 \u2002New\u2003Name\u3000 /cap 2"));
+    }
+
+    @Test
+    public void parse_nonbreakingSpaceInsideRealName_preservesName() throws Exception {
+        for (String whitespace : new String[] {"\u00a0", "\u2007", "\u202f"}) {
+            String name = "New" + whitespace + "Name";
+            assertEquals(new EditEventCommand(new EventId("E1"), name, 2, null),
+                    parser.parseCommand("edit-event E1 " + name + " /cap 2"));
+        }
     }
 
     @Test

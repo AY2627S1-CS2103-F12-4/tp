@@ -28,6 +28,9 @@ AttendPlusPlus is a **desktop application for managing events and their particip
 6. Enter a command in the command box and press **Enter**. You can try `help`, `list`, or `list-event`.
 7. Refer to [Features](#features) for command details.
 
+Run only one instance of AttendPlusPlus per data folder. Close the existing instance before launching it again
+from the same folder. A second launch using that folder is blocked. See [Saving data](#saving-data) for details.
+
 ---
 
 ## Features

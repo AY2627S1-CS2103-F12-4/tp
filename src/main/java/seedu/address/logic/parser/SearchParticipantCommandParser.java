@@ -1,25 +1,14 @@
 package seedu.address.logic.parser;
 
-import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.parser.CliSyntax.FLAG_INCLUDE_ARCHIVE;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.SearchParticipantCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.event.EventId;
 
 /**
  * Parses a name phrase followed by an optional /event scope and /include-archive flag.
  */
 public class SearchParticipantCommandParser implements Parser<SearchParticipantCommand> {
-    private static final Pattern ARGUMENT_FORMAT = Pattern.compile(
-            "(?<keyword>.+?) /event (?<eventId>\\S+)");
-    private static final Pattern COMMAND_PREFIX = Pattern.compile("(?:^|\\s)/\\S*");
-
     /**
      * Parses {@code NAME [/event EVENTID] [/include-archive]}, preserving case and normalizing whitespace.
      * Rejects duplicate or unsupported options and misplaced event scopes or archive flags.
@@ -31,34 +20,12 @@ public class SearchParticipantCommandParser implements Parser<SearchParticipantC
      */
     @Override
     public SearchParticipantCommand parse(String args) throws ParseException {
-        requireNonNull(args);
-        String input = StringUtil.normalizeWhitespace(args);
-        String archiveFlagSuffix = " " + FLAG_INCLUDE_ARCHIVE;
-        boolean shouldIncludeArchived = input.endsWith(archiveFlagSuffix);
-        if (shouldIncludeArchived) {
-            input = input.substring(0, input.length() - archiveFlagSuffix.length());
+        SearchArguments arguments = SearchArgumentsParser.parse(args,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, SearchParticipantCommand.MESSAGE_USAGE));
+        if (arguments.getEventId().isPresent()) {
+            return new SearchParticipantCommand(arguments.getEventId().orElseThrow(), arguments.getKeyword(),
+                    arguments.shouldIncludeArchived());
         }
-        if (input.isEmpty()) {
-            throw invalidFormat();
-        }
-        if (!COMMAND_PREFIX.matcher(input).find()) {
-            return new SearchParticipantCommand(input, shouldIncludeArchived);
-        }
-        Matcher matcher = ARGUMENT_FORMAT.matcher(input);
-        if (!matcher.matches()) {
-            throw invalidFormat();
-        }
-
-        String keyword = matcher.group("keyword");
-        if (COMMAND_PREFIX.matcher(keyword).find() || matcher.group("eventId").startsWith("/")) {
-            throw invalidFormat();
-        }
-        EventId eventId = ParserUtil.parseEventId(matcher.group("eventId"));
-        return new SearchParticipantCommand(eventId, keyword, shouldIncludeArchived);
-    }
-
-    private ParseException invalidFormat() {
-        return new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT,
-                SearchParticipantCommand.MESSAGE_USAGE));
+        return new SearchParticipantCommand(arguments.getKeyword(), arguments.shouldIncludeArchived());
     }
 }

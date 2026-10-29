@@ -52,11 +52,6 @@ public class SearchRoleCommandParserTest {
     }
 
     @Test
-    public void parse_valueImmediatelyAfterPrefix_throwsUsageError() {
-        assertParseFailure(parser, "Best Man /eventE1", MESSAGE_INVALID_FORMAT);
-    }
-
-    @Test
     public void parse_searchTextOutsideRoleConstraints_acceptsQuery() {
         for (String keyword : new String[] {"?", "a".repeat(51), "Assistant's (Lead)", "Host/Coordinator", "E1",
             "Host/include-archive"}) {
@@ -67,38 +62,30 @@ public class SearchRoleCommandParserTest {
     }
 
     @Test
-    public void parse_missingArguments_throwsUsageError() {
-        for (String input : new String[] {"", " \t ", "/event E1", "Best Man /event", "/event",
-            "Best Man /name Alice", "Best Man /foo E1", "Best Man /Event E1", "Best Man /event E1 extra",
-            "Best Man /event /event", "Best Man /", "E1 /role Best Man", "E1 /roleBest Man"}) {
+    public void parse_malformedArguments_throwsUsageError() {
+        for (String input : SearchParserTestData.getMalformedArguments("Best Man")) {
             assertParseFailure(parser, input, MESSAGE_INVALID_FORMAT);
         }
     }
 
     @Test
     public void parse_blankQuery_throwsUsageError() {
-        for (String input : new String[] {"\u2003", "\u00a0", " /event E1", " \t\n /event E1"}) {
+        for (String input : SearchParserTestData.getBlankQueries()) {
             assertParseFailure(parser, input, MESSAGE_INVALID_FORMAT);
         }
     }
 
     @Test
     public void parse_invalidEventId_throwsIdConstraintError() {
-        for (String eventId : new String[] {"1", "0", "e1", "P1", "E", "E-1", "E1x", "+1", "1.5"}) {
+        for (String eventId : SearchParserTestData.getInvalidEventIds()) {
             assertParseFailure(parser, "Best Man /event " + eventId, EventId.MESSAGE_CONSTRAINTS);
             assertParseFailure(parser, "Best Man /event " + eventId + " /include-archive", EventId.MESSAGE_CONSTRAINTS);
         }
     }
 
     @Test
-    public void parse_eventScopeBeforeQuery_throwsUsageError() {
-        assertParseFailure(parser, " /event E1 Best Man", MESSAGE_INVALID_FORMAT);
-    }
-
-    @Test
     public void parse_duplicatePrefixes_throwsUsageError() {
-        for (String input : new String[] {"Best Man /event E1 /event E2", "Best Man /event E1 /event E1",
-            "Best Man /event /event E1", "Best Man /event E1 /event", "Best Man /event E1\t/event E2"}) {
+        for (String input : SearchParserTestData.getRepeatedEventArguments("Best Man")) {
             assertParseFailure(parser, input, MESSAGE_INVALID_FORMAT);
         }
     }
@@ -128,12 +115,7 @@ public class SearchRoleCommandParserTest {
 
     @Test
     public void parse_malformedArchiveFlag_throwsUsageError() {
-        for (String args : new String[] {"/include-archive", "/event E1 /include-archive", "/include-archive Best Man",
-            "Best Man /include-archive /event E1", "Best Man /include-archive extra", "Best Man /include-archive true",
-            "Best Man /include-archive /include-archive", "Best Man /event E1 /include-archive /include-archive",
-            "Best Man /include-archivex", "Best Man /Include-Archive", "Best Man /include-archive=true",
-            "Best Man /event /include-archive", "Best Man /event E1 extra /include-archive",
-            "Best Man /unknown /include-archive", "Best Man /event E1 /event E2 /include-archive"}) {
+        for (String args : SearchParserTestData.getMalformedArchiveArguments("Best Man")) {
             assertParseFailure(parser, args, MESSAGE_INVALID_FORMAT);
         }
     }

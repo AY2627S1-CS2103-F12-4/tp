@@ -201,6 +201,17 @@ participation forms.
 
 <puml src="diagrams/FormValidationActivityDiagram.puml" width="850" alt="Activity diagram of required-field checks, field validation, command execution, error recovery and cancellation" />
 
+#### Dialog layout
+
+`FormDialog` displays its complete header text in a wrapping label inside a height-limited `ScrollPane`.
+Long names, including names without spaces, wrap within the header width; exceptionally tall headings scroll
+vertically so the form fields and action buttons remain accessible. This affects presentation only, leaving
+field values and stored names intact.
+
+The actual dialog window is fitted to the usable screen area by `WindowBounds` after the window is shown and after
+validation errors resize it. The window's shown event is used because `Dialog#showAndWait` fires the dialog's own
+shown event before positioning its window.
+
 #### Literal addresses and command prefixes
 
 Addresses accept free-form text, so their domain validation alone cannot prevent extra CLI arguments.

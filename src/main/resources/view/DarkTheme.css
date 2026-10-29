@@ -381,6 +381,11 @@
     -fx-text-fill: white;
 }
 
+#addEntryDialog .header-panel .scroll-pane,
+#addEntryDialog .header-panel .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
 #addEntryDialog .validation-error-label {
     -fx-font-family: "Segoe UI Semibold";
     -fx-font-size: 11pt;

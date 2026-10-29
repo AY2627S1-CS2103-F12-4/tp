@@ -5,9 +5,10 @@ import java.util.List;
 import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
-/** Keeps restored windows inside a currently available screen's usable area. */
-final class WindowBounds {
+/** Keeps windows inside a currently available screen's usable area. */
+public final class WindowBounds {
     private WindowBounds() {
     }
 
@@ -34,19 +35,21 @@ final class WindowBounds {
         return new Rectangle2D(x, y, width, height);
     }
 
-    /** Fits a sized stage, relaxing minimum dimensions only when the screen requires it. */
-    static void fit(Stage stage) {
+    /** Fits a sized window, relaxing stage minimum dimensions only when the screen requires it. */
+    public static void fit(Window window) {
         Rectangle2D primary = Screen.getPrimary().getVisualBounds();
         Rectangle2D bounds = fit(new Rectangle2D(
-                Double.isFinite(stage.getX()) ? stage.getX() : primary.getMinX(),
-                Double.isFinite(stage.getY()) ? stage.getY() : primary.getMinY(),
-                stage.getWidth(), stage.getHeight()),
+                Double.isFinite(window.getX()) ? window.getX() : primary.getMinX(),
+                Double.isFinite(window.getY()) ? window.getY() : primary.getMinY(),
+                window.getWidth(), window.getHeight()),
                 Screen.getScreens().stream().map(Screen::getVisualBounds).toList(), primary);
-        stage.setMinWidth(Math.min(stage.getMinWidth(), bounds.getWidth()));
-        stage.setMinHeight(Math.min(stage.getMinHeight(), bounds.getHeight()));
-        stage.setWidth(bounds.getWidth());
-        stage.setHeight(bounds.getHeight());
-        stage.setX(bounds.getMinX());
-        stage.setY(bounds.getMinY());
+        if (window instanceof Stage stage) {
+            stage.setMinWidth(Math.min(stage.getMinWidth(), bounds.getWidth()));
+            stage.setMinHeight(Math.min(stage.getMinHeight(), bounds.getHeight()));
+        }
+        window.setWidth(bounds.getWidth());
+        window.setHeight(bounds.getHeight());
+        window.setX(bounds.getMinX());
+        window.setY(bounds.getMinY());
     }
 }

@@ -3,30 +3,75 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox id="cardPane" alignment="CENTER_LEFT" spacing="8" xmlns="http://javafx.com/javafx/17"
+<VBox id="cardPane"
+      spacing="8"
+      xmlns="http://javafx.com/javafx/17"
       xmlns:fx="http://javafx.com/fxml/1">
+
   <padding>
     <Insets top="10" right="16" bottom="10" left="15" />
   </padding>
-  <VBox spacing="4" HBox.hgrow="ALWAYS">
+
+  <VBox spacing="4">
     <HBox alignment="CENTER_LEFT">
-      <Label fx:id="index" styleClass="cell_big_label" minWidth="-Infinity" />
-      <Label fx:id="name" styleClass="cell_big_label" wrapText="true" />
-      <Label fx:id="archivedStatus" text="Archived" styleClass="archived-status" minWidth="-Infinity"
-             visible="false" managed="false">
-        <HBox.margin><Insets left="8" /></HBox.margin>
+      <Label fx:id="index"
+             minWidth="-Infinity"
+             styleClass="cell_big_label" />
+
+      <Label fx:id="name"
+             styleClass="cell_big_label"
+             wrapText="true" />
+
+      <Label fx:id="archivedStatus"
+             managed="false"
+             minWidth="-Infinity"
+             styleClass="archived-status"
+             text="Archived"
+             visible="false">
+        <HBox.margin>
+          <Insets left="8" />
+        </HBox.margin>
       </Label>
     </HBox>
-    <Label fx:id="eventId" styleClass="cell_small_label" />
-    <Label fx:id="capacity" styleClass="cell_small_label" />
-    <Label fx:id="description" styleClass="cell_small_label" wrapText="true" />
+
+    <Label fx:id="eventId"
+           styleClass="cell_small_label" />
+
+    <Label fx:id="capacity"
+           styleClass="cell_small_label" />
+
+    <Label fx:id="description"
+           styleClass="cell_small_label"
+           wrapText="true" />
   </VBox>
-  <Button fx:id="addParticipantButton" mnemonicParsing="false" styleClass="button, card-action-button"
-          text="Add participant" />
-  <Button fx:id="editButton" mnemonicParsing="false" styleClass="button, card-action-button" text="Edit event" />
-  <Button fx:id="archiveButton" mnemonicParsing="false" styleClass="button, card-archive-button" text="Archive" />
-  <Button fx:id="deleteButton" mnemonicParsing="false" styleClass="button, card-delete-button" text="Delete" />
-</HBox>
+
+  <FlowPane alignment="CENTER_RIGHT"
+            hgap="8"
+            vgap="8"
+            prefWrapLength="150">
+
+    <Button fx:id="addParticipantButton"
+            mnemonicParsing="false"
+            styleClass="button, card-action-button"
+            text="Add participant" />
+
+    <Button fx:id="editButton"
+            mnemonicParsing="false"
+            styleClass="button, card-action-button"
+            text="Edit event" />
+
+    <Button fx:id="archiveButton"
+            mnemonicParsing="false"
+            styleClass="button, card-archive-button"
+            text="Archive" />
+
+    <Button fx:id="deleteButton"
+            mnemonicParsing="false"
+            styleClass="button, card-delete-button"
+            text="Delete" />
+  </FlowPane>
+</VBox>

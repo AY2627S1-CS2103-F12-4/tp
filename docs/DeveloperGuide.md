@@ -13,7 +13,12 @@
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+* AttendPlusPlus is based on [AddressBook Level 3](https://github.com/se-edu/addressbook-level3).
+  Its JavaFX UI, command parsing, person model, JSON storage, tests and documentation have been adapted
+  for event and participant management.
+* The application uses [JavaFX](https://openjfx.io/) for its desktop UI and
+  [Jackson](https://github.com/FasterXML/jackson) for JSON serialization.
+  Documentation uses [MarkBind](https://markbind.org/) and [PlantUML](https://plantuml.com/).
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -35,7 +40,7 @@ The following provides a quick overview of the main components and their interac
 
 **Main components of the architecture**
 
-**`Main`** (consisting of classes [`Main`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
+**`Main`** (consisting of classes [`Main`](https://github.com/AY2627S1-CS2103-F12-4/tp/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/AY2627S1-CS2103-F12-4/tp/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
 * At app launch, it initializes the other components in the correct sequence, and connects them up with each other.
 * At shut down, it shuts down the other components and invokes cleanup methods where necessary.
 
@@ -57,7 +62,8 @@ The *Sequence Diagram* below shows how the components interact with each other f
 Each of the four main components (also shown in the diagram above),
 
 * defines its *API* in an `interface` with the same name as the Component.
-* provides its functionality through a concrete `{Component Name}Manager` class that implements the corresponding API interface.
+* provides its functionality through `UiManager`, `LogicManager`, `ModelManager` or `StorageManager`,
+  implementing the corresponding API interface.
 
 For example, the `Logic` component defines its API in `Logic.java` and implements it in `LogicManager.java`. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
 
@@ -67,24 +73,28 @@ The sections below give more details of each component.
 
 ### UI component
 
-The **API** of this component is specified in [`Ui.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/Ui.java)
+The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103-F12-4/tp/tree/master/src/main/java/seedu/address/ui/Ui.java)
 
 <puml src="diagrams/UiClassDiagram.puml" alt="Structure of the UI Component"/>
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+The UI consists of a `MainWindow` with **People** and **Events** tabs, `CommandBox`, `ResultDisplay`,
+`PersonListPanel`, `EventListPanel`, `ParticipantListPanel`, and `StatusBarFooter`. The Events tab places
+the event list beside the selected event's participants. These parts inherit from `UiPart`,
+which captures common behavior among classes that represent visible GUI parts. Entry forms and
+confirmation dialogs provide GUI shortcuts to the shared command execution pipeline.
 
-The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
+The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103-F12-4/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103-F12-4/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
 
 The `UI` component,
 
 * executes user commands using the `Logic` component.
 * listens for changes to `Model` data so that the UI can be updated with the modified data.
 * keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
-* depends on some classes in the `Model` component because it displays `Person` objects from the model.
+* depends on domain classes in `Model` because it displays `Person`, `Event` and `Participation` objects.
 
 ### Logic component
 
-**API** : [`Logic.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/logic/Logic.java)
+**API** : [`Logic.java`](https://github.com/AY2627S1-CS2103-F12-4/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
 
 Here's a (partial) class diagram of the `Logic` component:
 
@@ -117,38 +127,34 @@ How the parsing works:
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 
 ### Model component
-**API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
+**API** : [`Model.java`](https://github.com/AY2627S1-CS2103-F12-4/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
 <puml src="diagrams/ModelClassDiagram.puml" width="450" />
 
 
 The `Model` component,
 
-* stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
+* stores people as `Person` objects in `AddressBook`, backed by a `UniquePersonList`.
+* stores events in `EventList`, including archive state and the next unused Event ID, independently of person data.
 * delegates participation management to the `Mapper` API. `ModelManager` owns a `MapperManager`, which links events and
   people using their stable IDs and exposes participation data through `ReadOnlyParticipations`.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
+* exposes filtered events, the selected event and participant search results through the `Model` API.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
-
-
-<box type="info" seamless>
-
-**Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `AddressBook`, and each `Person` references tags from that list. This lets `AddressBook` maintain one `Tag` object per unique tag instead of each `Person` holding its own `Tag` objects.<br>
-
-<puml src="diagrams/BetterModelClassDiagram.puml" width="450" />
-</box>
 
 
 ### Storage component
 
-**API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
+**API** : [`Storage.java`](https://github.com/AY2627S1-CS2103-F12-4/tp/tree/master/src/main/java/seedu/address/storage/Storage.java)
 
 <puml src="diagrams/StorageClassDiagram.puml" width="700" />
 
 The `Storage` component,
-* can save address book data, user preferences, and participations in JSON format, and read them back into corresponding objects.
-* is implemented by `StorageManager`, which delegates participation data access to `JsonParticipationStorage`.
+* saves people, events, participations and preferences in separate JSON files and reads them back into domain objects.
+* is implemented by `StorageManager`, which delegates to `JsonAddressBookStorage`, `JsonEventStorage`,
+  `JsonParticipationStorage` and `JsonUserPrefsStorage`.
+* saves the next Event ID alongside events so deleted IDs are not reused after restarting.
 * reconstructs a `MapperManager` by resolving the event and person IDs stored in each `JsonAdaptedParticipation`.
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
@@ -318,8 +324,8 @@ the panel retains the global or scoped query context. `Model` and `Logic` expose
 `isParticipantSearchIncludingArchived()`, which returns false when no search is
 active. `MainWindow` uses this value for the empty global-search heading:
 **All events** when archives are included and **All nonarchived events** otherwise.
-Scoped headings and event cards use `Event#getDisplayName()`, including its
-`<archived>` suffix. Participant cards show the stable Person ID, full name, and
+Scoped headings and event cards use `Event#getName()` and display a separate red
+`Archived` label when `Event#isArchived()` is true. Participant cards show the stable Person ID, full name, and
 all assigned roles.
 
 Relevant model mutations refresh the active search using its stored type, scope,
@@ -453,102 +459,15 @@ These error paths and the mapper's internal ID resolution are omitted from the
 diagram for clarity. `LogicManager` saves the application data after successful
 command execution; those storage calls are also omitted.
 
-### \[Proposed\] Undo/redo feature
-
-#### Proposed Implementation
-
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
-
-* `VersionedAddressBook#commit()` -- Saves the current address book state in its history.
-* `VersionedAddressBook#undo()` -- Restores the previous address book state from its history.
-* `VersionedAddressBook#redo()` -- Restores a previously undone address book state from its history.
-
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
-
-Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
-
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
-
-<puml src="diagrams/UndoRedoState0.puml" alt="UndoRedoState0" />
-
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
-
-<puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
-
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
-
-<puml src="diagrams/UndoRedoState2.puml" alt="UndoRedoState2" />
-
-<box type="info" seamless>
-
-**Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
-</box>
-
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
-
-<puml src="diagrams/UndoRedoState3.puml" alt="UndoRedoState3" />
-
-
-<box type="info" seamless>
-
-**Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
-than attempting to perform the undo.
-</box>
-
-The following sequence diagram shows how an undo operation goes through the `Logic` component:
-
-<puml src="diagrams/UndoSequenceDiagram-Logic.puml" alt="UndoSequenceDiagram-Logic" />
-
-<box type="info" seamless>
-
-**Note:** The lifeline for `UndoCommand` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
-</box>
-
-Similarly, how an undo operation goes through the `Model` component is shown below:
-
-<puml src="diagrams/UndoSequenceDiagram-Model.puml" alt="UndoSequenceDiagram-Model" />
-
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
-
-<box type="info" seamless>
-
-**Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
-</box>
-
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
-
-<puml src="diagrams/UndoRedoState4.puml" alt="UndoRedoState4" />
-
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
-
-<puml src="diagrams/UndoRedoState5.puml" alt="UndoRedoState5" />
-
-The following activity diagram summarizes what happens when a user executes a new command:
-
-<puml src="diagrams/CommitActivityDiagram.puml" width="250" />
-
-#### Design considerations:
-
-**Aspect: How undo & redo execute:**
-
-* **Alternative 1 (current choice):** Saves the entire address book.
-  * Pros: Easy to implement.
-  * Cons: May have performance issues in terms of memory usage.
-
-* **Alternative 2:** Individual command knows how to undo/redo by
-  itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
-  * Cons: We must ensure that the implementation of each individual command is correct.
-
-_{more aspects and alternatives to be added}_
-
 ### Event archiving and visibility
 
 `Event` stores an immutable archive flag. Archiving and restoring replace the event
 through `withArchived(boolean)` and `Model#updateEvent`, preserving its stable ID
 and registrations. `JsonAdaptedEvent` persists the flag; older event records without
-an archive field load as nonarchived. `Event#getDisplayName()` appends `<archived>`
-for display without modifying the stored name used for matching.
+an archive field load as nonarchived. `EventCard` and `ParticipantListPanel` display
+the stored name and a separate red `Archived` label, whose visible and managed
+properties follow the archive flag. Names containing `<archived>` remain ordinary
+text and do not control the status label.
 
 The initial event view excludes archives. The overload
 `updateFilteredEventList(predicate, shouldIncludeArchived)` combines archive visibility
@@ -593,7 +512,7 @@ The target users are event organisers who manage events involving guests, partic
 
 They typically need to:
 * manage information for many people across one or more events;
-* keep track of RSVP status, contact information, plus-ones, dietary restrictions, and mobility requirements;
+* maintain contact information and event-specific roles, tags and attendance;
 * keep track of other event-related personnel such as venue liaisons and relevant authorities;
 * retrieve participant information quickly when needed;
 * manage event capacity and attendance;
@@ -604,10 +523,15 @@ They typically need to:
 
 The application provides event organisers with a CLI-based alternative to using multiple spreadsheets and documents.
 
-It centralises event and participant information in one application, allowing organisers to quickly manage and retrieve information such as contact details, RSVP status, dietary requirements, attendance, roles, and event capacity.
+AttendPlusPlus centralises people, events and registrations, allowing organisers to quickly manage and retrieve
+contact details, attendance, event-specific roles and tags, and event capacity.
 
 It aims to reduce repetitive administrative work and make common event-management tasks faster through keyboard-driven commands.
 ### User stories
+
+These stories include future requirements as well as delivered features. Refer to the
+[User Guide](UserGuide.md) for the currently supported commands; invitations, RSVP, waiting lists
+and event cloning are not implemented commands.
 
 Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`
 
@@ -780,7 +704,6 @@ Use case ends.
     * 1b1. AttendPlusPlus informs the event organiser that the event capacity must be a positive integer.
     * Use case ends.
 
-*{More to be added}*
 
 ### Non-Functional Requirements
 
@@ -788,18 +711,16 @@ Use case ends.
 2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
 3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
 
-*{More to be added}*
 
 ### Glossary
 
-* **Mainstream OS**: Windows, Linux, Unix, or macOS
+* **Mainstream OS**: Windows, Linux, or macOS with a compatible JavaFX runtime
 * **Mapper**: The part of the Model that manages participations between people and events
 * **Participant**: A person registered for an event
 * **Participant role**: A responsibility assigned to a participant for a specific event
 * **Participant tag**: A label assigned to a participant for a specific event
 * **Participation**: The event-specific relationship between a person and an event, including attendance status, roles,
   and tags
-* **Private contact detail**: A contact detail that is not meant to be shared with others
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -819,17 +740,17 @@ testers are expected to do more *exploratory* testing.
 
    1. Download the JAR file and copy it into an empty folder.
 
-   1. Double-click the JAR file.<br>
-      Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
+   1. Open a terminal in that folder and run `java -jar FILENAME.jar`, using the downloaded filename.<br>
+      Expected: AttendPlusPlus opens with **People** and **Events** tabs. A fresh folder has sample people,
+      no events and no registrations.
 
 1. Saving window preferences
 
    1. Resize the window to an optimal size. Move the window to a different location. Close the window.
 
-   1. Relaunch the app by double-clicking the JAR file.<br>
+   1. Relaunch the app using the same terminal command.<br>
        Expected: The most recent window size and location are retained.
 
-1. _{ more test cases … }_
 
 ### Searching events and participants
 
@@ -955,7 +876,8 @@ then `edit-participant E1 P2 /role Speaker`: both P1 and P2 must remain visible 
    1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
 
    1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows `Person deleted successfully.`
+      Expected: The first person and their event registrations are deleted. Other people and their registrations remain.
+      The status message shows `Person deleted successfully.`
 
    1. Test case: `delete 0`<br>
       Expected: No person is deleted. The status message shows error details.
@@ -963,12 +885,27 @@ then `edit-participant E1 P2 /role Speaker`: both P1 and P2 must remain visible 
    1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
       Expected: Similar to previous.
 
-1. _{ more test cases … }_
 
 ### Saving data
 
-1. Dealing with missing/corrupted data files
+Use a disposable application folder for these checks. Close AttendPlusPlus and back up its `data` directory
+and `preferences.json` before changing any file. Restore the baseline between cases.
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+1. Create an event, register a person and mark them present. Exit and relaunch in the same folder.
+   Expected: people, event details, registrations, roles, tags and attendance are restored.
+2. Create E1 and E2 in a fresh folder, delete E2, exit and relaunch, then create another event.
+   Expected: the new event is E3. Repeat after deleting all events: retired Event IDs are still not reused.
+3. With the app closed, remove only `data/addressbook.json` from the disposable folder and relaunch.
+   Expected: sample people are used. If the file contains malformed JSON instead, the people list starts empty
+   and a loading warning is logged.
+4. Restore the baseline, then separately remove or corrupt `data/events.json` and relaunch.
+   Expected: the event list starts empty. Registrations referring to unknown events are omitted.
+   Malformed event data produces a loading warning.
+5. Restore the baseline, then separately remove or corrupt `data/participations.json` and relaunch.
+   Expected: people and events remain available, with no registrations. Malformed participation data produces
+   a loading warning.
+6. Remove or corrupt `preferences.json` and relaunch.
+   Expected: default preferences are used. This does not clear people, events or registrations.
 
-1. _{ more test cases … }_
+Do not execute data-changing commands against corrupted files that you intend to recover: a later save can
+replace the original contents with the fallback state. Close the app and restore the backup before continuing.

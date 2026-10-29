@@ -12,7 +12,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import seedu.address.commons.util.ToStringBuilder;
-import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Address;
@@ -30,7 +29,8 @@ public class AddCommand extends Command {
 
     public static final String COMMAND_WORD = "add";
 
-    public static final String MESSAGE_MISSING_FIELDS = "Missing required fields: %1$s.\n%2$s";
+    public static final String MESSAGE_MISSING_FIELDS =
+            "Missing required fields: %1$s.\n%2$s";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Adds a person to the address book. "
@@ -48,7 +48,9 @@ public class AddCommand extends Command {
             + PREFIX_TAG + "friends "
             + PREFIX_TAG + "owesMoney";
 
-    public static final String MESSAGE_SUCCESS = "New person added: %1$s";
+    public static final String MESSAGE_SUCCESS =
+            "Person added successfully. Person ID: %1$s";
+
     public static final String MESSAGE_DUPLICATE_PERSON =
             "This person already exists in the address book.";
 
@@ -59,11 +61,14 @@ public class AddCommand extends Command {
     private final Set<Tag> tags;
 
     /**
-     * Creates an AddCommand using the specified person details.
+     * Creates an {@code AddCommand} using the specified person details.
      */
-    public AddCommand(Name name, Phone phone, Email email,
-                      Address address, Set<Tag> tags) {
-
+    public AddCommand(
+            Name name,
+            Phone phone,
+            Email email,
+            Address address,
+            Set<Tag> tags) {
         requireAllNonNull(name, phone, email, address, tags);
 
         this.name = name;
@@ -74,16 +79,16 @@ public class AddCommand extends Command {
     }
 
     /**
-     * Creates an AddCommand using the details of the specified {@code Person}.
+     * Creates an {@code AddCommand} using the details of the specified person.
      */
     public AddCommand(Person person) {
         requireNonNull(person);
 
-        this.name = person.getName();
-        this.phone = person.getPhone();
-        this.email = person.getEmail();
-        this.address = person.getAddress();
-        this.tags = Set.copyOf(person.getTags());
+        name = person.getName();
+        phone = person.getPhone();
+        email = person.getEmail();
+        address = person.getAddress();
+        tags = Set.copyOf(person.getTags());
     }
 
     @Override
@@ -91,8 +96,7 @@ public class AddCommand extends Command {
         requireNonNull(model);
 
         PersonId personId = model.generateNextPersonId();
-
-        Person toAdd = new Person(
+        Person personToAdd = new Person(
                 personId,
                 name,
                 phone,
@@ -100,16 +104,17 @@ public class AddCommand extends Command {
                 address,
                 tags);
 
-        if (model.hasPerson(toAdd)) {
+        if (model.hasPerson(personToAdd)) {
             throw new CommandException(MESSAGE_DUPLICATE_PERSON);
         }
 
-        model.addPerson(toAdd);
+        model.addPerson(personToAdd);
 
-        return new CommandResult(
-                String.format(
-                        MESSAGE_SUCCESS,
-                        Messages.format(toAdd)));
+        String feedback = String.format(
+                MESSAGE_SUCCESS,
+                personToAdd.getId());
+
+        return new CommandResult(feedback);
     }
 
     @Override
@@ -118,15 +123,15 @@ public class AddCommand extends Command {
             return true;
         }
 
-        if (!(other instanceof AddCommand otherAddCommand)) {
+        if (!(other instanceof AddCommand otherCommand)) {
             return false;
         }
 
-        return name.equals(otherAddCommand.name)
-                && phone.equals(otherAddCommand.phone)
-                && email.equals(otherAddCommand.email)
-                && address.equals(otherAddCommand.address)
-                && tags.equals(otherAddCommand.tags);
+        return name.equals(otherCommand.name)
+                && phone.equals(otherCommand.phone)
+                && email.equals(otherCommand.email)
+                && address.equals(otherCommand.address)
+                && tags.equals(otherCommand.tags);
     }
 
     @Override

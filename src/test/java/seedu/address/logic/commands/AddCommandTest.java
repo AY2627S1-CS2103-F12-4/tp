@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
-import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
@@ -48,7 +47,7 @@ public class AddCommandTest {
         ModelStubAcceptingPersonAdded modelStub = new ModelStubAcceptingPersonAdded();
 
         Person validPerson = new PersonBuilder()
-                .withId("P999")
+                .withId(TEST_PERSON_ID.toString())
                 .build();
 
         CommandResult commandResult = new AddCommand(validPerson).execute(modelStub);
@@ -56,7 +55,7 @@ public class AddCommandTest {
         assertEquals(
                 String.format(
                         AddCommand.MESSAGE_SUCCESS,
-                        Messages.format(validPerson)),
+                        TEST_PERSON_ID),
                 commandResult.getFeedbackToUser());
 
         assertEquals(
@@ -339,7 +338,7 @@ public class AddCommandTest {
 
         @Override
         public void editParticipation(EventId eventId, PersonId personId,
-                Set<ParticipationRole> roles, Set<Tag> tags) {
+                                      Set<ParticipationRole> roles, Set<Tag> tags) {
             throw new AssertionError("This method should not be called.");
         }
 

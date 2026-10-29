@@ -18,6 +18,7 @@ import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
+import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ArchiveEventCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.DeleteCommand;
@@ -679,13 +680,16 @@ public class MainWindow extends UiPart<Stage> {
 
             resultDisplay.setFeedbackToUser(
                     isParticipantSearchCommand(commandText)
-                            || commandText.stripLeading().split("\\s+", 2)[0].equals(EditEventCommand.COMMAND_WORD)
-                            || FindEventCommand.MESSAGE_NO_MATCHES.equals(commandResult.getFeedbackToUser())
+                            || commandText.stripLeading().split("\\s+", 2)[0]
+                            .equals(EditEventCommand.COMMAND_WORD)
+                            || FindEventCommand.MESSAGE_NO_MATCHES.equals(
+                            commandResult.getFeedbackToUser())
                             || commandText.stripLeading().split("\\s+", 2)[0]
                             .equals(ViewParticipantCommand.COMMAND_WORD)
+                            || commandText.stripLeading().split("\\s+", 2)[0]
+                            .equals(AddCommand.COMMAND_WORD)
                             ? commandResult.getFeedbackToUser()
-                            : CommandSuccessMessages.forCommand(
-                            commandText));
+                            : CommandSuccessMessages.forCommand(commandText));
 
             if (commandResult.shouldShowParticipants()) {
                 showCommandSelectedEvent();

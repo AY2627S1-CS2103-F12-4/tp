@@ -29,8 +29,8 @@ EventList *--> "*" Event
 AddressBook *--> "*" Person
 Participation --> "1" Event
 Participation --> "1" Person
-Participation *--> "*" Tag
-Participation *--> "*" ParticipationRole
+Participation --> "*" Tag
+Participation --> "*" ParticipationRole
 
 note right of MapperManager
   Stores each participation as

@@ -1,114 +1,41 @@
 @startuml
 !include style.puml
 skinparam ArrowFontStyle plain
-skinparam ParticipantPadding 5
-skinparam maxMessageSize 180
+skinparam DefaultFontSize 16
+skinparam ParticipantPadding 10
+skinparam maxMessageSize 240
 
 participant ":LogicManager" as LogicManager LOGIC_COLOR
-participant "r:CommandResult" as CommandResult LOGIC_COLOR
 participant ":SearchParticipantCommand" as Command LOGIC_COLOR
 participant "m:ModelManager" as ModelManager MODEL_COLOR
-participant ":EventList" as EventList MODEL_COLOR
-participant ":MapperManager" as MapperManager MODEL_COLOR
-participant "predicate:\nParticipantNameContains\nKeywordPredicate" as Predicate MODEL_COLOR
-
-note over LogicManager, Command
-  After parsing search-participant Michael
-  /event E1 /include-archive.
-  E1 exists and has at least one match.
-  eventId identifies E1.
-end note
+participant "r:CommandResult" as CommandResult LOGIC_COLOR
 
 LogicManager -> Command : execute(m)
 activate Command
-Command -> ModelManager : updateParticipantSearch(eventId, "Michael", true)
+Command -> ModelManager : updateParticipantSearch(...)
 activate ModelManager
-ModelManager -> ModelManager : applyParticipantSearch(eventId, "Michael", NAME, true)
-activate ModelManager
-ModelManager -> EventList : getEventFromId("E1")
-activate EventList
-EventList --> ModelManager : event
-deactivate EventList
-note over ModelManager : events contains only event E1.
-ModelManager -> ModelManager : applyParticipantSearch(events, eventId, "Michael", NAME, true)
-activate ModelManager
-
-create Predicate
-ModelManager -> Predicate : new ParticipantNameContainsKeywordPredicate("Michael")
-activate Predicate
-Predicate --> ModelManager : predicate
-deactivate Predicate
-
-note over ModelManager, EventList
-  shouldIncludeArchived is true, so E1
-  is eligible even if archived.
+note over ModelManager
+  Publish search context and event filter
+  before notifying result observers.
 end note
-
-ModelManager -> ModelManager : getParticipationsForEvent(event)
-activate ModelManager
-ModelManager -> MapperManager : getParticipationsForEvent(event)
-activate MapperManager
-MapperManager --> ModelManager : registrations
-deactivate MapperManager
-ModelManager --> ModelManager : registrations
-deactivate ModelManager
-
-loop each registration in E1
-    ModelManager -> Predicate : test(participation)
-    activate Predicate
-    Predicate --> ModelManager : matchesName
-    deactivate Predicate
-end
-
-note over ModelManager, EventList
-  Sort matches by Person ID and
-  derive matchingEventIds.
-  Store NAME, eventId, query,
-  and shouldIncludeArchived.
-end note
-
-ModelManager -> ModelManager : updateFilteredEventList(matchingEventPredicate, true)
-activate ModelManager
-ModelManager --> ModelManager
-deactivate ModelManager
-
-note over ModelManager, EventList
-  Set participantSearchResults
-  to matches using setAll.
-  Observers see the updated search
-  context and matching-event filter.
-end note
-
-ModelManager --> ModelManager
-deactivate ModelManager
-ModelManager --> ModelManager
-deactivate ModelManager
 ModelManager --> Command
 deactivate ModelManager
 
 Command -> ModelManager : getParticipantSearchResults()
 activate ModelManager
-ModelManager --> Command : results
+ModelManager --> Command : registrations
 deactivate ModelManager
-note over Command : matchCount = results.size()
 
 Command -> ModelManager : getFilteredEventList()
 activate ModelManager
 ModelManager --> Command : matchingEvents
 deactivate ModelManager
-note over Command : eventCount = matchingEvents.size()
 
 create CommandResult
-Command -> CommandResult : new CommandResult(feedback, false, false, true)
+Command -> CommandResult : create result with registration/event\ncounts and Events-tab request
 activate CommandResult
 CommandResult --> Command : r
 deactivate CommandResult
-note over CommandResult
-  Feedback contains registration
-  and event counts.
-  The final true requests
-  the Events tab.
-end note
 Command --> LogicManager : r
 deactivate Command
 @enduml

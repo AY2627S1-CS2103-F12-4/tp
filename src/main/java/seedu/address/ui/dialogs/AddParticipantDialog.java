@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import seedu.address.logic.commands.AddParticipantCommand;
+import seedu.address.logic.parser.ParserUtil;
+import seedu.address.logic.parser.exceptions.ParseException;
 
 /** Collects the details required to add a participant to an event. */
 public final class AddParticipantDialog extends FormDialog {
@@ -32,10 +34,12 @@ public final class AddParticipantDialog extends FormDialog {
                 buildCommand(eventId, personId.getText(), roles.getText(), tags.getText()));
     }
 
-    static String buildCommand(String eventId, String personId, String roles, String tags) {
+    static String buildCommand(String eventId, String personId, String roles, String tags) throws ParseException {
+        String validatedPersonId = ParserUtil.parsePersonId(personId).toString();
+        DialogInputValidator.validateParticipation(roles, tags);
         String roleArguments = formatArguments(roles, PREFIX_ROLE.toString());
         String tagArguments = formatArguments(tags, PREFIX_PARTICIPANT_TAG.toString());
-        return String.format("%s %s %s%s%s", AddParticipantCommand.COMMAND_WORD, eventId, personId.trim(),
+        return String.format("%s %s %s%s%s", AddParticipantCommand.COMMAND_WORD, eventId, validatedPersonId,
                 roleArguments, tagArguments);
     }
 

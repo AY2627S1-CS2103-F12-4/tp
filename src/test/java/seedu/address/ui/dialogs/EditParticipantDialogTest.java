@@ -15,6 +15,7 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.Event;
 import seedu.address.model.event.EventId;
 import seedu.address.model.mapper.Participation;
@@ -25,14 +26,14 @@ import seedu.address.testutil.PersonBuilder;
 public class EditParticipantDialogTest {
 
     @Test
-    public void buildCommand_rolesAndTags_formatsRepeatedCliArguments() {
+    public void buildCommand_rolesAndTags_formatsRepeatedCliArguments() throws ParseException {
         assertEquals("edit-participant E1 P1 /role Facilitator /role Guest Speaker /tag VIP /tag Alumni",
                 EditParticipantDialog.buildCommand(
                         "E1", "P1", " Facilitator, Guest Speaker ", " VIP, Alumni "));
     }
 
     @Test
-    public void buildCommand_blankRolesAndTags_includesEmptyPrefixes() {
+    public void buildCommand_blankRolesAndTags_includesEmptyPrefixes() throws ParseException {
         assertEquals("edit-participant E1 P1 /role /tag",
                 EditParticipantDialog.buildCommand("E1", "P1", " ", " "));
     }

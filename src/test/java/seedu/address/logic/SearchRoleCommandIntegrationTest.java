@@ -108,10 +108,10 @@ public class SearchRoleCommandIntegrationTest {
         assertEquals(List.of(WEDDING), logic.getFilteredEventList());
         assertEquals(List.of("P1", "P2"), logic.getParticipantSearchResults().stream()
                 .map(participation -> participation.getPerson().getId().toString()).toList());
-        assertFalse(result.isShowHelp());
-        assertFalse(result.isExit());
-        assertTrue(result.isShowEvents());
-        assertFalse(result.isShowParticipants());
+        assertFalse(result.shouldShowHelp());
+        assertFalse(result.shouldExit());
+        assertTrue(result.shouldShowEvents());
+        assertFalse(result.shouldShowParticipants());
         assertMemoryAndStorageUnchanged();
     }
 
@@ -217,7 +217,7 @@ public class SearchRoleCommandIntegrationTest {
                 .toList());
         assertTrue(logic.getParticipantSearchEvent().isEmpty());
         assertEquals("Best Man", logic.getParticipantSearchKeyword().orElseThrow());
-        assertTrue(result.isShowEvents());
+        assertTrue(result.shouldShowEvents());
         assertMemoryAndStorageUnchanged();
     }
 
@@ -419,7 +419,7 @@ public class SearchRoleCommandIntegrationTest {
     }
 
     @Test
-    public void execute_participationSaveFailure_reportsErrorWithoutChangingData() throws Exception {
+    public void execute_unchangedParticipations_doesNotAttemptFailingSave() throws Exception {
         IOException saveFailure = new IOException("Cannot save participations");
         JsonParticipationStorage failingStorage = new JsonParticipationStorage(storage.getParticipationFilePath()) {
             @Override
@@ -432,9 +432,8 @@ public class SearchRoleCommandIntegrationTest {
                 new JsonUserPrefsStorage(storage.getUserPrefsFilePath()),
                 new JsonEventStorage(storage.getEventFilePath()), failingStorage);
         logic = new LogicManager(model, storageWithSaveFailure);
-        String expectedMessage = String.format(LogicManager.FILE_OPS_ERROR_FORMAT, saveFailure.getMessage());
-
-        assertThrows(CommandException.class, expectedMessage, () -> logic.execute("search-role Best Man /event E1"));
+        CommandResult result = logic.execute("search-role Best Man /event E1");
+        assertEquals(BEST_MAN_RESULT, result.getFeedbackToUser());
         assertMemoryAndStorageUnchanged();
     }
 

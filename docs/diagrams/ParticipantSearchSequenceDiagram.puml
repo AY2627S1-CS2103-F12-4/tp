@@ -40,7 +40,7 @@ Predicate --> ModelManager : predicate
 deactivate Predicate
 
 note over ModelManager, EventList
-  includeArchived is true, so E1
+  shouldIncludeArchived is true, so E1
   is eligible even if archived.
 end note
 
@@ -64,7 +64,7 @@ note over ModelManager, EventList
   Sort matches by Person ID and
   derive matchingEventIds.
   Store NAME, eventId, query,
-  and includeArchived.
+  and shouldIncludeArchived.
 end note
 
 ModelManager -> ModelManager : updateFilteredEventList(matchingEventPredicate, true)

@@ -38,7 +38,9 @@ public class MainAppStorageTest {
         Event event = original.createEvent("Workshop", 10, "Java");
         original.addParticipation(event, TypicalPersons.ALICE);
         original.setPresent(event, TypicalPersons.ALICE, true);
-        new LogicManager(original, storage).execute("list");
+        storage.saveAddressBook(original.getAddressBook());
+        storage.saveEvents(original.getEvents());
+        storage.saveParticipations(original.getParticipations());
 
         MainApp app = new MainApp();
         Model restored = app.initModelManager(storage, new UserPrefs());

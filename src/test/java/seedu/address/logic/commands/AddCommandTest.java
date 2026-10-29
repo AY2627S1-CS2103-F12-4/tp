@@ -136,7 +136,7 @@ public class AddCommandTest {
         }
 
         @Override
-        public void updateParticipantSearch(EventId eventId, String keyword, boolean includeArchived) {
+        public void updateParticipantSearch(EventId eventId, String keyword, boolean shouldIncludeArchived) {
             throw new AssertionError("This method should not be called.");
         }
 
@@ -146,7 +146,7 @@ public class AddCommandTest {
         }
 
         @Override
-        public void updateParticipantSearch(String keyword, boolean includeArchived) {
+        public void updateParticipantSearch(String keyword, boolean shouldIncludeArchived) {
             throw new AssertionError("This method should not be called.");
         }
 
@@ -156,7 +156,7 @@ public class AddCommandTest {
         }
 
         @Override
-        public void updateParticipantRoleSearch(String keyword, boolean includeArchived) {
+        public void updateParticipantRoleSearch(String keyword, boolean shouldIncludeArchived) {
             throw new AssertionError("This method should not be called.");
         }
 
@@ -166,7 +166,7 @@ public class AddCommandTest {
         }
 
         @Override
-        public void updateParticipantRoleSearch(EventId eventId, String keyword, boolean includeArchived) {
+        public void updateParticipantRoleSearch(EventId eventId, String keyword, boolean shouldIncludeArchived) {
             throw new AssertionError("This method should not be called.");
         }
 
@@ -176,7 +176,7 @@ public class AddCommandTest {
         }
 
         @Override
-        public void showEvents(boolean includeArchived) {
+        public void showEvents(boolean shouldIncludeArchived) {
             throw new AssertionError("This method should not be called.");
         }
 
@@ -247,7 +247,7 @@ public class AddCommandTest {
         }
 
         @Override
-        public void updateFilteredEventList(Predicate<Event> predicate, boolean includeArchived) {
+        public void updateFilteredEventList(Predicate<Event> predicate, boolean shouldIncludeArchived) {
             throw new AssertionError("This method should not be called.");
         }
 

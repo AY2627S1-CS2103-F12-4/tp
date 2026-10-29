@@ -13,7 +13,7 @@ public class ListEventCommand extends Command {
             + "Parameters: [/include-archive]\nExample: " + COMMAND_WORD + " /include-archive";
     public static final String MESSAGE_NO_EVENTS = "No events found.";
 
-    private final boolean includeArchived;
+    private final boolean shouldIncludeArchived;
 
     /** Creates an event listing that excludes archived events. */
     public ListEventCommand() {
@@ -21,14 +21,14 @@ public class ListEventCommand extends Command {
     }
 
     /** Creates an event listing with the requested archive visibility. */
-    public ListEventCommand(boolean includeArchived) {
-        this.includeArchived = includeArchived;
+    public ListEventCommand(boolean shouldIncludeArchived) {
+        this.shouldIncludeArchived = shouldIncludeArchived;
     }
 
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.showEvents(includeArchived);
+        model.showEvents(shouldIncludeArchived);
         int count = model.getFilteredEventList().size();
         String message = count == 0 ? MESSAGE_NO_EVENTS
                 : String.format(Messages.MESSAGE_EVENTS_LISTED_OVERVIEW, count);
@@ -39,11 +39,11 @@ public class ListEventCommand extends Command {
     public boolean equals(Object other) {
         return other == this
                 || other instanceof ListEventCommand otherCommand
-                && includeArchived == otherCommand.includeArchived;
+                && shouldIncludeArchived == otherCommand.shouldIncludeArchived;
     }
 
     @Override
     public int hashCode() {
-        return Boolean.hashCode(includeArchived);
+        return Boolean.hashCode(shouldIncludeArchived);
     }
 }

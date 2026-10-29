@@ -35,15 +35,15 @@ public class SearchRoleCommandParser implements Parser<SearchRoleCommand> {
         requireNonNull(args);
         String input = StringUtil.normalizeWhitespace(args);
         String archiveFlagSuffix = " " + FLAG_INCLUDE_ARCHIVE;
-        boolean includeArchived = input.endsWith(archiveFlagSuffix);
-        if (includeArchived) {
+        boolean shouldIncludeArchived = input.endsWith(archiveFlagSuffix);
+        if (shouldIncludeArchived) {
             input = input.substring(0, input.length() - archiveFlagSuffix.length());
         }
         if (input.isEmpty()) {
             throw invalidFormat();
         }
         if (!COMMAND_PREFIX.matcher(input).find()) {
-            return new SearchRoleCommand(input, includeArchived);
+            return new SearchRoleCommand(input, shouldIncludeArchived);
         }
 
         Matcher matcher = ARGUMENT_FORMAT.matcher(input);
@@ -55,7 +55,7 @@ public class SearchRoleCommandParser implements Parser<SearchRoleCommand> {
             throw invalidFormat();
         }
         EventId eventId = ParserUtil.parseEventId(matcher.group("eventId"));
-        return new SearchRoleCommand(eventId, keyword, includeArchived);
+        return new SearchRoleCommand(eventId, keyword, shouldIncludeArchived);
     }
 
     private ParseException invalidFormat() {

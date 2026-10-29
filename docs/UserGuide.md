@@ -244,8 +244,8 @@ The flag takes no value and can appear only once. Extra arguments produce an err
 
 Finds events whose names contain the supplied keyword or phrase, ignoring letter
 case. A multiword phrase must appear together in the event name, including its
-internal spaces. The search uses the stored name, excluding the `<archived>` display
-suffix.
+internal spaces. The search uses the stored event name; the separate **Archived**
+badge is not part of the name being searched.
 
 Format: `find-event KEYWORD [/include-archive]`
 
@@ -267,7 +267,7 @@ an error. With no matches, the events list is empty and the app displays
 `No matching events found.`
 
 This command selects the **Events** tab and clears any participant or role search.
-Archived matching cards retain their `<archived>` indication. Searching preserves
+Archived matching cards display a separate red **Archived** badge. Searching preserves
 events and their registrations.
 
 ### Viewing event details: `view-event`
@@ -341,7 +341,11 @@ Format: `list-participants EVENT_ID`
 
 Example: `list-participants E1`
 
-![List participants](images/listParticipants.png)
+For example, after searching for `Michael`, `list-participants E1` displays all
+registrations in `E1`, including people whose names did not match the search.
+The **Clear search** button is hidden because the search has been cleared.
+
+![Events tab showing all registrations for E1 after list-participants clears a participant search](images/listParticipants.png)
 
 ### Viewing participant details: `view-participant`
 
@@ -425,6 +429,14 @@ ordered by the numeric part of Person ID (for example, `P1`, `P2`, `P10`). Searc
 feedback counts registrations across all matching events. Each registration counts
 once even when several roles match; the same person matching in two events counts
 as two registrations.
+
+For example, `search-participant Michael /include-archive` below finds three
+registrations across three events, including one archived event. The selected
+event's right pane shows only Michael's matching registration. The feedback counts
+matches across all three events, not just the selected event. Role searches use
+the same layout.
+
+![Participant search showing three matching events, an Archived badge, one selected event's match, and Clear search](images/participantSearchResults.png)
 
 Archived events are excluded unless `/include-archive` is supplied, even when
 explicitly scoped with `/event EVENTID`. Including archives still shows only events

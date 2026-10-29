@@ -13,6 +13,9 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.event.EventId;
 
 public class SearchParticipantCommandParserTest {
+    private static final String MESSAGE_INVALID_FORMAT =
+            String.format(MESSAGE_INVALID_COMMAND_FORMAT, SearchParticipantCommand.MESSAGE_USAGE);
+
     private final SearchParticipantCommandParser parser = new SearchParticipantCommandParser();
 
     @Test
@@ -40,28 +43,32 @@ public class SearchParticipantCommandParserTest {
     }
 
     @Test
-    public void parse_missingOrMalformedArguments_throwsParseException() {
-        for (String args : List.of("", " ", "\u2003", "\u00a0", "/event E1", "Michael /event",
-                "Michael /event \u2003", "Michael /event /event", "Michael /eventE1", "/event E1 Michael",
-                "Michael /event E1 extra", "Michael /Event E1", "Michael /name Tan", "Michael /foo E1",
-                "E1 /name Michael", "Michael /role Speaker", "Michael /")) {
+    public void parse_blankQuery_throwsUsageError() {
+        for (String args : SearchParserTestData.getBlankQueries()) {
             ParseException exception = assertThrows(ParseException.class, () -> parser.parse(args), args);
-            assertEquals(String.format(MESSAGE_INVALID_COMMAND_FORMAT, SearchParticipantCommand.MESSAGE_USAGE),
-                    exception.getMessage(), args);
+            assertEquals(MESSAGE_INVALID_FORMAT, exception.getMessage(), args);
         }
     }
 
     @Test
-    public void parse_repeatedEventPrefix_throwsParseException() {
-        for (String args : List.of("Michael /event E1 /event E2", "Michael /event /event E1",
-                "Michael /event E1 /event", "Michael /event E1\t/event\tE2")) {
-            assertThrows(ParseException.class, () -> parser.parse(args), args);
+    public void parse_malformedArguments_throwsUsageError() {
+        for (String args : SearchParserTestData.getMalformedArguments("Michael")) {
+            ParseException exception = assertThrows(ParseException.class, () -> parser.parse(args), args);
+            assertEquals(MESSAGE_INVALID_FORMAT, exception.getMessage(), args);
+        }
+    }
+
+    @Test
+    public void parse_repeatedEventPrefix_throwsUsageError() {
+        for (String args : SearchParserTestData.getRepeatedEventArguments("Michael")) {
+            ParseException exception = assertThrows(ParseException.class, () -> parser.parse(args), args);
+            assertEquals(MESSAGE_INVALID_FORMAT, exception.getMessage(), args);
         }
     }
 
     @Test
     public void parse_invalidEventId_throwsParseException() {
-        for (String eventId : List.of("1", "0", "-1", "+1", "1.5", "P1", "e1", "E", "E-1", "E1x")) {
+        for (String eventId : SearchParserTestData.getInvalidEventIds()) {
             ParseException exception = assertThrows(ParseException.class, () ->
                     parser.parse("Michael /event " + eventId), eventId);
             assertEquals(EventId.MESSAGE_CONSTRAINTS, exception.getMessage());
@@ -105,16 +112,9 @@ public class SearchParticipantCommandParserTest {
 
     @Test
     public void parse_malformedArchiveFlag_throwsUsageError() {
-        for (String args : List.of("/include-archive", "/event E1 /include-archive", "/include-archive Michael",
-                "Michael /include-archive /event E1", "Michael /include-archive extra",
-                "Michael /include-archive true", "Michael /include-archive /include-archive",
-                "Michael /event E1 /include-archive /include-archive", "Michael /include-archivex",
-                "Michael /Include-Archive", "Michael /include-archive=true", "Michael /event /include-archive",
-                "Michael /event E1 extra /include-archive", "Michael /unknown /include-archive",
-                "Michael /event E1 /event E2 /include-archive")) {
+        for (String args : SearchParserTestData.getMalformedArchiveArguments("Michael")) {
             ParseException exception = assertThrows(ParseException.class, () -> parser.parse(args), args);
-            assertEquals(String.format(MESSAGE_INVALID_COMMAND_FORMAT, SearchParticipantCommand.MESSAGE_USAGE),
-                    exception.getMessage(), args);
+            assertEquals(MESSAGE_INVALID_FORMAT, exception.getMessage(), args);
         }
     }
 

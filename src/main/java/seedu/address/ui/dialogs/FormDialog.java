@@ -125,6 +125,9 @@ abstract class FormDialog {
         };
         window.widthProperty().addListener(fitOnResize);
         window.heightProperty().addListener(fitOnResize);
+        // Install skins before Dialog computes its initial size from the heading's preferred height.
+        dialog.getDialogPane().applyCss();
+        dialog.getDialogPane().layout();
         // The window is positioned after Dialog's shown event when using showAndWait.
         window.setOnShown(event -> {
             WindowBounds.fit(window);

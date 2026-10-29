@@ -355,6 +355,10 @@ A `Participation` is an immutable snapshot containing:
 * event-specific `Tag` objects; and
 * event-specific `ParticipationRole` objects.
 
+A snapshot exposes unmodifiable tag and role sets. The immutable `Tag` and `ParticipationRole` instances can be
+shared between snapshots, including a snapshot and its `withPresent` result. The diagram therefore uses ordinary
+associations for these value objects.
+
 Internally, `MapperManager` does not use mutable domain objects as map keys. It stores each record using the stable pair
 `(EventId, PersonId)` and keeps the attendance state, tags and roles as the value. When a query is made, it resolves the
 current `Event` and `Person` from `EventList` and `AddressBook` before returning an immutable `Participation` snapshot.

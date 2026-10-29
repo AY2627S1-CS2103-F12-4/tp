@@ -51,7 +51,7 @@ public class ParticipantRoleSearchTest {
     public void globalSearch_filtersEventsAndOrdersRegistrationsWithoutDuplicates() {
         model.updateParticipantRoleSearch("  sPeAk  ");
         assertEquals(List.of(FIRST_EVENT, SECOND_EVENT), model.getFilteredEventList());
-        assertEquals(List.of("E2/P2", "E2/P10", "E1/P2"), resultIds());
+        assertEquals(List.of("E2/P2", "E2/P10", "E1/P2"), getResultIds());
         assertTrue(model.getParticipantSearchEvent().isEmpty());
         assertEquals(Optional.of("sPeAk"), model.getParticipantSearchKeyword());
         assertEquals(ALICE_ROLES, model.getParticipantSearchResults().getFirst().getRoles());
@@ -66,7 +66,7 @@ public class ParticipantRoleSearchTest {
 
         model.updateParticipantRoleSearch(FIRST_ID, " \u2003Keynote\t Speaker\u2003 ");
 
-        assertEquals(List.of("E2/P10"), resultIds());
+        assertEquals(List.of("E2/P10"), getResultIds());
         assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
         assertEquals(Optional.of(FIRST_EVENT), model.getParticipantSearchEvent());
         assertEquals(Optional.of("Keynote Speaker"), model.getParticipantSearchKeyword());
@@ -101,7 +101,7 @@ public class ParticipantRoleSearchTest {
         model.updateParticipantRoleSearch("Speaker");
         assertEquals(3, results.size());
         model.updateParticipantRoleSearch(FIRST_ID, "Guest");
-        assertEquals(List.of("E2/P1"), resultIds());
+        assertEquals(List.of("E2/P1"), getResultIds());
         model.updateParticipantRoleSearch("Missing");
         assertTrue(results.isEmpty());
         assertTrue(model.getFilteredEventList().isEmpty());
@@ -161,13 +161,13 @@ public class ParticipantRoleSearchTest {
     public void existingRefreshHooks_keepGlobalAndScopedRolePredicates() {
         model.updateParticipantRoleSearch("Speaker");
         model.markPresent(FIRST_ID, BOB.getId());
-        assertEquals(List.of("E2/P2", "E2/P10", "E1/P2"), resultIds());
+        assertEquals(List.of("E2/P2", "E2/P10", "E1/P2"), getResultIds());
         assertTrue(model.getParticipantSearchResults().get(1).isPresent());
         assertTrue(model.getParticipantSearchEvent().isEmpty());
 
         model.updateParticipantRoleSearch(FIRST_ID, "Speaker");
         model.setPerson(BOB, new PersonBuilder(BOB).withName("Renamed Person").build());
-        assertEquals(List.of("E2/P2", "E2/P10"), resultIds());
+        assertEquals(List.of("E2/P2", "E2/P10"), getResultIds());
         assertEquals("Renamed Person", model.getParticipantSearchResults().get(1).getPerson().getName().fullName);
     }
 
@@ -175,45 +175,47 @@ public class ParticipantRoleSearchTest {
     public void switchingToNameSearch_replacesRoleStateAndFiltersMatchingEvents() {
         model.updateParticipantRoleSearch("Missing");
         model.updateParticipantSearch(FIRST_ID, "  Alice  ");
-        assertEquals(List.of("E2/P2"), resultIds());
+        assertEquals(List.of("E2/P2"), getResultIds());
         assertEquals(Optional.of(FIRST_EVENT), model.getParticipantSearchEvent());
         assertEquals(Optional.of("Alice"), model.getParticipantSearchKeyword());
         assertEquals(List.of(FIRST_EVENT), model.getFilteredEventList());
         model.setPresent(FIRST_EVENT, ALICE, true);
-        assertEquals(List.of("E2/P2"), resultIds());
+        assertEquals(List.of("E2/P2"), getResultIds());
         assertTrue(model.getParticipantSearchResults().getFirst().isPresent());
         model.updateParticipantRoleSearch("Speaker");
-        assertEquals(List.of("E2/P2", "E2/P10", "E1/P2"), resultIds());
+        assertEquals(List.of("E2/P2", "E2/P10", "E1/P2"), getResultIds());
     }
 
     @Test
     public void switchingBetweenGlobalAndScopedSearchTypes_refreshesTheActivePredicate() {
-        for (boolean scoped : List.of(false, true)) {
+        for (boolean isEventScoped : List.of(false, true)) {
             model = createModel();
             model.updateParticipantRoleSearch("Speaker");
-            if (scoped) {
+            if (isEventScoped) {
                 model.updateParticipantSearch(FIRST_ID, "  Speaker  ");
             } else {
                 model.updateParticipantSearch("  Speaker  ");
             }
-            assertEquals(List.of("E2/P1"), resultIds());
+            assertEquals(List.of("E2/P1"), getResultIds());
             assertEquals(Optional.of("Speaker"), model.getParticipantSearchKeyword());
-            assertEquals(scoped ? Optional.of(FIRST_EVENT) : Optional.empty(), model.getParticipantSearchEvent());
+            assertEquals(isEventScoped ? Optional.of(FIRST_EVENT) : Optional.empty(),
+                    model.getParticipantSearchEvent());
             model.markPresent(FIRST_ID, CHARLIE.getId());
-            assertEquals(List.of("E2/P1"), resultIds());
+            assertEquals(List.of("E2/P1"), getResultIds());
             assertTrue(model.getParticipantSearchResults().getFirst().isPresent());
             model.setPerson(CHARLIE, new PersonBuilder(CHARLIE).withName("Renamed Person").build());
             assertTrue(model.getParticipantSearchResults().isEmpty());
             assertTrue(model.getFilteredEventList().isEmpty());
 
-            if (scoped) {
+            if (isEventScoped) {
                 model.updateParticipantRoleSearch(FIRST_ID, "Speaker");
             } else {
                 model.updateParticipantRoleSearch("Speaker");
             }
             model.setPerson(ALICE, new PersonBuilder(ALICE).withName("Speaker").build());
-            assertEquals(scoped ? List.of("E2/P2", "E2/P10") : List.of("E2/P2", "E2/P10", "E1/P2"), resultIds());
-            assertEquals(scoped ? List.of(FIRST_EVENT) : List.of(FIRST_EVENT, SECOND_EVENT),
+            assertEquals(isEventScoped ? List.of("E2/P2", "E2/P10") : List.of("E2/P2", "E2/P10", "E1/P2"),
+                    getResultIds());
+            assertEquals(isEventScoped ? List.of(FIRST_EVENT) : List.of(FIRST_EVENT, SECOND_EVENT),
                     model.getFilteredEventList());
         }
     }
@@ -222,7 +224,7 @@ public class ParticipantRoleSearchTest {
     public void deletingEvents_dropsGlobalResultsAndClearsDeletedScope() {
         model.updateParticipantRoleSearch("Speaker");
         model.deleteEvent(FIRST_ID);
-        assertEquals(List.of("E1/P2"), resultIds());
+        assertEquals(List.of("E1/P2"), getResultIds());
         assertEquals(List.of(SECOND_EVENT), model.getFilteredEventList());
         assertEquals(Optional.of("Speaker"), model.getParticipantSearchKeyword());
 
@@ -263,11 +265,11 @@ public class ParticipantRoleSearchTest {
 
     @Test
     public void clearSearch_restoresEventsAndStopsRoleRefreshWithoutChangingOtherViews() {
-        for (boolean scoped : List.of(false, true)) {
+        for (boolean isEventScoped : List.of(false, true)) {
             model = createModel();
             model.selectEvent(SECOND_ID);
             model.updateFilteredPersonList(person -> false);
-            if (scoped) {
+            if (isEventScoped) {
                 model.updateParticipantRoleSearch(FIRST_ID, "Speaker");
             } else {
                 model.updateParticipantRoleSearch("Speaker");
@@ -295,70 +297,71 @@ public class ParticipantRoleSearchTest {
         model.updateParticipantSearch(FIRST_ID, "Alice");
         model.updateFilteredEventList(event -> event.equals(SECOND_EVENT));
         model.clearParticipantSearch();
-        assertTrue(resultIds().isEmpty());
+        assertTrue(getResultIds().isEmpty());
         assertTrue(model.getParticipantSearchEvent().isEmpty());
         assertTrue(model.getParticipantSearchKeyword().isEmpty());
         assertEquals(List.of(FIRST_EVENT, SECOND_EVENT, EMPTY_EVENT), model.getFilteredEventList());
         model.setPresent(FIRST_EVENT, ALICE, true);
-        assertTrue(resultIds().isEmpty());
+        assertTrue(getResultIds().isEmpty());
         assertEquals(List.of(FIRST_EVENT, SECOND_EVENT, EMPTY_EVENT), model.getFilteredEventList());
     }
 
     @Test
     public void roleAndMembershipChanges_refreshGlobalAndScopedResultsAndEventVisibility() {
-        for (boolean scoped : List.of(false, true)) {
+        for (boolean isEventScoped : List.of(false, true)) {
             model = createModel();
-            if (scoped) {
+            if (isEventScoped) {
                 model.updateParticipantRoleSearch(FIRST_ID, "Speaker");
             } else {
                 model.updateParticipantRoleSearch("Speaker");
             }
             model.removeParticipation(FIRST_EVENT, ALICE);
-            assertEquals(scoped ? List.of("E2/P10") : List.of("E2/P10", "E1/P2"), resultIds());
+            assertEquals(isEventScoped ? List.of("E2/P10") : List.of("E2/P10", "E1/P2"), getResultIds());
             model.removeParticipation(FIRST_ID, BOB.getId());
-            assertEquals(scoped ? List.of() : List.of("E1/P2"), resultIds());
-            assertEquals(scoped ? List.of() : List.of(SECOND_EVENT), model.getFilteredEventList());
+            assertEquals(isEventScoped ? List.of() : List.of("E1/P2"), getResultIds());
+            assertEquals(isEventScoped ? List.of() : List.of(SECOND_EVENT), model.getFilteredEventList());
 
             model.addParticipation(FIRST_ID, BOB.getId(), ALICE_ROLES, Set.of());
-            assertEquals(scoped ? List.of("E2/P10") : List.of("E2/P10", "E1/P2"), resultIds());
+            assertEquals(isEventScoped ? List.of("E2/P10") : List.of("E2/P10", "E1/P2"), getResultIds());
             model.editParticipation(FIRST_ID, BOB.getId(), Set.of(new ParticipationRole("Guest")), null);
-            assertEquals(scoped ? List.of() : List.of(SECOND_EVENT), model.getFilteredEventList());
+            assertEquals(isEventScoped ? List.of() : List.of(SECOND_EVENT), model.getFilteredEventList());
             model.editParticipation(FIRST_ID, CHARLIE.getId(), ALICE_ROLES, null);
-            assertEquals(scoped ? List.of("E2/P1") : List.of("E2/P1", "E1/P2"), resultIds());
-            assertEquals(scoped ? List.of(FIRST_EVENT) : List.of(FIRST_EVENT, SECOND_EVENT),
+            assertEquals(isEventScoped ? List.of("E2/P1") : List.of("E2/P1", "E1/P2"), getResultIds());
+            assertEquals(isEventScoped ? List.of(FIRST_EVENT) : List.of(FIRST_EVENT, SECOND_EVENT),
                     model.getFilteredEventList());
             model.deletePerson(CHARLIE);
-            assertEquals(scoped ? List.of() : List.of("E1/P2"), resultIds());
-            assertEquals(scoped ? List.of() : List.of(SECOND_EVENT), model.getFilteredEventList());
+            assertEquals(isEventScoped ? List.of() : List.of("E1/P2"), getResultIds());
+            assertEquals(isEventScoped ? List.of() : List.of(SECOND_EVENT), model.getFilteredEventList());
             assertEquals(Optional.of("Speaker"), model.getParticipantSearchKeyword());
         }
     }
 
     @Test
     public void eventUpdates_refreshArchiveEligibilityAndDetailsWithoutLosingSearchScope() {
-        for (boolean scoped : List.of(false, true)) {
+        for (boolean isEventScoped : List.of(false, true)) {
             model = createModel();
-            if (scoped) {
+            if (isEventScoped) {
                 model.updateParticipantRoleSearch(FIRST_ID, "Speaker");
             } else {
                 model.updateParticipantRoleSearch("Speaker");
             }
             model.updateEvent(FIRST_EVENT.withArchived(true));
-            assertEquals(scoped ? List.of() : List.of("E1/P2"), resultIds());
-            assertEquals(scoped ? List.of() : List.of(SECOND_EVENT), model.getFilteredEventList());
+            assertEquals(isEventScoped ? List.of() : List.of("E1/P2"), getResultIds());
+            assertEquals(isEventScoped ? List.of() : List.of(SECOND_EVENT), model.getFilteredEventList());
             assertEquals(Optional.of("Speaker"), model.getParticipantSearchKeyword());
 
             Event renamed = new Event(FIRST_ID, "Renamed event", 30, "Updated");
             model.updateEvent(renamed);
-            assertEquals(scoped ? List.of("E2/P2", "E2/P10") : List.of("E2/P2", "E2/P10", "E1/P2"), resultIds());
+            assertEquals(isEventScoped ? List.of("E2/P2", "E2/P10") : List.of("E2/P2", "E2/P10", "E1/P2"),
+                    getResultIds());
             assertEquals(renamed, model.getParticipantSearchResultsForEvent(FIRST_EVENT).getFirst().getEvent());
-            assertEquals(scoped ? Optional.of(renamed) : Optional.empty(), model.getParticipantSearchEvent());
+            assertEquals(isEventScoped ? Optional.of(renamed) : Optional.empty(), model.getParticipantSearchEvent());
 
             Event restored = ARCHIVED_EVENT.withArchived(false);
             model.updateEvent(restored);
-            assertEquals(scoped ? List.of(renamed) : List.of(renamed, SECOND_EVENT, restored),
+            assertEquals(isEventScoped ? List.of(renamed) : List.of(renamed, SECOND_EVENT, restored),
                     model.getFilteredEventList());
-            assertEquals(scoped ? 2 : 4, model.getParticipantSearchResults().size());
+            assertEquals(isEventScoped ? 2 : 4, model.getParticipantSearchResults().size());
         }
     }
 
@@ -367,7 +370,7 @@ public class ParticipantRoleSearchTest {
         model.updateParticipantRoleSearch("  sPeAk  ", true);
 
         assertEquals(List.of(FIRST_EVENT, SECOND_EVENT, ARCHIVED_EVENT), model.getFilteredEventList());
-        assertEquals(List.of("E2/P2", "E2/P10", "E1/P2", "E3/P1"), resultIds());
+        assertEquals(List.of("E2/P2", "E2/P10", "E1/P2", "E3/P1"), getResultIds());
         assertEquals(ALICE_ROLES, model.getParticipantSearchResultsForEvent(ARCHIVED_EVENT).getFirst().getRoles());
         assertEquals(Optional.of("sPeAk"), model.getParticipantSearchKeyword());
         assertTrue(model.getParticipantSearchEvent().isEmpty());
@@ -378,21 +381,21 @@ public class ParticipantRoleSearchTest {
         EventId archivedId = new EventId(ARCHIVED_EVENT.getId());
         model.updateParticipantRoleSearch(archivedId, "Speaker", true);
         assertEquals(List.of(ARCHIVED_EVENT), model.getFilteredEventList());
-        assertEquals(List.of("E3/P1"), resultIds());
+        assertEquals(List.of("E3/P1"), getResultIds());
         assertEquals(Optional.of(ARCHIVED_EVENT), model.getParticipantSearchEvent());
 
         model.updateEvent(ARCHIVED_EVENT.withArchived(false));
         assertEquals(List.of(ARCHIVED_EVENT.withArchived(false)), model.getFilteredEventList());
         model.updateEvent(ARCHIVED_EVENT);
         assertEquals(List.of(ARCHIVED_EVENT), model.getFilteredEventList());
-        assertEquals(List.of("E3/P1"), resultIds());
+        assertEquals(List.of("E3/P1"), getResultIds());
     }
 
     @Test
     public void roleSearch_includingArchives_roleChangesRetainVisibilityInBothScopes() {
-        for (boolean scoped : List.of(false, true)) {
+        for (boolean isEventScoped : List.of(false, true)) {
             model = createModel();
-            if (scoped) {
+            if (isEventScoped) {
                 model.updateParticipantRoleSearch(new EventId(ARCHIVED_EVENT.getId()), "Speaker", true);
             } else {
                 model.updateParticipantRoleSearch("Speaker", true);
@@ -401,12 +404,12 @@ public class ParticipantRoleSearchTest {
             model.editParticipation(new EventId(ARCHIVED_EVENT.getId()), CHARLIE.getId(),
                     Set.of(new ParticipationRole("Guest")), null);
             assertTrue(model.getParticipantSearchResultsForEvent(ARCHIVED_EVENT).isEmpty());
-            assertEquals(scoped ? List.of() : List.of(FIRST_EVENT, SECOND_EVENT), model.getFilteredEventList());
+            assertEquals(isEventScoped ? List.of() : List.of(FIRST_EVENT, SECOND_EVENT), model.getFilteredEventList());
 
             model.editParticipation(new EventId(ARCHIVED_EVENT.getId()), CHARLIE.getId(), ALICE_ROLES, null);
-            assertEquals(scoped ? List.of(ARCHIVED_EVENT) : List.of(FIRST_EVENT, SECOND_EVENT, ARCHIVED_EVENT),
+            assertEquals(isEventScoped ? List.of(ARCHIVED_EVENT) : List.of(FIRST_EVENT, SECOND_EVENT, ARCHIVED_EVENT),
                     model.getFilteredEventList());
-            assertEquals(scoped ? 1 : 4, results.size());
+            assertEquals(isEventScoped ? 1 : 4, results.size());
             assertSame(results, model.getParticipantSearchResults());
         }
     }
@@ -477,7 +480,7 @@ public class ParticipantRoleSearchTest {
         assertEquals(model, other);
     }
 
-    private List<String> resultIds() {
+    private List<String> getResultIds() {
         return model.getParticipantSearchResults().stream()
                 .map(participation -> participation.getEvent().getId() + "/" + participation.getPerson().getId())
                 .toList();

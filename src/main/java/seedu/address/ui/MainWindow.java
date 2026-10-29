@@ -274,29 +274,13 @@ public class MainWindow extends UiPart<Stage> {
         isUpdatingParticipantPanel = true;
 
         try {
-            String commandWord = commandText.trim().split("\\s+", 2)[0];
-            if (commandWord.equals(FindEventCommand.COMMAND_WORD)
-                    || commandWord.equals(ListEventCommand.COMMAND_WORD)) {
-                eventListPanel.clearSelection();
-                clearParticipantPanel();
+            if (isParticipantPanelResetCommand(commandText)) {
+                clearEventSelectionAndParticipantPanel();
                 return;
             }
 
-            boolean startsSearch =
-                    isParticipantSearchCommand(commandText);
-
-            if (startsSearch) {
-                selectedEvent = null;
-
-                if (logic.getParticipantSearchKeyword().isPresent()) {
-                    participantDisplayMode =
-                            ParticipantDisplayMode.SEARCH;
-                    refreshParticipantSearch();
-                } else {
-                    eventListPanel.clearSelection();
-                    clearParticipantPanel();
-                }
-
+            if (isParticipantSearchCommand(commandText)) {
+                startParticipantSearchDisplay();
                 return;
             }
 
@@ -305,18 +289,48 @@ public class MainWindow extends UiPart<Stage> {
                 return;
             }
 
-            if (logic.getParticipantSearchKeyword().isPresent()) {
-                participantDisplayMode =
-                        ParticipantDisplayMode.SEARCH;
-                refreshParticipantSearch();
-            } else if (participantDisplayMode
-                    == ParticipantDisplayMode.SEARCH) {
-                eventListPanel.clearSelection();
-                clearParticipantPanel();
-            }
+            reconcileParticipantSearchDisplay();
         } finally {
             isUpdatingParticipantPanel = false;
         }
+    }
+
+    /**
+     * Starts a new search display without retaining the previous event selection.
+     */
+    private void startParticipantSearchDisplay() {
+        selectedEvent = null;
+        if (logic.getParticipantSearchKeyword().isEmpty()) {
+            clearEventSelectionAndParticipantPanel();
+            return;
+        }
+
+        participantDisplayMode = ParticipantDisplayMode.SEARCH;
+        refreshParticipantSearch();
+    }
+
+    /**
+     * Refreshes an active search display or clears a display whose search has ended.
+     */
+    private void reconcileParticipantSearchDisplay() {
+        if (logic.getParticipantSearchKeyword().isPresent()) {
+            participantDisplayMode = ParticipantDisplayMode.SEARCH;
+            refreshParticipantSearch();
+            return;
+        }
+
+        if (participantDisplayMode == ParticipantDisplayMode.SEARCH) {
+            clearEventSelectionAndParticipantPanel();
+        }
+    }
+
+    /**
+     * Clears event selection before resetting the participant panel.
+     * Called while participant panel updates are guarded against reentrancy.
+     */
+    private void clearEventSelectionAndParticipantPanel() {
+        eventListPanel.clearSelection();
+        clearParticipantPanel();
     }
 
     /**
@@ -419,6 +433,15 @@ public class MainWindow extends UiPart<Stage> {
         selectedEvent = null;
         participantDisplayMode = ParticipantDisplayMode.NONE;
         participantListPanel.clearSearchContext();
+    }
+
+    /**
+     * Returns whether the command clears participant selection and context.
+     */
+    private boolean isParticipantPanelResetCommand(String commandText) {
+        String commandWord = commandText.trim().split("\\s+", 2)[0];
+        return commandWord.equals(FindEventCommand.COMMAND_WORD)
+                || commandWord.equals(ListEventCommand.COMMAND_WORD);
     }
 
     /**

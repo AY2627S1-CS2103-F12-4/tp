@@ -252,14 +252,15 @@ request the Events tab through `CommandResult`. Empty-result feedback distinguis
 searches that include archives from default searches. Command equality and hash
 codes include archive visibility.
 
-The following sequence diagram shows command execution for
-`search-participant Michael /event E1 /include-archive`, after parsing. It assumes
-that E1 exists and has at least one matching registration. `events` is the
-single-event list containing E1. Calls within the mapper and predicate are
-omitted for clarity. `matchingEventPredicate` represents the
-lambda that checks whether an event's ID belongs to `matchingEventIds`.
+The following sequence diagram focuses on how the command updates the model and
+returns feedback for `search-participant Michael /event E1 /include-archive`, after
+parsing. It assumes that E1 exists and has at least one matching registration.
+`updateParticipantSearch(...)` receives E1's `EventId`, `"Michael"`, and `true` to
+include archived events. Internal event resolution, matching, and sorting are
+omitted; their behavior is described below. Result creation uses pseudocode to
+highlight the feedback counts and Events-tab request.
 
-<puml src="diagrams/ParticipantSearchSequenceDiagram.puml" width="1100" alt="Sequence of a scoped participant name search including archived events" />
+<puml src="diagrams/ParticipantSearchSequenceDiagram.puml" width="750" alt="Command-level sequence of a scoped participant name search, from updating the model to returning feedback" />
 
 Without `/event`, the command calls the global overload, which searches across
 events; without `/include-archive`, archived events are excluded. Role search

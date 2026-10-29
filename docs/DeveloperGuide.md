@@ -399,7 +399,9 @@ against the loaded `AddressBook` and `EventList` and constructs a `MapperManager
 are omitted, duplicate event-person pairs cause the participation file to be rejected, and invalid role or tag values
 are reported as data-loading errors. After a command executes successfully, `LogicManager` saves participations through
 the `ReadOnlyParticipations` interface only if they differ from the initially loaded or last successfully saved snapshot.
-The comparison includes event and person IDs, attendance, roles and tags. Failed saves leave the snapshot unchanged so
+The comparison includes event and person IDs, attendance, roles and tags. Role spelling is compared exactly as stored
+in JSON, independently of case-insensitive role deduplication, so capitalization-only edits are saved too.
+Failed saves leave the snapshot unchanged so
 that subsequent successful commands retry saving pending changes.
 
 #### Design considerations

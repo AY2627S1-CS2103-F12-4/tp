@@ -162,7 +162,8 @@ public class FormDialogLayoutTest {
         assertTrue(sceneBounds.getMinX() >= -1 && sceneBounds.getMaxX() <= node.getScene().getWidth() + 1,
                 "Control is clipped by the dialog's horizontal bounds");
         assertTrue(sceneBounds.getMinY() >= -1 && sceneBounds.getMaxY() <= node.getScene().getHeight() + 1,
-                "Control is clipped by the dialog's vertical bounds");
+                node.getClass().getSimpleName() + " is clipped vertically: bounds=" + sceneBounds
+                        + ", sceneHeight=" + node.getScene().getHeight());
     }
 
     /** Waits for layout pulses and deferred native bounds updates without blocking the FX thread. */

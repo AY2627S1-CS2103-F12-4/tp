@@ -13,6 +13,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
@@ -130,6 +131,7 @@ public class FormDialogLayoutTest {
 
     /** Checks rendered window, field and button bounds rather than only preferred layout sizes. */
     private void assertLayoutWithinScreen(DialogPane pane, Rectangle2D screen) {
+        awaitLayout(pane.getScene());
         ScrollPane scroll = (ScrollPane) pane.getHeader().lookup(".scroll-pane");
         Label header = (Label) scroll.getContent();
         assertTrue(header.isWrapText());
@@ -138,7 +140,8 @@ public class FormDialogLayoutTest {
         assertTrue(window.getX() >= screen.getMinX() - 1, "Dialog extends past the left screen edge");
         assertTrue(window.getY() >= screen.getMinY() - 1, "Dialog extends past the top screen edge");
         assertTrue(window.getX() + window.getWidth() <= screen.getMaxX() + 1,
-                "Dialog extends past the right screen edge: width=" + window.getWidth());
+                "Dialog extends past the right screen edge: x=" + window.getX()
+                        + ", width=" + window.getWidth() + ", screen=" + screen);
         assertTrue(window.getY() + window.getHeight() <= screen.getMaxY() + 1,
                 "Dialog extends past the bottom screen edge");
         for (Node node : fields(pane)) {
@@ -160,5 +163,30 @@ public class FormDialogLayoutTest {
                 "Control is clipped by the dialog's horizontal bounds");
         assertTrue(sceneBounds.getMinY() >= -1 && sceneBounds.getMaxY() <= node.getScene().getHeight() + 1,
                 "Control is clipped by the dialog's vertical bounds");
+    }
+
+    /** Waits for layout pulses and deferred native bounds updates without blocking the FX thread. */
+    private void awaitLayout(Scene scene) {
+        Object loopKey = new Object();
+        Runnable pulseListener = new Runnable() {
+            private int remainingPulses = 10;
+
+            @Override
+            public void run() {
+                if (--remainingPulses == 0) {
+                    scene.removePostLayoutPulseListener(this);
+                    Platform.runLater(() -> Platform.exitNestedEventLoop(loopKey, null));
+                } else {
+                    Platform.requestNextPulse();
+                }
+            }
+        };
+        scene.addPostLayoutPulseListener(pulseListener);
+        try {
+            Platform.requestNextPulse();
+            Platform.enterNestedEventLoop(loopKey);
+        } finally {
+            scene.removePostLayoutPulseListener(pulseListener);
+        }
     }
 }

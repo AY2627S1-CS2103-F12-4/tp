@@ -86,6 +86,28 @@ public class JsonParticipationStorageTest {
     }
 
     @Test
+    public void readParticipations_nullRecord_throwsDataLoadingException() throws Exception {
+        Path filePath = testFolder.resolve("null-record.json");
+        Files.writeString(filePath, """
+                {"participations":[{"eventId":"E1","personId":"P1"},null]}
+                """);
+        JsonParticipationStorage storage = new JsonParticipationStorage(filePath);
+
+        assertThrows(DataLoadingException.class, () -> storage.readParticipations(eventList, addressBook));
+    }
+
+    @Test
+    public void readParticipations_nullTag_throwsDataLoadingException() throws Exception {
+        Path filePath = testFolder.resolve("null-tag.json");
+        Files.writeString(filePath, """
+                {"participations":[{"eventId":"E1","personId":"P1","tags":["vip",null]}]}
+                """);
+        JsonParticipationStorage storage = new JsonParticipationStorage(filePath);
+
+        assertThrows(DataLoadingException.class, () -> storage.readParticipations(eventList, addressBook));
+    }
+
+    @Test
     public void readParticipations_unknownOrInvalidIds_dropsParticipations() throws Exception {
         Path filePath = testFolder.resolve("participations.json");
         Files.writeString(filePath, """

@@ -46,11 +46,17 @@ class JsonSerializableParticipations {
     /**
      * Resolves all valid stored participations against the current events and people.
      * Participations with invalid or unknown IDs are omitted.
+     *
+     * @throws IllegalValueException if a record is null, duplicated, or contains invalid role or tag data.
      */
     public ReadOnlyParticipations toModelType(EventList eventList, AddressBook addressBook)
             throws IllegalValueException {
         List<Participation> modelParticipations = new ArrayList<>();
-        for (JsonAdaptedParticipation adaptedParticipation : participations) {
+        for (int i = 0; i < participations.size(); i++) {
+            JsonAdaptedParticipation adaptedParticipation = participations.get(i);
+            if (adaptedParticipation == null) {
+                throw new IllegalValueException("participations[" + i + "] must not be null.");
+            }
             Participation modelParticipation = adaptedParticipation.toModelType(eventList, addressBook).orElse(null);
             if (modelParticipation == null) {
                 continue;

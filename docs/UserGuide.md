@@ -19,7 +19,9 @@ AttendPlusPlus is a **desktop application for managing events and their particip
 2. Download the latest AttendPlusPlus `.jar` file from the [project releases page](https://github.com/AY2627S1-CS2103-F12-4/tp/releases), if a release is available.
 3. Place the JAR file in a folder of your choice.
 4. Open a terminal in that folder and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded JAR filename.
-5. The application window will appear with tabs for people, events and participants.
+5. The application window will appear with **People** and **Events** tabs. The Events tab shows
+   events and the selected event's participants side by side. A fresh installation contains sample
+   people; create an event and register people to populate the Events tab.
 
    ![AttendPlusPlus interface](images/updatedUi.png)
 
@@ -41,7 +43,7 @@ Failed commands continue to show the specific error and usage guidance where app
 * `UPPER_CASE` indicates a value you must replace, e.g., `EVENT_ID` could be `E1`.
 * Square brackets `[ ]` indicate optional arguments.
 * `...` indicates an argument that can be repeated.
-* Event IDs (e.g., `E1`) and person IDs (e.g., `P1`) are different from the numbered indices displayed in person lists. Use the identifier required by each command.
+* Event IDs (e.g., `E1`) and Person IDs (e.g., `P1`) are different from the numbered indices displayed in person lists. People cards show both the current list index and permanent Person ID. Use the identifier required by each command.
 * Some person-editing commands accept prefixed arguments in any order. For event/participant commands, follow the order shown in the format.
 * Event/participant field prefixes (`/cap`, `/desc`, `/role`, `/tag`) must be followed by whitespace before a value, or by the end of input for an empty value where allowed. Misspelled or attached forms such as `/roles`, `/tags`, `/description` and `/cap10` produce an error without changing data. Person prefixes such as `n/` and `p/` still accept attached values.
 
@@ -71,7 +73,7 @@ interpreted as command options. The form displays an error for these addresses.
 | Top action bar | **+ Person**, **+ Event** | Opens a form for adding a person or event. |
 | Each person in the People tab | **Edit**, **Delete** | **Edit** opens a pre-filled person form. **Delete** asks for confirmation, then deletes the person and their registrations from all events. |
 | Each event in the Events tab | **Add participant**, **Edit event**, **Archive** or **Unarchive**, **Delete** | **Add participant** registers a person by ID and accepts optional roles and event-specific tags. **Edit event** opens a pre-filled event form. **Archive** hides an active event from the event list; the button reads **Unarchive** for an archived event and restores it when selected. **Delete** asks for confirmation, then deletes the event and its registrations, as does the CLI command `del-event EVENT_ID`. |
-| Each participant shown for an event | **Edit participation**, **Delete** | **Edit participation** opens a pre-filled form that replaces the participant's roles and event-specific tags; leave a field blank to clear it. **Delete** asks for confirmation, then removes only that event registration. The person remains in the address book. |
+| Each participant shown for an event | **Edit participation**, **Delete** | **Edit participation** opens a pre-filled form that replaces the participant's roles and event-specific tags; leave a field blank to clear it. **Delete** asks for confirmation, then removes only that event registration. The person remains in the people list. |
 
 Select an event to display its participants and their action buttons. Closing a form or declining a deletion leaves
 the data unchanged.
@@ -86,7 +88,7 @@ Format: `help`
 
 ### Adding a person: `add`
 
-Adds a person to the address book. A person must exist before they can be registered for an event. People may have the same name because each person is assigned a unique ID.
+Adds a person to the people list. A person must exist before they can be registered for an event. People may have the same name because each person is assigned a unique ID.
 
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]...`
 
@@ -103,7 +105,7 @@ Examples:
 
 ### Listing all people: `list`
 
-Shows all people in the address book.
+Shows all people in the people list.
 
 Format: `list`
 
@@ -172,6 +174,7 @@ trigger this confirmation.
 
 The Event ID, registrations, roles, tags and attendance are preserved. Reducing
 capacity below the registration count does not remove existing participants.
+The feedback warns when registrations exceed the updated capacity and confirms that registrations have been retained.
 
 Format: `edit-event EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]`
 
@@ -304,7 +307,7 @@ Examples:
 * `add-participant E1 P2 /role Best Man`
 * `add-participant E1 P3 /role Bridesmaid /tag VIP`
 
-The person must already exist in the address book. Role information applies to that person's participation in this event, rather than all their events.
+The person must already exist in the people list. Role information applies to that person's participation in this event, rather than all their events.
 
 ### Editing a participant: `edit-participant`
 
@@ -494,7 +497,7 @@ Example: `unmark-participant E1 P2`
 
 ### Removing a participant: `del-participant`
 
-Removes the person's registration from the specified event. The underlying person remains in the address book.
+Removes the person's registration from the specified event. The underlying person remains in the people list.
 
 Format: `del-participant EVENT_ID PERSON_ID`
 
@@ -512,7 +515,7 @@ Example: `view-participant E999 P1`
 
 ### Clearing all people: `clear`
 
-Clears all people from the address book and removes their registrations across events. **Use with caution.**
+Clears all people from the people list and removes their registrations across events. **Use with caution.**
 
 Format: `clear`
 
@@ -535,7 +538,9 @@ Application data is stored in JSON files. Editing these files manually can cause
 ## FAQ
 
 **Q:** How do I add a new person to an event?  
-**A:** First add them with `add` if needed, then register them using `add-participant EVENT_ID PERSON_ID`. The current People list shows numbered indices, **not permanent person IDs** such as `P1`. You must obtain the correct person ID from an available command or record that explicitly shows it; do not assume the list index equals the ID. If no ID is shown, this is a current UI limitation.
+**A:** First add them with `add` if needed, then use the **Person ID** shown on their People card in
+`add-participant EVENT_ID PERSON_ID`. The numbered list index is used by `edit` and `delete`; it can change
+when the list is filtered and must not be substituted for the permanent Person ID.
 
 **Q:** Does `del-participant` delete the person's contact details?  
 **A:** No. It removes the participation in the specified event, not the underlying person record.

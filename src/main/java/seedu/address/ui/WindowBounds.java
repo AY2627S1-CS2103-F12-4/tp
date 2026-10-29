@@ -47,8 +47,13 @@ public final class WindowBounds {
             stage.setMinWidth(Math.min(stage.getMinWidth(), bounds.getWidth()));
             stage.setMinHeight(Math.min(stage.getMinHeight(), bounds.getHeight()));
         }
-        window.setWidth(bounds.getWidth());
-        window.setHeight(bounds.getHeight());
+        // Rewriting unchanged dimensions cancels pending sizeToScene requests in JavaFX.
+        if (window.getWidth() > bounds.getWidth()) {
+            window.setWidth(bounds.getWidth());
+        }
+        if (window.getHeight() > bounds.getHeight()) {
+            window.setHeight(bounds.getHeight());
+        }
         window.setX(bounds.getMinX());
         window.setY(bounds.getMinY());
     }

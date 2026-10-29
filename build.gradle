@@ -30,6 +30,7 @@ checkstyle {
 
 test {
     useJUnitPlatform()
+    testLogging.exceptionFormat = 'full'
     finalizedBy jacocoTestReport
 }
 

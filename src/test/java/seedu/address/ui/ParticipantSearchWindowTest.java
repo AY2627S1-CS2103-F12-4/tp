@@ -46,7 +46,7 @@ public class ParticipantSearchWindowTest {
     public Path temporaryFolder;
 
     @Test
-    public void searchThroughCommandBox_matchesAndEmptyResults_selectEventsTab() throws Exception {
+    public void searchThroughCommandBox_matchingResults_selectsEventsTab() throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
             try {
@@ -57,6 +57,18 @@ public class ParticipantSearchWindowTest {
                 assertEquals("Matching \"John\"", getHeading(window, "searchHeading"));
                 assertEquals(1, getEvents(window).getItems().size());
                 assertEquals("1 matching registration across 1 event for \"John\".", getFeedback(window));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void searchThroughCommandBox_emptyResultsAfterEventSearch_selectsEventsTab() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-participant John /event E1");
                 enterCommand(window, "find-event birthday");
                 assertEquals("Events", getSelectedTabName(window));
                 enterCommand(window, "search-participant Missing /event E1");
@@ -72,35 +84,13 @@ public class ParticipantSearchWindowTest {
     }
 
     @Test
-    public void clearSearchButton_afterParticipantAndRoleSearch_runsListEvent() throws Exception {
-        runOnFxThread(() -> {
-            MainWindow window = createWindow();
-            try {
-                Button clearSearchButton = (Button) window.getPrimaryStage()
-                        .getScene()
-                        .lookup("#clearSearchButton");
+    public void clearSearchButton_afterParticipantSearch_runsListEvent() throws Exception {
+        assertClearSearchButtonResetsSearch("search-participant John");
+    }
 
-                assertNotNull(clearSearchButton);
-                assertFalse(clearSearchButton.isVisible());
-
-                for (String command : new String[]{
-                    "search-participant John",
-                    "search-role Missing"
-                }) {
-                    enterCommand(window, command);
-                    assertTrue(clearSearchButton.isVisible());
-
-                    clearSearchButton.fire();
-
-                    assertFalse(clearSearchButton.isVisible());
-                    assertEquals("Listing events...", getFeedback(window));
-                    assertEquals(1, getEvents(window).getItems().size());
-                    assertTrue(getParticipants(window).getItems().isEmpty());
-                }
-            } finally {
-                window.getPrimaryStage().close();
-            }
-        });
+    @Test
+    public void clearSearchButton_afterEmptyRoleSearch_runsListEvent() throws Exception {
+        assertClearSearchButtonResetsSearch("search-role Missing");
     }
 
     @Test
@@ -157,48 +147,13 @@ public class ParticipantSearchWindowTest {
     }
 
     @Test
-    public void listParticipants_afterEmptySearch_displaysEmptyAndArchivedTargets() throws Exception {
-        runOnFxThread(() -> {
-            MainWindow window = createWindow();
-            try {
-                enterCommand(window, "add-event Empty /cap 10 /desc No registrations");
-                enterCommand(window, "add-event Archived /cap 10 /desc Archived event");
-                enterCommand(window, "add-participant E3 P1 /role Host");
-                enterCommand(window, "archive-event E3");
-                assertEquals(List.of("E1", "E2"), getEvents(window).getItems().stream().map(Event::getId).toList());
+    public void listParticipants_afterEmptySearch_displaysEmptyEvent() throws Exception {
+        assertListsParticipantsAfterEmptySearch("E2");
+    }
 
-                for (String target : List.of("E2", "E3")) {
-                    enterCommand(window, "search-participant Missing /event E1");
-                    assertTrue(getEvents(window).getItems().isEmpty());
-
-                    enterCommand(window, "list-participants " + target);
-
-                    assertEquals("Events", getSelectedTabName(window));
-                    assertEquals(target, getEvents(window).getSelectionModel().getSelectedItem().getId());
-                    assertEquals("Participants", getHeading(window, "searchHeading"));
-                    Button clearSearchButton = (Button) window.getPrimaryStage()
-                            .getScene().lookup("#clearSearchButton");
-                    assertFalse(clearSearchButton.isVisible());
-                    assertFalse(clearSearchButton.isManaged());
-                    if (target.equals("E2")) {
-                        assertEquals(List.of("E1", "E2"),
-                                getEvents(window).getItems().stream().map(Event::getId).toList());
-                        assertEquals("Empty (E2)", getHeading(window, "eventHeading"));
-                        assertTrue(getParticipants(window).getItems().isEmpty());
-                        Label placeholder = (Label) getParticipants(window).getPlaceholder();
-                        assertEquals("No participants found for this event.", placeholder.getText());
-                    } else {
-                        assertEquals(List.of("E1", "E2", "E3"),
-                                getEvents(window).getItems().stream().map(Event::getId).toList());
-                        assertEquals("Archived (E3)", getHeading(window, "eventHeading"));
-                        assertEquals(1, getParticipants(window).getItems().size());
-                        assertEquals("E3", getParticipants(window).getItems().getFirst().getEvent().getId());
-                    }
-                }
-            } finally {
-                window.getPrimaryStage().close();
-            }
-        });
+    @Test
+    public void listParticipants_afterEmptySearch_displaysArchivedEvent() throws Exception {
+        assertListsParticipantsAfterEmptySearch("E3");
     }
 
     @Test
@@ -437,6 +392,74 @@ public class ParticipantSearchWindowTest {
                 assertTrue(getParticipants(window).getItems().isEmpty());
                 assertEquals("Participants", getHeading(window, "eventHeading"));
                 assertEquals(1, getEvents(window).getItems().size());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    private void assertClearSearchButtonResetsSearch(String command) throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                Button clearSearchButton = (Button) window.getPrimaryStage()
+                        .getScene()
+                        .lookup("#clearSearchButton");
+
+                assertNotNull(clearSearchButton);
+                assertFalse(clearSearchButton.isVisible());
+
+                enterCommand(window, command);
+                assertTrue(clearSearchButton.isVisible());
+
+                clearSearchButton.fire();
+
+                assertFalse(clearSearchButton.isVisible());
+                assertEquals("Listing events...", getFeedback(window));
+                assertEquals(1, getEvents(window).getItems().size());
+                assertTrue(getParticipants(window).getItems().isEmpty());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    private void assertListsParticipantsAfterEmptySearch(String target) throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "add-event Empty /cap 10 /desc No registrations");
+                enterCommand(window, "add-event Archived /cap 10 /desc Archived event");
+                enterCommand(window, "add-participant E3 P1 /role Host");
+                enterCommand(window, "archive-event E3");
+                assertEquals(List.of("E1", "E2"), getEvents(window).getItems().stream().map(Event::getId).toList());
+
+                enterCommand(window, "search-participant Missing /event E1");
+                assertTrue(getEvents(window).getItems().isEmpty());
+
+                enterCommand(window, "list-participants " + target);
+
+                assertEquals("Events", getSelectedTabName(window));
+                assertEquals(target, getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals("Participants", getHeading(window, "searchHeading"));
+                Button clearSearchButton = (Button) window.getPrimaryStage()
+                        .getScene().lookup("#clearSearchButton");
+                assertFalse(clearSearchButton.isVisible());
+                assertFalse(clearSearchButton.isManaged());
+                if (target.equals("E2")) {
+                    assertEquals(List.of("E1", "E2"),
+                            getEvents(window).getItems().stream().map(Event::getId).toList());
+                    assertEquals("Empty (E2)", getHeading(window, "eventHeading"));
+                    assertTrue(getParticipants(window).getItems().isEmpty());
+                    Label placeholder = (Label) getParticipants(window).getPlaceholder();
+                    assertEquals("No participants found for this event.", placeholder.getText());
+                } else {
+                    assertEquals(List.of("E1", "E2", "E3"),
+                            getEvents(window).getItems().stream().map(Event::getId).toList());
+                    assertEquals("Archived (E3)", getHeading(window, "eventHeading"));
+                    assertEquals(1, getParticipants(window).getItems().size());
+                    assertEquals("E3", getParticipants(window).getItems().getFirst().getEvent().getId());
+                }
             } finally {
                 window.getPrimaryStage().close();
             }

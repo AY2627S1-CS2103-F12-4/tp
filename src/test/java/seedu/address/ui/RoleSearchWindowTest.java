@@ -50,67 +50,38 @@ public class RoleSearchWindowTest {
     public Path temporaryFolder;
 
     @Test
-    public void addEventDuringSearch_preservesSelectedMatchAndHeadings() throws Exception {
-        runOnFxThread(() -> {
-            ModelManager model = createModel();
-            MainWindow window = createWindow(model);
-            try {
-                for (String search : List.of("search-role Speaker", "search-participant Alice",
-                        "search-role Speaker /include-archive")) {
-                    enterCommand(window, search);
-                    List<Event> matchingEvents = List.copyOf(getEvents(window).getItems());
-                    Event selected = matchingEvents.getLast();
-                    getEvents(window).getSelectionModel().select(selected);
-                    List<String> registrations = resultIds(window);
-                    String eventHeading = getHeading(window, "eventHeading");
-                    String searchHeading = getHeading(window, "searchHeading");
-                    int eventCount = model.getEvents().size();
-
-                    enterCommand(window, "add-event Empty /cap 10 /desc No participants");
-
-                    assertEquals("Event added successfully.", getFeedback(window));
-                    assertEquals(eventCount + 1, model.getEvents().size());
-                    assertEquals("Events", getSelectedTabName(window));
-                    assertEquals(matchingEvents, getEvents(window).getItems());
-                    assertEquals(selected, getEvents(window).getSelectionModel().getSelectedItem());
-                    assertEquals(registrations, resultIds(window));
-                    assertEquals(eventHeading, getHeading(window, "eventHeading"));
-                    assertEquals(searchHeading, getHeading(window, "searchHeading"));
-                }
-            } finally {
-                window.getPrimaryStage().close();
-            }
-        });
+    public void addEventDuringRoleSearch_preservesSelectedMatchAndHeadings() throws Exception {
+        assertAddingEventPreservesSelectedSearchMatch("search-role Speaker");
     }
 
     @Test
-    public void addEventDuringEmptySearch_preservesEmptySelectionAndContext() throws Exception {
-        runOnFxThread(() -> {
-            ModelManager model = createModel();
-            MainWindow window = createWindow(model);
-            try {
-                for (String search : List.of("search-role Missing", "search-role Missing /event E1 /include-archive",
-                        "search-participant Missing /include-archive", "search-participant Missing /event E1")) {
-                    enterCommand(window, search);
-                    assertTrue(getEvents(window).getItems().isEmpty());
-                    String eventHeading = getHeading(window, "eventHeading");
-                    int eventCount = model.getEvents().size();
+    public void addEventDuringParticipantSearch_preservesSelectedMatchAndHeadings() throws Exception {
+        assertAddingEventPreservesSelectedSearchMatch("search-participant Alice");
+    }
 
-                    enterCommand(window, "add-event Empty /cap 10 /desc No participants");
+    @Test
+    public void addEventDuringArchiveRoleSearch_preservesSelectedMatchAndHeadings() throws Exception {
+        assertAddingEventPreservesSelectedSearchMatch("search-role Speaker /include-archive");
+    }
 
-                    assertEquals("Event added successfully.", getFeedback(window));
-                    assertEquals(eventCount + 1, model.getEvents().size());
-                    assertEquals("Events", getSelectedTabName(window));
-                    assertTrue(getEvents(window).getItems().isEmpty());
-                    assertNull(getEvents(window).getSelectionModel().getSelectedItem());
-                    assertTrue(getParticipants(window).getItems().isEmpty());
-                    assertEquals(eventHeading, getHeading(window, "eventHeading"));
-                    assertEquals("Matching \"Missing\"", getHeading(window, "searchHeading"));
-                }
-            } finally {
-                window.getPrimaryStage().close();
-            }
-        });
+    @Test
+    public void addEventDuringEmptyGlobalRoleSearch_preservesEmptySelectionAndContext() throws Exception {
+        assertAddingEventPreservesEmptySearchContext("search-role Missing");
+    }
+
+    @Test
+    public void addEventDuringEmptyScopedArchiveRoleSearch_preservesEmptySelectionAndContext() throws Exception {
+        assertAddingEventPreservesEmptySearchContext("search-role Missing /event E1 /include-archive");
+    }
+
+    @Test
+    public void addEventDuringEmptyGlobalArchiveParticipantSearch_preservesEmptySelectionAndContext() throws Exception {
+        assertAddingEventPreservesEmptySearchContext("search-participant Missing /include-archive");
+    }
+
+    @Test
+    public void addEventDuringEmptyScopedParticipantSearch_preservesEmptySelectionAndContext() throws Exception {
+        assertAddingEventPreservesEmptySearchContext("search-participant Missing /event E1");
     }
 
     @Test
@@ -133,7 +104,7 @@ public class RoleSearchWindowTest {
                 assertEquals(List.of("E1", "E2", "E3"), model.getEvents().stream().map(Event::getId).toList());
                 assertEquals(List.of(matchingEvent), getEvents(window).getItems());
                 assertEquals(matchingEvent, getEvents(window).getSelectionModel().getSelectedItem());
-                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals("Other (E2)", getHeading(window, "eventHeading"));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
                 assertEquals("Events", getSelectedTabName(window));
@@ -153,7 +124,7 @@ public class RoleSearchWindowTest {
                 assertEquals(List.of("People", "Events"), getTabs(window).getTabs().stream()
                         .map(tab -> tab.getText()).toList());
                 assertEquals(List.of(CONFERENCE, WORKSHOP), getEvents(window).getItems());
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 assertEquals("Conference (E1)", getHeading(window, "eventHeading"));
                 assertEquals("Matching \"sPeAkEr\"", getHeading(window, "searchHeading"));
                 assertEquals("2 registrations across 2 events with roles matching \"sPeAkEr\".", getFeedback(window));
@@ -161,7 +132,7 @@ public class RoleSearchWindowTest {
                 assertEquals(Set.of(new ParticipationRole("Speaker"), new ParticipationRole("Host")),
                         getParticipants(window).getItems().getFirst().getRoles());
                 getEvents(window).getSelectionModel().select(1);
-                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals("Workshop (E2)", getHeading(window, "eventHeading"));
                 assertEquals("Matching \"sPeAkEr\"", getHeading(window, "searchHeading"));
             } finally {
@@ -171,14 +142,14 @@ public class RoleSearchWindowTest {
     }
 
     @Test
-    public void scopedSearch_andEmptyResults_keepContextAndSelectEvents() throws Exception {
+    public void scopedSearch_archiveChanges_preserveContextAndRestoreMatchingSelection() throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
             try {
                 enterCommand(window, "search-role  Speaker  /event E1");
                 assertEquals("Events", getSelectedTabName(window));
                 assertEquals(List.of(CONFERENCE), getEvents(window).getItems());
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 assertEquals("Conference (E1)", getHeading(window, "eventHeading"));
                 assertEquals("1 registration across 1 event with roles matching \"Speaker\".", getFeedback(window));
 
@@ -188,9 +159,20 @@ public class RoleSearchWindowTest {
                 assertEquals(CONFERENCE.withArchived(true).getName() + " (E1)", getHeading(window, "eventHeading"));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
                 enterCommand(window, "unarchive-event E1");
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
 
+    @Test
+    public void scopedSearch_noMatches_replacesMatchingRowsAndRetainsEventContext() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-role Speaker /event E1");
                 enterCommand(window, "search-role Missing /event E1");
                 assertEquals("Events", getSelectedTabName(window));
                 assertTrue(getEvents(window).getItems().isEmpty());
@@ -200,11 +182,34 @@ public class RoleSearchWindowTest {
                 assertEquals("No registrations with roles matching \"Missing\" in nonarchived events.",
                         getFeedback(window));
                 assertNull(getEvents(window).getSelectionModel().getSelectedItem());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
 
+    @Test
+    public void globalSearch_noMatches_replacesPreviousEventScope() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-role Missing /event E1");
                 enterCommand(window, "search-role Missing");
                 assertEquals("All nonarchived events", getHeading(window, "eventHeading"));
                 assertNull(getEvents(window).getSelectionModel().getSelectedItem());
                 assertTrue(getParticipants(window).getItems().isEmpty());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void scopedSearch_archivedEventWithoutArchiveFlag_showsEmptyEventContext() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-role Missing");
                 enterCommand(window, "search-role Speaker /event E3");
                 assertEquals(ARCHIVED.getName() + " (E3)", getHeading(window, "eventHeading"));
                 assertTrue(getEvents(window).getItems().isEmpty());
@@ -226,14 +231,14 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "search-role Speaker /event E99");
                 assertEquals("Event E99 does not exist.", getFeedback(window));
                 assertEquals("People", getSelectedTabName(window));
-                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals(List.of(CONFERENCE, WORKSHOP), getEvents(window).getItems());
                 assertEquals("Workshop (E2)", getHeading(window, "eventHeading"));
 
                 enterCommand(window, "search-role Speaker /event");
                 assertTrue(getFeedback(window).contains(SearchRoleCommand.MESSAGE_USAGE));
                 assertEquals("People", getSelectedTabName(window));
-                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
@@ -242,16 +247,27 @@ public class RoleSearchWindowTest {
     }
 
     @Test
-    public void switchingTabsAndResettingSearch_updatesInstructionsWithoutChangingLayout() throws Exception {
+    public void switchingTabs_duringRoleSearch_preservesRowsAndHeadings() throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
             try {
                 enterCommand(window, "search-role Speaker");
                 getTabs(window).getSelectionModel().select(0);
                 getTabs(window).getSelectionModel().select(1);
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
 
+    @Test
+    public void listEvent_afterRoleSearch_clearsContextUntilSearchResumes() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-role Speaker");
                 enterCommand(window, "list-event");
                 assertTrue(getParticipants(window).getItems().isEmpty());
                 assertEquals("Participants", getHeading(window, "eventHeading"));
@@ -262,12 +278,36 @@ public class RoleSearchWindowTest {
 
                 enterCommand(window, "search-role Speaker");
                 assertEquals(2, getParticipants(window).getItems().size());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void findEvent_afterRoleSearch_clearsRowsAndShowsEventSearchFeedback() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-role Speaker");
                 enterCommand(window, "find-event Workshop");
                 assertEquals(List.of(WORKSHOP), getEvents(window).getItems());
                 assertTrue(getParticipants(window).getItems().isEmpty());
                 assertEquals(SELECT_EVENT_PROMPT, getHeading(window, "searchHeading"));
                 assertEquals("Showing event search results for Workshop...", getFeedback(window));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
 
+    @Test
+    public void findEvent_changingArchiveVisibility_replacesResultsAndFeedback() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-role Speaker");
+                enterCommand(window, "find-event Workshop");
                 enterCommand(window, "find-event Archived /include-archive");
                 assertEquals(List.of(ARCHIVED), getEvents(window).getItems());
                 assertTrue(getParticipants(window).getItems().isEmpty());
@@ -293,7 +333,7 @@ public class RoleSearchWindowTest {
             try {
                 enterCommand(window, "search-role Speaker");
                 enterCommand(window, "edit-participant E1 P1 /role Guest");
-                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals(List.of(WORKSHOP), getEvents(window).getItems());
                 assertEquals("Workshop (E2)", getHeading(window, "eventHeading"));
                 enterCommand(window, "archive-event E2");
@@ -301,7 +341,7 @@ public class RoleSearchWindowTest {
                 assertTrue(getEvents(window).getItems().isEmpty());
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
                 enterCommand(window, "unarchive-event E2");
-                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals(List.of("E2/P1"), getResultIds(window));
 
                 enterCommand(window, "search-participant Alice /event E1");
                 assertEquals("Events", getSelectedTabName(window));
@@ -312,7 +352,7 @@ public class RoleSearchWindowTest {
                 assertTrue(getParticipants(window).getItems().isEmpty());
                 enterCommand(window, "edit-participant E1 P1 /role Speaker");
                 assertEquals("Events", getSelectedTabName(window));
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 assertEquals("Conference (E1)", getHeading(window, "eventHeading"));
             } finally {
                 window.getPrimaryStage().close();
@@ -329,21 +369,21 @@ public class RoleSearchWindowTest {
             try {
                 enterCommand(window, "search-role Speaker");
                 getEvents(window).getSelectionModel().select(1);
-                assertEquals(List.of("E2/P1", "E2/P4"), resultIds(window));
+                assertEquals(List.of("E2/P1", "E2/P4"), getResultIds(window));
                 enterCommand(window, "edit-participant E2 P1 /role Guest");
-                assertEquals(List.of("E2/P4"), resultIds(window));
+                assertEquals(List.of("E2/P4"), getResultIds(window));
                 assertEquals(List.of(CONFERENCE, WORKSHOP), getEvents(window).getItems());
                 assertEquals("E2", getEvents(window).getSelectionModel().getSelectedItem().getId());
                 enterCommand(window, "edit-event E2 Renamed Workshop");
                 assertEquals("Renamed Workshop (E2)", getHeading(window, "eventHeading"));
-                assertEquals(List.of("E2/P4"), resultIds(window));
+                assertEquals(List.of("E2/P4"), getResultIds(window));
                 enterCommand(window, "edit-participant E1 P2 /role Speaker");
-                assertEquals(List.of("E2/P4"), resultIds(window));
+                assertEquals(List.of("E2/P4"), getResultIds(window));
                 enterCommand(window, "del-participant E2 P4");
                 assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals(List.of("E1/P1", "E1/P2"), resultIds(window));
+                assertEquals(List.of("E1/P1", "E1/P2"), getResultIds(window));
                 enterCommand(window, "edit-participant E1 P1 /role Guest");
-                assertEquals(List.of("E1/P2"), resultIds(window));
+                assertEquals(List.of("E1/P2"), getResultIds(window));
                 enterCommand(window, "del-participant E1 P2");
                 assertNull(getEvents(window).getSelectionModel().getSelectedItem());
                 assertTrue(getParticipants(window).getItems().isEmpty());
@@ -366,7 +406,7 @@ public class RoleSearchWindowTest {
                 getEvents(window).getSelectionModel().select(1);
                 model.editParticipation(new EventId("E2"), new PersonId("P1"),
                         Set.of(new ParticipationRole("Guest")), null);
-                assertEquals(List.of("E2/P4"), resultIds(window));
+                assertEquals(List.of("E2/P4"), getResultIds(window));
                 assertEquals(List.of(CONFERENCE, WORKSHOP), getEvents(window).getItems());
                 assertEquals("E2", getEvents(window).getSelectionModel().getSelectedItem().getId());
                 model.setPerson(dana, new PersonBuilder(dana).withName("Dana Updated").build());
@@ -374,7 +414,7 @@ public class RoleSearchWindowTest {
                         getParticipants(window).getItems().getFirst().getPerson().getName().fullName);
                 model.markPresent(new EventId("E2"), dana.getId());
                 assertTrue(getParticipants(window).getItems().getFirst().isPresent());
-                assertEquals(List.of("E2/P4"), resultIds(window));
+                assertEquals(List.of("E2/P4"), getResultIds(window));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
@@ -392,7 +432,7 @@ public class RoleSearchWindowTest {
                 getEvents(window).getSelectionModel().select(1);
                 enterCommand(window, "del-event E2");
                 assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 assertEquals("Speaker", model.getParticipantSearchKeyword().orElseThrow());
                 enterCommand(window, "search-role Speaker /event E1");
                 enterCommand(window, "del-event E1");
@@ -404,7 +444,7 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "unarchive-event E3");
                 assertTrue(getParticipants(window).getItems().isEmpty());
                 getEvents(window).getSelectionModel().select(0);
-                assertEquals(List.of("E3/P3"), resultIds(window));
+                assertEquals(List.of("E3/P3"), getResultIds(window));
                 assertEquals("Participants", getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
@@ -421,22 +461,22 @@ public class RoleSearchWindowTest {
             MainWindow window = createWindow(model);
             try {
                 enterCommand(window, "search-role Speaker");
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 enterCommand(window, "search-participant Speaker");
-                assertEquals(List.of("E1/P2"), resultIds(window));
+                assertEquals(List.of("E1/P2"), getResultIds(window));
                 assertEquals("1 matching registration across 1 event for \"Speaker\".", getFeedback(window));
                 enterCommand(window, "search-role Speaker /event E99");
                 assertEquals("Event E99 does not exist.", getFeedback(window));
                 enterCommand(window, "edit-participant E1 P1 /role Speaker");
-                assertEquals(List.of("E1/P2"), resultIds(window));
+                assertEquals(List.of("E1/P2"), getResultIds(window));
 
                 enterCommand(window, "search-role Speaker");
                 assertEquals("2 registrations across 2 events with roles matching \"Speaker\".", getFeedback(window));
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 enterCommand(window, "search-participant Speaker /event E99");
                 assertEquals("Event E99 does not exist.", getFeedback(window));
                 enterCommand(window, "edit-participant E1 P2 /role Speaker");
-                assertEquals(List.of("E1/P1", "E1/P2"), resultIds(window));
+                assertEquals(List.of("E1/P1", "E1/P2"), getResultIds(window));
                 assertEquals(List.of(CONFERENCE, WORKSHOP), getEvents(window).getItems());
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
             } finally {
@@ -455,14 +495,14 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "list-participants E1");
                 assertEquals("Events", getSelectedTabName(window));
                 assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals(List.of("E1/P1", "E1/P2"), resultIds(window));
+                assertEquals(List.of("E1/P1", "E1/P2"), getResultIds(window));
                 assertEquals("Participants", getHeading(window, "searchHeading"));
 
                 getEvents(window).getSelectionModel().select(1);
                 getEvents(window).getSelectionModel().select(0);
-                assertEquals(List.of("E1/P1", "E1/P2"), resultIds(window));
+                assertEquals(List.of("E1/P1", "E1/P2"), getResultIds(window));
                 enterCommand(window, "search-role Speaker");
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
                 assertEquals("2 registrations across 2 events with roles matching \"Speaker\".", getFeedback(window));
 
@@ -470,7 +510,7 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "view-participant E1 P2");
                 assertEquals("Events", getSelectedTabName(window));
                 assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals(List.of("E1/P1", "E1/P2"), resultIds(window));
+                assertEquals(List.of("E1/P1", "E1/P2"), getResultIds(window));
                 assertEquals("Participants", getHeading(window, "searchHeading"));
                 enterCommand(window, "edit-participant E1 P1 /role Guest");
                 assertEquals(List.of(WORKSHOP), getEvents(window).getItems());
@@ -478,7 +518,7 @@ public class RoleSearchWindowTest {
                 assertTrue(getParticipants(window).getItems().isEmpty());
                 assertEquals(SELECT_EVENT_PROMPT, getHeading(window, "searchHeading"));
                 enterCommand(window, "search-role Speaker");
-                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
                 assertEquals("1 registration across 1 event with roles matching \"Speaker\".", getFeedback(window));
             } finally {
@@ -497,7 +537,7 @@ public class RoleSearchWindowTest {
                 assertEquals("Events", getSelectedTabName(window));
                 assertEquals(List.of(CONFERENCE, WORKSHOP), getEvents(window).getItems());
                 assertEquals("E2", getEvents(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals("Workshop (E2)", getHeading(window, "eventHeading"));
                 assertEquals("Participants", getHeading(window, "searchHeading"));
                 Button clearSearchButton = (Button) window.getPrimaryStage().getScene().lookup("#clearSearchButton");
@@ -506,14 +546,14 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "edit-participant E2 P1 /role Guest");
                 assertEquals(List.of(CONFERENCE, WORKSHOP), getEvents(window).getItems());
                 assertEquals("E2", getEvents(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals(Set.of(new ParticipationRole("Guest")),
                         getParticipants(window).getItems().getFirst().getRoles());
                 assertFalse(clearSearchButton.isVisible());
 
                 enterCommand(window, "search-role Speaker");
                 assertEquals(List.of(CONFERENCE), getEvents(window).getItems());
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
                 assertTrue(clearSearchButton.isVisible());
             } finally {
@@ -536,7 +576,7 @@ public class RoleSearchWindowTest {
                 assertEquals(SELECT_EVENT_PROMPT, getHeading(window, "searchHeading"));
 
                 enterCommand(window, "search-role Speaker");
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
@@ -552,11 +592,11 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "search-role Speaker /include-archive");
                 assertEquals("Events", getSelectedTabName(window));
                 assertEquals(List.of(CONFERENCE, WORKSHOP, ARCHIVED), getEvents(window).getItems());
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 assertEquals("3 registrations across 3 events with roles matching \"Speaker\".", getFeedback(window));
 
                 getEvents(window).getSelectionModel().select(2);
-                assertEquals(List.of("E3/P3"), resultIds(window));
+                assertEquals(List.of("E3/P3"), getResultIds(window));
                 assertEquals("Archived (E3)", getHeading(window, "eventHeading"));
                 assertEquals("Cara Lim", getParticipants(window).getItems().getFirst().getPerson().getName().fullName);
                 assertEquals(Set.of(new ParticipationRole("Speaker")),
@@ -564,14 +604,14 @@ public class RoleSearchWindowTest {
                 getTabs(window).getSelectionModel().select(0);
                 enterCommand(window, "search-role Speaker /event E99");
                 assertEquals("People", getSelectedTabName(window));
-                assertEquals(List.of("E3/P3"), resultIds(window));
+                assertEquals(List.of("E3/P3"), getResultIds(window));
                 assertEquals("Archived (E3)", getHeading(window, "eventHeading"));
                 getTabs(window).getSelectionModel().select(1);
                 assertEquals("E3", getEvents(window).getSelectionModel().getSelectedItem().getId());
 
                 enterCommand(window, "search-role Speaker");
                 assertEquals(List.of(CONFERENCE, WORKSHOP), getEvents(window).getItems());
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -579,7 +619,7 @@ public class RoleSearchWindowTest {
     }
 
     @Test
-    public void archiveRoleSearch_emptyResultsAndArchivedScopes_showRequestedContext() throws Exception {
+    public void globalArchiveSearch_noMatches_showsRequestedVisibilityAndResetsToDefault() throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
             try {
@@ -591,17 +631,38 @@ public class RoleSearchWindowTest {
                 assertEquals("Matching \"Missing\"", getHeading(window, "searchHeading"));
                 enterCommand(window, "search-role Missing");
                 assertEquals("All nonarchived events", getHeading(window, "eventHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
 
+    @Test
+    public void scopedArchiveSearch_noMatches_replacesRowsAndRetainsArchivedEventContext() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
                 enterCommand(window, "search-role Speaker /event E3 /include-archive");
                 assertEquals(List.of(ARCHIVED), getEvents(window).getItems());
-                assertEquals(List.of("E3/P3"), resultIds(window));
+                assertEquals(List.of("E3/P3"), getResultIds(window));
                 enterCommand(window, "search-role Missing /event E3 /include-archive");
                 assertTrue(getEvents(window).getItems().isEmpty());
                 assertTrue(getParticipants(window).getItems().isEmpty());
                 assertNull(getEvents(window).getSelectionModel().getSelectedItem());
                 assertEquals("Archived (E3)", getHeading(window, "eventHeading"));
                 assertEquals("Matching \"Missing\"", getHeading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
 
+    @Test
+    public void listEvent_afterEmptyArchivedScope_clearsSearchAndResetsArchiveVisibility() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                enterCommand(window, "search-role Missing /event E3 /include-archive");
                 enterCommand(window, "list-event /include-archive");
                 assertEquals(List.of(CONFERENCE, WORKSHOP, ARCHIVED), getEvents(window).getItems());
                 assertTrue(getParticipants(window).getItems().isEmpty());
@@ -624,7 +685,7 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "search-role Speaker /include-archive");
                 getEvents(window).getSelectionModel().select(1);
                 enterCommand(window, "archive-event E2");
-                assertEquals(List.of("E2/P1"), resultIds(window));
+                assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals("E2", getEvents(window).getSelectionModel().getSelectedItem().getId());
                 assertEquals("Workshop (E2)", getHeading(window, "eventHeading"));
                 enterCommand(window, "unarchive-event E2");
@@ -632,9 +693,9 @@ public class RoleSearchWindowTest {
                 assertEquals("Workshop (E2)", getHeading(window, "eventHeading"));
 
                 enterCommand(window, "edit-participant E2 P1 /role Guest");
-                assertEquals(List.of("E1/P1"), resultIds(window));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
                 enterCommand(window, "edit-participant E1 P1 /role Guest");
-                assertEquals(List.of("E3/P3"), resultIds(window));
+                assertEquals(List.of("E3/P3"), getResultIds(window));
                 assertEquals("Archived (E3)", getHeading(window, "eventHeading"));
                 enterCommand(window, "edit-participant E3 P3 /role Guest");
                 assertNull(getEvents(window).getSelectionModel().getSelectedItem());
@@ -643,9 +704,65 @@ public class RoleSearchWindowTest {
 
                 model.editParticipation(new EventId("E3"), new PersonId("P3"),
                         Set.of(new ParticipationRole("Speaker")), null);
-                assertEquals(List.of("E3/P3"), resultIds(window));
+                assertEquals(List.of("E3/P3"), getResultIds(window));
                 assertEquals("E3", getEvents(window).getSelectionModel().getSelectedItem().getId());
                 assertEquals("Archived (E3)", getHeading(window, "eventHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    private void assertAddingEventPreservesSelectedSearchMatch(String search) throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, search);
+                List<Event> matchingEvents = List.copyOf(getEvents(window).getItems());
+                Event selected = matchingEvents.getLast();
+                getEvents(window).getSelectionModel().select(selected);
+                List<String> registrations = getResultIds(window);
+                String eventHeading = getHeading(window, "eventHeading");
+                String searchHeading = getHeading(window, "searchHeading");
+                int eventCount = model.getEvents().size();
+
+                enterCommand(window, "add-event Empty /cap 10 /desc No participants");
+
+                assertEquals("Event added successfully.", getFeedback(window));
+                assertEquals(eventCount + 1, model.getEvents().size());
+                assertEquals("Events", getSelectedTabName(window));
+                assertEquals(matchingEvents, getEvents(window).getItems());
+                assertEquals(selected, getEvents(window).getSelectionModel().getSelectedItem());
+                assertEquals(registrations, getResultIds(window));
+                assertEquals(eventHeading, getHeading(window, "eventHeading"));
+                assertEquals(searchHeading, getHeading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    private void assertAddingEventPreservesEmptySearchContext(String search) throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, search);
+                assertTrue(getEvents(window).getItems().isEmpty());
+                String eventHeading = getHeading(window, "eventHeading");
+                int eventCount = model.getEvents().size();
+
+                enterCommand(window, "add-event Empty /cap 10 /desc No participants");
+
+                assertEquals("Event added successfully.", getFeedback(window));
+                assertEquals(eventCount + 1, model.getEvents().size());
+                assertEquals("Events", getSelectedTabName(window));
+                assertTrue(getEvents(window).getItems().isEmpty());
+                assertNull(getEvents(window).getSelectionModel().getSelectedItem());
+                assertTrue(getParticipants(window).getItems().isEmpty());
+                assertEquals(eventHeading, getHeading(window, "eventHeading"));
+                assertEquals("Matching \"Missing\"", getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }
@@ -693,7 +810,7 @@ public class RoleSearchWindowTest {
         return dana;
     }
 
-    private List<String> resultIds(MainWindow window) {
+    private List<String> getResultIds(MainWindow window) {
         return getParticipants(window).getItems().stream()
                 .map(participation -> participation.getEvent().getId() + "/" + participation.getPerson().getId())
                 .toList();

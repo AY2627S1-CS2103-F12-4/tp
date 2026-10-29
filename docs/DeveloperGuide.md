@@ -831,6 +831,123 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases … }_
 
+### Searching events and participants
+
+These cases exercise the behavior documented under
+[finding events](UserGuide.md#finding-events-by-name-find-event),
+[participant name search](UserGuide.md#searching-participants-by-name-search-participant),
+[role search](UserGuide.md#searching-participants-by-role-search-role), and
+[viewing and clearing search results](UserGuide.md#viewing-and-clearing-participant-search-results).
+Record the release/JAR filename, operating system, and `java -version` output with your results.
+
+#### Preparing search test data
+
+1. Copy the JAR under test into a new, empty, writable folder. Open a terminal in that folder and run
+   `java -jar FILENAME.jar`, replacing `FILENAME.jar` with its actual filename.
+2. Run the following commands in order. `clear` removes the sample people in this isolated test folder.
+   The fresh folder and command order give the people IDs `P1` and `P2` and event IDs `E1` to `E3`.
+
+   ```text
+   clear
+   add n/Michael Tan p/91234567 e/michael@example.com a/1 Main Street t/VIP
+   add n/Sarah Lim p/92345678 e/sarah@example.com a/2 Main Street
+   add-event Java Workshop /cap 20 /desc Hands-on Java session
+   add-event Team Briefing /cap 10 /desc Volunteer briefing
+   add-event Past Workshop /cap 20 /desc Previous workshop
+   add-participant E1 P1 /role Host /role Co-host /tag Organiser
+   add-participant E1 P2 /role Guest
+   add-participant E2 P1 /role Speaker
+   add-participant E3 P1 /role Host
+   archive-event E3
+   ```
+
+   Check the following data using `list-participants E1`, `list-participants E2`, and `list-participants E3`:
+
+   | Event | Archive state | Registrations |
+   |---|---|---|
+   | E1: Java Workshop | Active | P1 Michael Tan: Co-host, Host; P2 Sarah Lim: Guest |
+   | E2: Team Briefing | Active | P1 Michael Tan: Speaker |
+   | E3: Past Workshop | Archived | P1 Michael Tan: Host |
+
+3. Close the app and copy this test folder's `data` directory to a separate `baseline-data` directory.
+   Before each table row below, close the app, restore the three JSON files from `baseline-data` into
+   this test folder's `data` directory, and relaunch. Alternatively, repeat the setup in another fresh folder.
+   `clear` alone does not reset events or the next event ID. Preserve any real application data separately.
+
+#### Matching and archive scope
+
+For successful name and role searches, check that the **Events** tab is selected, **Clear search** is visible,
+and the first matching event is selected. The participant pane shows only that event's matches, with all their
+assigned roles. Feedback counts registrations across all matching events, rather than distinct people or just
+the visible rows. Event IDs below are listed in their expected display order.
+
+| ID | Command | Expected result |
+|---|---|---|
+| S1 | `search-participant mIcHaEl` | E1, E2; 2 registrations across 2 events. E1 shows P1 only. Select E2: P1 appears with role Speaker and the search remains active. |
+| S2 | `search-participant Michael   Tan /event E1` | E1 only; 1 registration. The heading normalizes the query to `Michael Tan`. |
+| S3 | `search-participant Michael /include-archive` | E1, E2, E3; 3 registrations across 3 events. E3 has an **Archived** badge. |
+| S4 | `search-participant Michael /event E3 /include-archive` | E3 only; 1 registration. The participant heading also shows **Archived**. |
+| S5 | `search-role hOsT` | E1 only; 1 registration, even though both Host and Co-host match. Both roles remain visible on P1. |
+| S6 | `search-role Speaker /event E2` | E2 only; 1 registration, P1. |
+| S7 | `search-role Host /include-archive` | E1, E3; 2 registrations across 2 events. |
+| S8 | `search-role Host /event E3 /include-archive` | E3 only; 1 registration, P1. |
+| S9 | Run `search-participant Michael /event E3`, then `search-role Host /event E3`. | Both searches return no registrations: explicit event scope does not include archives without the flag. No event is selected; the heading retains Past Workshop (E3) and its archive badge. |
+| S10 | Run `search-participant Missing`, then `search-role Missing /include-archive`, then `search-participant Missing /event E1`. | Each search has empty event and participant lists and no selection. The headings are respectively **All nonarchived events**, **All events**, and **Java Workshop (E1)**. The query and **Clear search** remain visible. |
+| S11 | Run `find-event workshop`, then `find-event workshop /include-archive`, then `find-event Missing`. | The event lists are respectively E1; E1, E3; and empty. The final feedback is `No matching events found.` |
+
+#### Invalid input preserves the previous search
+
+Start with `search-participant Michael /include-archive`, select E2, and switch to the **People** tab.
+Try each command below separately, returning to the **People** tab before the next attempt:
+
+* `search-participant`
+* `search-role Host /unknown`
+* `search-participant Michael /include-archive /include-archive`
+* `search-role Host /include-archive /event E1`
+* `search-participant Michael /event E1 /event E2`
+* `search-participant Michael /include-archive true`
+* `search-participant Michael /event E999`
+
+Expected: each command displays an error and keeps the **People** tab selected. Return to **Events** to check that
+E1, E2, and E3 remain listed, E2 remains selected, P1 still appears with role Speaker, and the query is still
+`Michael`. **Clear search** remains visible. The E999 case reports `Event E999 does not exist.`; the other
+cases report invalid command syntax. Error feedback replaces the preceding success message.
+
+#### Refreshing results after data changes
+
+Restore the baseline before each row. Run the starting search, then perform the listed actions in order.
+Unless the row explicitly clears the search, its query and archive scope remain active; the action's status
+message replaces the search-count feedback.
+
+| ID | Starting search | Actions | Expected result |
+|---|---|---|---|
+| M1 | `search-participant Michael /include-archive` | `del-participant E1 P1` | E2, E3 remain; selection moves to E2 and P1 is shown with role Speaker. |
+| M2 | `search-role Host` | `edit-participant E1 P2 /role Host` | E1 stays selected and now shows P1 and P2, in that order. No archived event appears. |
+| M3 | `search-participant Michael` | `archive-event E1`, then `unarchive-event E1` | Archiving leaves E2 selected as the only match. Restoring E1 returns E1, E2; E2 stays selected because it still matches. E3 remains excluded. |
+| M4 | `search-participant Michael /include-archive` | `archive-event E1`, then `unarchive-event E1` | All three events remain listed and E1 stays selected. Its **Archived** badges appear and then disappear. |
+| M5 | `search-participant Michael /event E1` | `del-participant E1 P1`, then `add-participant E1 P1 /role Host` | Removal leaves empty lists but retains the E1 search heading and query. Re-registering P1 restores E1 and its matching row without re-entering the search. |
+| M6 | `search-participant Michael /include-archive` | `del-event E1` | E2, E3 remain and E2 becomes selected; the global search remains active. |
+| M7 | `search-participant Michael /event E1 /include-archive` | `del-event E1` | The scoped search clears. Only nonarchived E2 is listed, no event is selected, participant rows are empty, and **Clear search** is hidden. |
+| M8 | `search-participant Michael` | `add-event Unrelated /cap 10 /desc` | The new E4 does not appear in the filtered results. E1, E2 remain listed with E1 selected and P1 shown. |
+| M9 | `search-participant Michael` | `list`, then `edit 1 n/Mike Tan`, then select the **Events** tab. | Renaming P1 removes all matches. Lists are empty, the heading is **All nonarchived events**, and the active query remains `Michael`. |
+
+#### Clearing searches and replacing filters
+
+Restore the baseline and run `search-participant Michael /include-archive` before each row.
+Repeat these cases starting with `search-role Host /include-archive` to check both search types.
+
+| ID | Action | Expected result |
+|---|---|---|
+| R1 | `list-event` | E1, E2 are listed with no selection or participant rows. **Clear search** is hidden. Selecting E1 shows both P1 and P2. |
+| R2 | `list-event /include-archive` | E1, E2, E3 are listed; selection and participant rows are cleared. **Clear search** is hidden. |
+| R3 | `find-event Workshop /include-archive` | E1, E3 are listed; selection and participant rows are cleared. Selecting E1 shows P1 and P2 with no matching-query heading. |
+| R4 | `list-participants E1` | The search clears; E1, E2 are listed, E1 is selected, and both P1 and P2 are shown. |
+| R5 | `list-participants E3` | The search clears; all three events are listed, E3 is selected, and P1 is shown with the archived-event heading. |
+| R6 | Click **Clear search**. | Same result as R1. |
+
+After any reset, **Clear search** must be hidden. To check that a cleared query does not reactivate, run R4,
+then `edit-participant E1 P2 /role Speaker`: both P1 and P2 must remain visible without a matching-query heading.
+
 ### Deleting a person
 
 1. Deleting a person while all persons are being shown

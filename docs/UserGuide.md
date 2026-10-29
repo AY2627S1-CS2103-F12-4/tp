@@ -28,6 +28,9 @@ AttendPlusPlus is a **desktop application for managing events and their particip
 6. Enter a command in the command box and press **Enter**. You can try `help`, `list`, or `list-event`.
 7. Refer to [Features](#features) for command details.
 
+Run only one instance of AttendPlusPlus per data folder. Close the existing instance before launching it again
+from the same folder. See [Saving data](#saving-data) for the risk of sharing data files between running instances.
+
 ---
 
 ## Features
@@ -528,6 +531,11 @@ Format: `exit`
 ### Saving data
 
 AttendPlusPlus saves its application data automatically. You do not need to save manually.
+
+**Use only one running instance per data folder.** Multiple instances do not synchronize their in-memory data
+or detect conflicting saves. A command in an already-open instance, including a read-only command such as `list`,
+can overwrite changes saved by another instance. Close the current instance before opening another from the
+same folder. To run independent instances, launch them from separate folders with separate data files.
 
 ### Editing data files
 

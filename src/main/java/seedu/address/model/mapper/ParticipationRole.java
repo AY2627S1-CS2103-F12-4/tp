@@ -3,6 +3,8 @@ package seedu.address.model.mapper;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import java.util.Locale;
+
 /**
  * Represents a participant's role in an event.
  * Guarantees: immutable; is valid as declared in {@link #isValidRole(String)}
@@ -49,11 +51,11 @@ public class ParticipationRole {
     public boolean equals(Object other) {
         return other == this
                 || (other instanceof ParticipationRole
-                        && value.equals(((ParticipationRole) other).value));
+                        && value.equalsIgnoreCase(((ParticipationRole) other).value));
     }
 
     @Override
     public int hashCode() {
-        return value.hashCode();
+        return value.toLowerCase(Locale.ROOT).hashCode();
     }
 }

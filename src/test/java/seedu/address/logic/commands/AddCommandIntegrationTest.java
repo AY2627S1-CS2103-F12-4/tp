@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -48,6 +49,44 @@ public class AddCommandIntegrationTest {
                 model,
                 expectedMessage(expectedPerson),
                 expectedModel);
+    }
+
+    @Test
+    public void execute_adjacentEmailSymbols_success() throws Exception {
+        String[] emails = {
+            "alpha++tag@example.com",
+            "alpha__tag@example.com",
+            "alpha+-tag@example.com",
+            "alpha_.tag@example.com",
+            "alpha+tag@example.com"
+        };
+
+        for (String email : emails) {
+            Model actualModel = new ModelManager();
+            Model expectedModel = new ModelManager();
+
+            Command command = new AddressBookParser().parseCommand(
+                    "add n/Email Person p/91234567 e/"
+                            + email
+                            + " a/1 Main Street");
+
+            Person expectedPerson = new PersonBuilder()
+                    .withName("Email Person")
+                    .withPhone("91234567")
+                    .withEmail(email)
+                    .withAddress("1 Main Street")
+                    .withTags()
+                    .withId(expectedModel.generateNextPersonId().toString())
+                    .build();
+
+            expectedModel.addPerson(expectedPerson);
+
+            assertCommandSuccess(
+                    command,
+                    actualModel,
+                    expectedMessage(expectedPerson),
+                    expectedModel);
+        }
     }
 
     @Test

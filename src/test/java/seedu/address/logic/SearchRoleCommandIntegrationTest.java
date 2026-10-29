@@ -108,10 +108,10 @@ public class SearchRoleCommandIntegrationTest {
         assertEquals(List.of(WEDDING), logic.getFilteredEventList());
         assertEquals(List.of("P1", "P2"), logic.getParticipantSearchResults().stream()
                 .map(participation -> participation.getPerson().getId().toString()).toList());
-        assertFalse(result.isShowHelp());
-        assertFalse(result.isExit());
-        assertTrue(result.isShowEvents());
-        assertFalse(result.isShowParticipants());
+        assertFalse(result.shouldShowHelp());
+        assertFalse(result.shouldExit());
+        assertTrue(result.shouldShowEvents());
+        assertFalse(result.shouldShowParticipants());
         assertMemoryAndStorageUnchanged();
     }
 
@@ -217,7 +217,7 @@ public class SearchRoleCommandIntegrationTest {
                 .toList());
         assertTrue(logic.getParticipantSearchEvent().isEmpty());
         assertEquals("Best Man", logic.getParticipantSearchKeyword().orElseThrow());
-        assertTrue(result.isShowEvents());
+        assertTrue(result.shouldShowEvents());
         assertMemoryAndStorageUnchanged();
     }
 

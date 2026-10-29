@@ -81,10 +81,10 @@ public class SearchRoleCommandTest {
         assertEquals(List.of(EVENT), model.getFilteredEventList());
         assertEquals(Optional.of(EVENT), model.getParticipantSearchEvent());
         assertEquals(Optional.of("Best Man"), model.getParticipantSearchKeyword());
-        assertFalse(result.isShowHelp());
-        assertFalse(result.isExit());
-        assertTrue(result.isShowEvents());
-        assertFalse(result.isShowParticipants());
+        assertFalse(result.shouldShowHelp());
+        assertFalse(result.shouldExit());
+        assertTrue(result.shouldShowEvents());
+        assertFalse(result.shouldShowParticipants());
     }
 
     @Test
@@ -249,8 +249,8 @@ public class SearchRoleCommandTest {
         assertEquals(List.of(EVENT, OTHER_EVENT), model.getFilteredEventList());
         assertEquals(3, model.getParticipantSearchResults().size());
         assertTrue(model.getParticipantSearchEvent().isEmpty());
-        assertTrue(result.isShowEvents());
-        assertFalse(result.isShowParticipants());
+        assertTrue(result.shouldShowEvents());
+        assertFalse(result.shouldShowParticipants());
     }
 
     @Test
@@ -268,7 +268,7 @@ public class SearchRoleCommandTest {
                 scoped.getFeedbackToUser());
         assertTrue(model.getParticipantSearchResults().isEmpty());
         assertTrue(model.getFilteredEventList().isEmpty());
-        assertTrue(scoped.isShowEvents());
+        assertTrue(scoped.shouldShowEvents());
     }
 
     @Test
@@ -297,8 +297,8 @@ public class SearchRoleCommandTest {
         assertTrue(model.getFilteredEventList().isEmpty());
         assertEquals("No registrations with roles matching \"Missing\" in nonarchived events.",
                 result.getFeedbackToUser());
-        assertTrue(result.isShowEvents());
-        assertFalse(result.isShowParticipants());
+        assertTrue(result.shouldShowEvents());
+        assertFalse(result.shouldShowParticipants());
     }
 
     @Test
@@ -325,9 +325,9 @@ public class SearchRoleCommandTest {
         assertEquals("3 registrations across 2 events with roles matching \"Best Man\".", result.getFeedbackToUser());
         assertEquals(List.of(EVENT.withArchived(true), OTHER_EVENT), model.getFilteredEventList());
         assertEquals(3, model.getParticipantSearchResults().size());
-        assertTrue(result.isShowEvents());
-        assertFalse(result.isShowHelp());
-        assertFalse(result.isExit());
+        assertTrue(result.shouldShowEvents());
+        assertFalse(result.shouldShowHelp());
+        assertFalse(result.shouldExit());
 
         CommandResult defaultResult = parser.parseCommand("search-role Best Man").execute(model);
         assertEquals("1 registration across 1 event with roles matching \"Best Man\".",
@@ -366,7 +366,7 @@ public class SearchRoleCommandTest {
                     result.getFeedbackToUser());
             assertTrue(model.getParticipantSearchResults().isEmpty());
             assertTrue(model.getFilteredEventList().isEmpty());
-            assertTrue(result.isShowEvents());
+            assertTrue(result.shouldShowEvents());
         }
     }
 

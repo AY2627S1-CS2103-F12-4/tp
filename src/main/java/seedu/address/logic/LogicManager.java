@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
@@ -35,7 +36,7 @@ public class LogicManager implements Logic {
     private final Model model;
     private final Storage storage;
     private final AddressBookParser addressBookParser;
-    private Set<Participation> savedParticipations;
+    private Set<ParticipationSnapshot> savedParticipations;
 
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
@@ -44,7 +45,7 @@ public class LogicManager implements Logic {
         this.model = model;
         this.storage = storage;
         addressBookParser = new AddressBookParser();
-        savedParticipations = model.getParticipations().getParticipations();
+        savedParticipations = snapshotParticipations(model.getParticipations().getParticipations());
     }
 
     @Override
@@ -59,9 +60,10 @@ public class LogicManager implements Logic {
             storage.saveAddressBook(model.getAddressBook());
             storage.saveEvents(model.getEvents(), model.getNextEventId());
             Set<Participation> participations = model.getParticipations().getParticipations();
-            if (!savedParticipations.equals(participations)) {
+            Set<ParticipationSnapshot> snapshot = snapshotParticipations(participations);
+            if (!savedParticipations.equals(snapshot)) {
                 storage.saveParticipations(() -> participations);
-                savedParticipations = participations;
+                savedParticipations = snapshot;
             }
         } catch (AccessDeniedException e) {
             throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, e.getMessage()), e);
@@ -70,6 +72,19 @@ public class LogicManager implements Logic {
         }
 
         return commandResult;
+    }
+
+    /** Captures exactly the fields written to participation JSON, including case-sensitive role spelling. */
+    private static Set<ParticipationSnapshot> snapshotParticipations(Set<Participation> participations) {
+        return participations.stream()
+                .map(participation -> new ParticipationSnapshot(
+                        participation.getEvent().getId(), participation.getPerson().getId().toString(),
+                        participation.isPresent(),
+                        participation.getTags().stream().map(tag -> tag.tagName)
+                                .collect(Collectors.toUnmodifiableSet()),
+                        participation.getRoles().stream().map(role -> role.value)
+                                .collect(Collectors.toUnmodifiableSet())))
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
@@ -125,5 +140,10 @@ public class LogicManager implements Logic {
     @Override
     public Optional<Event> getSelectedEvent() {
         return model.getSelectedEvent();
+    }
+
+    /** A persisted registration's identity and values, independent of domain equality rules. */
+    private record ParticipationSnapshot(String eventId, String personId, boolean present,
+            Set<String> tags, Set<String> roles) {
     }
 }

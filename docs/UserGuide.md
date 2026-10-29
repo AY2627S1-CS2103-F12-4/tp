@@ -54,7 +54,15 @@ Name and Capacity when editing an event. The Add participant form's Person ID fi
 `P1`; enter roles and tags in their separate fields. Invalid submissions show an error and keep the form open for
 correction. Submitted commands also undergo the same validation as commands entered in the command box.
 
-Enter roles and tags as comma-separated values in their designated fields. Each value is validated before submission.
+Long names wrap in form headings. If a heading is too tall, scroll within it to read the rest.
+This display behavior does not shorten names in the form fields or saved data.
+
+Enter roles and tags as comma-separated values in their designated fields. Each value must meet the
+[role and tag requirements](#role-and-tag-requirements) below; the tag rules also apply to person tags.
+Surrounding whitespace is trimmed and empty entries are ignored: `Host, , Speaker,` supplies `Host` and `Speaker`.
+In Add participant, a blank Roles or Tags field adds no values for that field. In Edit participation, a blank field
+clears its existing set. A field containing only commas and whitespace is treated as blank.
+
 Person-form addresses cannot contain `n/`, `p/`, `e/`, `a/` or `t/` immediately after a space, as those sequences are
 interpreted as command options. The form displays an error for these addresses.
 
@@ -82,12 +90,16 @@ Adds a person to the address book. A person must exist before they can be regist
 
 Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]...`
 
+Names must start with an alphanumeric character and may contain alphanumeric characters, spaces,
+hyphens (`-`), and straight apostrophes (`'`).
+
 If required fields are omitted, the error lists all missing fields before showing
 the command usage. For example, omitting the name reports `Missing required fields: n/NAME.`
 
 Examples:
 * `add n/John Tan p/91234567 e/john@example.com a/Singapore`
 * `add n/Michael Lee p/92345678 e/michael@example.com a/Singapore t/VIP`
+* `add n/Mary-Jane O'Connor p/91234568 e/mary@example.com a/2 Main Street`
 
 ### Listing all people: `list`
 
@@ -103,6 +115,7 @@ Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...`
 
 * `INDEX` is the positive integer shown in the currently displayed person list (1, 2, 3, ...).
 * Provide at least one field to update.
+* Names follow the same rules as for `add`.
 * Providing tags replaces the person's existing tags; `t/` clears all tags.
 
 Examples:
@@ -271,6 +284,21 @@ Registers an existing person for an event. Optional roles and event-specific tag
 
 Format: `add-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...`
 
+#### Role and tag requirements
+
+These rules apply to both participant commands and the GUI forms:
+
+* **Roles:** Each role must be nonblank and 1–50 characters long after trimming leading and trailing whitespace.
+  Allowed characters are ASCII letters (`A-Z`, `a-z`), digits (`0-9`), spaces, straight apostrophes (`'`),
+  hyphens (`-`) and parentheses (`(`, `)`). Repeated internal spaces count towards the length limit during validation;
+  accepted roles are stored with those spaces collapsed to one space.
+* **Tags:** Each tag must contain one or more ASCII letters or digits (`A-Z`, `a-z`, `0-9`).
+  Spaces and punctuation are not allowed within a tag. Leading and trailing whitespace is trimmed before validation.
+
+For example, `Co-host (2)` and `Speaker's Assistant` are valid roles, but `Co_host`, `Host!` and roles longer than
+50 characters are rejected. `VIP` and `Guest2` are valid tags; `VIP-Guest` and `VIP Guest` are rejected.
+Invalid values produce an error without changing the registration. In GUI forms, correct the value and submit again.
+
 Examples:
 * `add-participant E1 P1`
 * `add-participant E1 P2 /role Best Man`
@@ -285,6 +313,10 @@ contact details or attendance. Supply at least one `/role` or `/tag` field.
 An omitted field is preserved; supplied values replace the entire corresponding set.
 Use a single empty `/role` or `/tag` to clear that set. Do not mix an empty
 value with other values for the same field. Repeated identical values are deduplicated.
+Roles are also deduplicated ignoring case and repeated whitespace: `/role Host /role host`
+stores one role, preserving the first spelling (`Host`). Tags retain their existing case-sensitive behavior.
+Role and tag values must meet the same [role and tag requirements](#role-and-tag-requirements) as when adding
+a participant. Unlike GUI comma-separated fields, CLI commands use a separate `/role` or `/tag` prefix for each value.
 
 Format: `edit-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...`
 

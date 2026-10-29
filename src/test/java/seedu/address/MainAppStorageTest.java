@@ -3,6 +3,7 @@ package seedu.address;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
@@ -67,5 +68,43 @@ public class MainAppStorageTest {
         assertEquals(TypicalPersons.getTypicalAddressBook(), model.getAddressBook());
         assertTrue(model.getEvents().isEmpty());
         assertTrue(model.getParticipations().getParticipations().isEmpty());
+    }
+
+    @Test
+    public void initialize_nullParticipationRecord_recoversWithEmptyParticipations() throws Exception {
+        assertParticipationRecovery("""
+                {"participations":[null]}
+                """);
+    }
+
+    @Test
+    public void initialize_nullParticipationTag_recoversWithEmptyParticipations() throws Exception {
+        assertParticipationRecovery("""
+                {"participations":[{"eventId":"E1","personId":"P1","tags":[null]}]}
+                """);
+    }
+
+    /**
+     * Verifies that invalid participation data preserves people and events during startup recovery.
+     */
+    private void assertParticipationRecovery(String json) throws Exception {
+        StorageManager storage = new StorageManager(
+                new JsonAddressBookStorage(testFolder.resolve("addressbook.json")),
+                new JsonUserPrefsStorage(testFolder.resolve("prefs.json")),
+                new JsonEventStorage(testFolder.resolve("events.json")),
+                new JsonParticipationStorage(testFolder.resolve("participations.json")));
+        ModelManager original = new ModelManager(TypicalPersons.getTypicalAddressBook(), new UserPrefs());
+        Event event = original.createEvent("Workshop", 10, "Java");
+        original.addParticipation(event, TypicalPersons.ALICE);
+        storage.saveAddressBook(original.getAddressBook());
+        storage.saveEvents(original.getEvents());
+        Files.writeString(storage.getParticipationFilePath(), json);
+
+        Model restored = new MainApp().initModelManager(storage, new UserPrefs());
+
+        assertEquals(original.getAddressBook(), restored.getAddressBook());
+        assertEquals(List.of(event), restored.getEvents());
+        assertTrue(restored.getParticipations().getParticipations().isEmpty());
+        assertEquals(json, Files.readString(storage.getParticipationFilePath()));
     }
 }

@@ -100,6 +100,12 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseName_punctuatedNameWithWhitespace_returnsTrimmedName() throws Exception {
+        String name = "Mary-Jane O'Connor";
+        assertEquals(new Name(name), ParserUtil.parseName(WHITESPACE + name + WHITESPACE));
+    }
+
+    @Test
     public void parsePhone_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parsePhone((String) null));
     }

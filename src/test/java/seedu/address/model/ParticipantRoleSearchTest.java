@@ -413,31 +413,33 @@ public class ParticipantRoleSearchTest {
 
     @Test
     public void roleSearch_invalidInput_preservesPreviousArchiveVisibility() {
-        for (boolean includeArchived : List.of(false, true)) {
+        for (boolean shouldIncludeArchived : List.of(false, true)) {
             model = createModel();
-            model.updateParticipantRoleSearch("Speaker", includeArchived);
-            assertEquals(includeArchived, model.isParticipantSearchIncludingArchived());
+            model.updateParticipantRoleSearch("Speaker", shouldIncludeArchived);
+            assertEquals(shouldIncludeArchived, model.isParticipantSearchIncludingArchived());
             List<Participation> before = List.copyOf(model.getParticipantSearchResults());
 
             assertThrows(EventNotFoundException.class, () ->
-                    model.updateParticipantRoleSearch(new EventId("E99"), "Speaker", !includeArchived));
+                    model.updateParticipantRoleSearch(new EventId("E99"), "Speaker", !shouldIncludeArchived));
             assertThrows(IllegalArgumentException.class, () ->
-                    model.updateParticipantRoleSearch("\u2003", !includeArchived));
+                    model.updateParticipantRoleSearch("\u2003", !shouldIncludeArchived));
             assertThrows(IllegalArgumentException.class, () ->
-                    model.updateParticipantRoleSearch(FIRST_ID, " ", !includeArchived));
+                    model.updateParticipantRoleSearch(FIRST_ID, " ", !shouldIncludeArchived));
             assertThrows(NullPointerException.class, () ->
-                    model.updateParticipantRoleSearch(null, "Speaker", !includeArchived));
+                    model.updateParticipantRoleSearch(null, "Speaker", !shouldIncludeArchived));
             assertThrows(NullPointerException.class, () ->
-                    model.updateParticipantRoleSearch(FIRST_ID, null, !includeArchived));
-            assertThrows(NullPointerException.class, () -> model.updateParticipantRoleSearch(null, !includeArchived));
+                    model.updateParticipantRoleSearch(FIRST_ID, null, !shouldIncludeArchived));
+            assertThrows(NullPointerException.class, () -> model.updateParticipantRoleSearch(
+                    null, !shouldIncludeArchived));
             assertEquals(before, model.getParticipantSearchResults());
             assertEquals(Optional.of("Speaker"), model.getParticipantSearchKeyword());
             assertTrue(model.getParticipantSearchEvent().isEmpty());
 
             model.setPresent(ARCHIVED_EVENT, CHARLIE, true);
-            assertEquals(includeArchived, model.isParticipantSearchIncludingArchived());
-            assertEquals(includeArchived ? 1 : 0, model.getParticipantSearchResultsForEvent(ARCHIVED_EVENT).size());
-            assertEquals(includeArchived ? List.of(FIRST_EVENT, SECOND_EVENT, ARCHIVED_EVENT)
+            assertEquals(shouldIncludeArchived, model.isParticipantSearchIncludingArchived());
+            assertEquals(shouldIncludeArchived ? 1 : 0,
+                    model.getParticipantSearchResultsForEvent(ARCHIVED_EVENT).size());
+            assertEquals(shouldIncludeArchived ? List.of(FIRST_EVENT, SECOND_EVENT, ARCHIVED_EVENT)
                     : List.of(FIRST_EVENT, SECOND_EVENT), model.getFilteredEventList());
         }
     }

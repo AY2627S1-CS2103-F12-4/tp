@@ -66,6 +66,8 @@ class JsonAdaptedParticipation {
     /**
      * Resolves the stored IDs and returns the corresponding participation.
      * Returns an empty result when either ID is invalid or cannot be found.
+     *
+     * @throws IllegalValueException if a resolved participation contains invalid role or tag data.
      */
     public Optional<Participation> toModelType(EventList eventList, AddressBook addressBook)
             throws IllegalValueException {
@@ -87,6 +89,10 @@ class JsonAdaptedParticipation {
 
         Set<Tag> modelTags = new HashSet<>();
         for (JsonAdaptedTag tag : tags) {
+            if (tag == null) {
+                throw new IllegalValueException("Participation for event " + eventId + " and person " + personId
+                        + " contains a null tag.");
+            }
             modelTags.add(tag.toModelType());
         }
 

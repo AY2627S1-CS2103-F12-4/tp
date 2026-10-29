@@ -56,6 +56,58 @@ public class ParticipantCommandIntegrationTest {
     private ParticipationStorageStub participationStorage;
 
     @Test
+    public void execute_caseOnlyRoleEdit_persistsExactSpellingAcrossReloads() throws Exception {
+        logic.execute("add-participant E1 P1 /role Host /role Speaker /tag VIP");
+        assertEquals(1, participationStorage.saveAttempts);
+        for (String spelling : java.util.List.of("host", "HOST", "Host")) {
+            logic.execute("edit-participant E1 P1 /role " + spelling + " /role Speaker");
+            assertEquals(Set.of(spelling, "Speaker"), getOnlyStoredParticipation().getRoles().stream()
+                    .map(ParticipationRole::toString).collect(java.util.stream.Collectors.toSet()));
+            ReadOnlyParticipations loaded = participationStorage.readParticipations(eventList, addressBook)
+                    .orElseThrow();
+            model = new ModelManager(addressBook, new UserPrefs(), eventList, loaded);
+            assertEquals(Set.of(spelling, "Speaker"), model.getParticipationsForEvent(EVENT).iterator().next()
+                    .getRoles().stream().map(ParticipationRole::toString)
+                    .collect(java.util.stream.Collectors.toSet()));
+            logic = createLogic();
+        }
+        assertEquals(4, participationStorage.saveAttempts);
+        logic.execute("edit-participant E1 P1 /role Speaker /role Host");
+        assertEquals(4, participationStorage.saveAttempts);
+    }
+
+    @Test
+    public void execute_caseOnlyRoleEdit_saveFailureRetainsSnapshotAndRetries() throws Exception {
+        logic.execute("add-participant E1 P1 /role Host");
+        participationStorage.saveFailure = new AccessDeniedException("participations.json");
+        assertThrows(CommandException.class, () -> logic.execute("edit-participant E1 P1 /role host"));
+        assertEquals("host", model.getParticipationsForEvent(EVENT).iterator().next()
+                .getRoles().iterator().next().value);
+        assertEquals("Host", getOnlyStoredParticipation().getRoles().iterator().next().value);
+        assertThrows(CommandException.class, () -> logic.execute("list-event"));
+        participationStorage.saveFailure = null;
+        logic.execute("list-event");
+        assertEquals("host", getOnlyStoredParticipation().getRoles().iterator().next().value);
+        assertEquals(4, participationStorage.saveAttempts);
+        logic.execute("list-event");
+        assertEquals(4, participationStorage.saveAttempts);
+    }
+
+    @Test
+    public void execute_caseOnlyRoleDuplicates_addAndEditRetainFirstSpellingAndPersistOneRole() throws Exception {
+        logic.execute("add-participant E1 P1 /role Host /role host /role HOST");
+        Participation added = getOnlyStoredParticipation();
+        assertEquals(1, added.getRoles().size());
+        assertEquals("Host", added.getRoles().iterator().next().value);
+
+        logic.execute("edit-participant E1 P1 /role Lead Guest /role lead   guest /role LEAD GUEST");
+        Participation edited = getOnlyStoredParticipation();
+        assertEquals(1, edited.getRoles().size());
+        assertEquals("Lead Guest", edited.getRoles().iterator().next().value);
+        assertEquals(edited.getRoles(), model.getParticipationsForEvent(EVENT).iterator().next().getRoles());
+    }
+
+    @Test
     public void execute_mistypedOptions_rejectsWithoutChangingOrPersistingData() throws Exception {
         logic.execute("add-participant E1 P1 /role Host /tag VIP");
         var registrations = Set.copyOf(model.getParticipations().getParticipations());
@@ -98,8 +150,8 @@ public class ParticipantCommandIntegrationTest {
         participationStorage.saveFailure = new AccessDeniedException("participations.json");
 
         logic.execute("list-event");
-        assertTrue(logic.execute("help").isShowHelp());
-        assertTrue(logic.execute("exit").isExit());
+        assertTrue(logic.execute("help").shouldShowHelp());
+        assertTrue(logic.execute("exit").shouldExit());
         assertEquals(0, participationStorage.saveAttempts);
     }
 
@@ -110,8 +162,8 @@ public class ParticipantCommandIntegrationTest {
         logic = createLogic();
         participationStorage.saveFailure = new AccessDeniedException("participations.json");
 
-        assertTrue(logic.execute("help").isShowHelp());
-        assertTrue(logic.execute("exit").isExit());
+        assertTrue(logic.execute("help").shouldShowHelp());
+        assertTrue(logic.execute("exit").shouldExit());
         assertEquals(1, participationStorage.saveAttempts);
         assertFalse(getOnlyStoredParticipation().isPresent());
     }
@@ -177,8 +229,8 @@ public class ParticipantCommandIntegrationTest {
         assertEquals(4, participationStorage.saveAttempts);
 
         participationStorage.saveFailure = saveFailure;
-        assertTrue(logic.execute("help").isShowHelp());
-        assertTrue(logic.execute("exit").isExit());
+        assertTrue(logic.execute("help").shouldShowHelp());
+        assertTrue(logic.execute("exit").shouldExit());
         assertEquals(4, participationStorage.saveAttempts);
     }
 

@@ -21,8 +21,8 @@ public class FindEventCommandParser implements Parser<FindEventCommand> {
         requireNonNull(args);
         String keyword = args.trim();
         String[] tokens = keyword.split("\\s+");
-        boolean includeArchived = tokens[tokens.length - 1].equals(FLAG_INCLUDE_ARCHIVE);
-        if (includeArchived) {
+        boolean shouldIncludeArchived = tokens[tokens.length - 1].equals(FLAG_INCLUDE_ARCHIVE);
+        if (shouldIncludeArchived) {
             keyword = keyword.substring(0, keyword.length() - FLAG_INCLUDE_ARCHIVE.length()).trim();
         }
         if (keyword.isEmpty() || COMMAND_PREFIX.matcher(keyword).find()) {
@@ -32,6 +32,6 @@ public class FindEventCommandParser implements Parser<FindEventCommand> {
         }
 
         return new FindEventCommand(
-                new EventNameContainsKeywordPredicate(keyword), includeArchived);
+                new EventNameContainsKeywordPredicate(keyword), shouldIncludeArchived);
     }
 }

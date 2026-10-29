@@ -201,6 +201,17 @@ participation forms.
 
 <puml src="diagrams/FormValidationActivityDiagram.puml" width="850" alt="Activity diagram of required-field checks, field validation, command execution, error recovery and cancellation" />
 
+#### Dialog layout
+
+`FormDialog` displays its complete header text in a wrapping label inside a height-limited `ScrollPane`.
+Long names, including names without spaces, wrap within the header width; exceptionally tall headings scroll
+vertically so the form fields and action buttons remain accessible. This affects presentation only, leaving
+field values and stored names intact.
+
+The actual dialog window is fitted to the usable screen area by `WindowBounds` after the window is shown and after
+validation errors resize it. The window's shown event is used because `Dialog#showAndWait` fires the dialog's own
+shown event before positioning its window.
+
 #### Literal addresses and command prefixes
 
 Addresses accept free-form text, so their domain validation alone cannot prevent extra CLI arguments.
@@ -236,7 +247,7 @@ remaining query and event scope. Repeated, misplaced, or unsupported options and
 flag values are rejected. `SearchParticipantCommand` calls the global or scoped
 `Model#updateParticipantSearch` overload; `SearchRoleCommand` calls the
 corresponding `Model#updateParticipantRoleSearch` overload. Each passes the
-`includeArchived` boolean. Both commands report registration and event counts and
+`shouldIncludeArchived` boolean. Both commands report registration and event counts and
 request the Events tab through `CommandResult`. Empty-result feedback distinguishes
 searches that include archives from default searches. Command equality and hash
 codes include archive visibility.
@@ -315,7 +326,7 @@ and archive visibility, including person updates, registration and role changes,
 event edits, and archive changes. Deleting an event during a global search refreshes
 the remaining matches. Deleting the scoped event calls `clearParticipantSearch()`, which clears
 either search type and restores the ordinary nonarchived event list.
-`ListEventCommand` calls `showEvents(includeArchived)` to clear the search and list
+`ListEventCommand` calls `showEvents(shouldIncludeArchived)` to clear the search and list
 events with the requested archive visibility. `clearParticipantSearch()` delegates
 to `showEvents(false)`; `FindEventCommand` uses this default reset before applying
 its name predicate. Both reset paths clear the stored search archive flag, even
@@ -343,6 +354,10 @@ A `Participation` is an immutable snapshot containing:
 * whether the person has been marked present;
 * event-specific `Tag` objects; and
 * event-specific `ParticipationRole` objects.
+
+A snapshot exposes unmodifiable tag and role sets. The immutable `Tag` and `ParticipationRole` instances can be
+shared between snapshots, including a snapshot and its `withPresent` result. The diagram therefore uses ordinary
+associations for these value objects.
 
 Internally, `MapperManager` does not use mutable domain objects as map keys. It stores each record using the stable pair
 `(EventId, PersonId)` and keeps the attendance state, tags and roles as the value. When a query is made, it resolves the
@@ -399,7 +414,9 @@ against the loaded `AddressBook` and `EventList` and constructs a `MapperManager
 are omitted, duplicate event-person pairs cause the participation file to be rejected, and invalid role or tag values
 are reported as data-loading errors. After a command executes successfully, `LogicManager` saves participations through
 the `ReadOnlyParticipations` interface only if they differ from the initially loaded or last successfully saved snapshot.
-The comparison includes event and person IDs, attendance, roles and tags. Failed saves leave the snapshot unchanged so
+The comparison includes event and person IDs, attendance, roles and tags. Role spelling is compared exactly as stored
+in JSON, independently of case-insensitive role deduplication, so capitalization-only edits are saved too.
+Failed saves leave the snapshot unchanged so
 that subsequent successful commands retry saving pending changes.
 
 #### Design considerations
@@ -533,12 +550,12 @@ an archive field load as nonarchived. `Event#getDisplayName()` appends `<archive
 for display without modifying the stored name used for matching.
 
 The initial event view excludes archives. The overload
-`updateFilteredEventList(predicate, includeArchived)` combines archive visibility
+`updateFilteredEventList(predicate, shouldIncludeArchived)` combines archive visibility
 with the supplied predicate; its single-argument overload defaults to `false`.
 Search result collection uses the
 same archive policy so registration counts and displayed matching events agree.
 `list-event [/include-archive]` replaces the event filter through
-`showEvents(includeArchived)` and clears any participant search. Archive state is
+`showEvents(shouldIncludeArchived)` and clears any participant search. Archive state is
 persisted, while listing visibility and search context are transient and reset
 when the model is reconstructed.
 
@@ -548,7 +565,7 @@ archive flag before constructing the predicate, preserving the keyword's interna
 whitespace. Empty keywords, unknown options, duplicate flags, and misplaced flags
 are rejected before changing model state. `FindEventCommand` clears participant
 search and applies the predicate through
-`updateFilteredEventList(predicate, includeArchived)`. The existing constructor
+`updateFilteredEventList(predicate, shouldIncludeArchived)`. The existing constructor
 defaults to excluding archives. Each command replaces the previous keyword and
 archive scope; including archives does not include events that fail the predicate.
 The GUI success message displays the keyword without the archive flag.
@@ -820,7 +837,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
 
    1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
+      Expected: The first contact is deleted from the list. The status message shows `Person deleted successfully.`
 
    1. Test case: `delete 0`<br>
       Expected: No person is deleted. The status message shows error details.

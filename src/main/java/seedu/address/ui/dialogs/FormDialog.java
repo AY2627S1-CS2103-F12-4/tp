@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -11,15 +13,22 @@ import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.ui.WindowBounds;
 
 /** Provides the shared layout and submission behavior for entry dialogs. */
 abstract class FormDialog {
+    private static final double HEADER_PREF_WIDTH = 480;
+    private static final double MAX_HEADER_HEIGHT = 200;
+
     private final Dialog<Void> dialog = new Dialog<>();
     private final GridPane form = new GridPane();
     private final Label requiredFieldNote = new Label("* Required");
@@ -36,6 +45,22 @@ abstract class FormDialog {
         dialog.initOwner(owner);
         dialog.setTitle(title);
         dialog.setHeaderText(header);
+        Label headerLabel = new Label(header);
+        headerLabel.setMinWidth(0);
+        headerLabel.setPrefWidth(HEADER_PREF_WIDTH);
+        headerLabel.setMaxWidth(Double.MAX_VALUE);
+        headerLabel.setWrapText(true);
+        ScrollPane headerScroll = new ScrollPane(headerLabel);
+        headerScroll.setFitToWidth(true);
+        headerScroll.setHbarPolicy(ScrollBarPolicy.NEVER);
+        headerScroll.setPrefViewportWidth(HEADER_PREF_WIDTH);
+        headerScroll.prefViewportHeightProperty().bind(Bindings.createDoubleBinding(() -> Math.min(
+                MAX_HEADER_HEIGHT, headerLabel.prefHeight(HEADER_PREF_WIDTH)),
+                headerLabel.fontProperty(), headerLabel.skinProperty()));
+        headerScroll.setMaxHeight(MAX_HEADER_HEIGHT);
+        VBox headerPane = new VBox(headerScroll);
+        headerPane.getStyleClass().add("header-panel");
+        dialog.getDialogPane().setHeader(headerPane);
         dialog.getDialogPane().setId("addEntryDialog");
         dialog.getDialogPane().getStylesheets().add("view/DarkTheme.css");
         dialog.getDialogPane().getButtonTypes().addAll(submitButton, ButtonType.CANCEL);
@@ -92,7 +117,22 @@ abstract class FormDialog {
                 event.consume();
             }
         });
-        dialog.setOnShown(event -> initialFocus.requestFocus());
+        Window window = dialog.getDialogPane().getScene().getWindow();
+        InvalidationListener fitOnResize = observable -> {
+            if (window.isShowing()) {
+                WindowBounds.fit(window);
+            }
+        };
+        window.widthProperty().addListener(fitOnResize);
+        window.heightProperty().addListener(fitOnResize);
+        // Install skins before Dialog computes its initial size from the heading's preferred height.
+        dialog.getDialogPane().applyCss();
+        dialog.getDialogPane().layout();
+        // The window is positioned after Dialog's shown event when using showAndWait.
+        window.setOnShown(event -> {
+            WindowBounds.fit(window);
+            initialFocus.requestFocus();
+        });
         dialog.showAndWait();
     }
 

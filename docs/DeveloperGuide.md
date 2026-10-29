@@ -44,6 +44,18 @@ The following provides a quick overview of the main components and their interac
 * At app launch, it initializes the other components in the correct sequence, and connects them up with each other.
 * At shut down, it shuts down the other components and invokes cleanup methods where necessary.
 
+Before starting JavaFX, `Main` acquires an exclusive, nonblocking `ApplicationInstanceLock` on
+`data/.attendplusplus.lock`. `Main` and `MainApp` share the same data-directory path. A second process
+using that directory logs a message and exits before loading preferences, loading data, or creating
+a window. An I/O failure accessing the lock is reported and prevents startup too.
+
+The lock channel stays open around the blocking `Application.launch` call, including normal shutdown
+and preference saving. Try-with-resources releases it when launch returns or throws; JVM termination
+also releases the operating-system lock. The lock file is deliberately retained: file existence is
+not evidence of a running instance, and deleting it while an instance runs could defeat coordination.
+Separate data folders have independent locks. All running copies must use a build with this guard;
+it does not coordinate with older builds that ignore the lock.
+
 The bulk of the app's work is done by the following four components:
 
 * [**`UI`**](#ui-component): The UI of the App.
@@ -906,6 +918,14 @@ and `preferences.json` before changing any file. Restore the baseline between ca
    a loading warning.
 6. Remove or corrupt `preferences.json` and relaunch.
    Expected: default preferences are used. This does not clear people, events or registrations.
+7. Launch two copies from the same disposable folder, including attempts started close together.
+   Expected: only one main window opens. The rejected process reports that the data folder is already
+   in use, without changing preferences or any JSON data. In the running copy, add
+   `add n/Lost Person p/91234567 e/lost@example.com a/Singapore`, then close and relaunch.
+   Expected: Lost Person is restored, along with existing events and registrations.
+8. Close the running copy and launch again, then repeat after forcibly terminating the running process.
+   Expected: each relaunch succeeds even though `data/.attendplusplus.lock` remains. Also launch copies
+   from two separate disposable folders: both should open and save independently.
 
 Do not execute data-changing commands against corrupted files that you intend to recover: a later save can
 replace the original contents with the fallback state. Close the app and restore the backup before continuing.

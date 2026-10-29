@@ -529,6 +529,15 @@ Format: `exit`
 
 AttendPlusPlus saves its application data automatically. You do not need to save manually.
 
+Only one running copy can use a data folder at a time. Launching another copy from the same folder
+does not open another window. Close the existing copy before launching again. Copies launched from
+separate folders can run independently.
+
+If you launch from a terminal, a blocked launch prints an "AttendPlusPlus is already running" message;
+the message is also recorded in the application log. The `data/.attendplusplus.lock` file may remain
+after the app closes. This is normal and does not prevent restarting. Do not delete this file while
+the app is running.
+
 ### Editing data files
 
 Application data is stored in JSON files. Editing these files manually can cause invalid or inconsistent data, so back them up before making changes. Using CLI commands is recommended.

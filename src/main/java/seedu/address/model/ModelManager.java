@@ -381,6 +381,10 @@ public class ModelManager implements Model {
         // Publish the search context and event filter before notifying result observers.
         updateFilteredEventList(event -> matchingEventIds.contains(event.getId()), shouldIncludeArchived);
         participantSearchResults.setAll(matches);
+        logger.fine(() -> "Applied participant search: type=" + searchType
+                + ", scope=" + (eventId == null ? "ALL" : eventId)
+                + ", includeArchived=" + shouldIncludeArchived
+                + ", registrations=" + matches.size() + ", events=" + matchingEventIds.size());
     }
 
     @Override
@@ -430,6 +434,7 @@ public class ModelManager implements Model {
         if (participantSearchType == null) {
             return;
         }
+        logger.finer("Refreshing active participant search");
         if (participantSearchEventId == null) {
             applyParticipantSearch(eventList.getEvents(), null, participantSearchKeyword, participantSearchType,
                     participantSearchIncludesArchived);

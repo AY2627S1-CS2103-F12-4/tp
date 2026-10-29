@@ -39,11 +39,13 @@ public class MainApp extends Application {
 
     public static final String VERSION = "V0.5.1";
 
+    static final Path DATA_DIRECTORY = Paths.get("data");
+
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = Paths.get("preferences.json");
-    private static final Path ADDRESS_BOOK_FILE_PATH = Paths.get("data", "addressbook.json");
-    private static final Path EVENT_FILE_PATH = Paths.get("data", "events.json");
-    private static final Path PARTICIPATION_FILE_PATH = Paths.get("data", "participations.json");
+    private static final Path ADDRESS_BOOK_FILE_PATH = DATA_DIRECTORY.resolve("addressbook.json");
+    private static final Path EVENT_FILE_PATH = DATA_DIRECTORY.resolve("events.json");
+    private static final Path PARTICIPATION_FILE_PATH = DATA_DIRECTORY.resolve("participations.json");
 
     protected Ui ui;
     protected Logic logic;

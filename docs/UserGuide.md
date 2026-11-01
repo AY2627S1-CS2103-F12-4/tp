@@ -545,6 +545,18 @@ the app is running.
 
 Application data is stored in JSON files. Editing these files manually can cause invalid or inconsistent data, so back them up before making changes. Using CLI commands is recommended.
 
+If `data/addressbook.json` is missing when the app starts, sample people are loaded. Existing events remain,
+but registrations are reset: any existing `data/participations.json` is renamed to
+`data/participations.orphaned-TIMESTAMP.json` before it is loaded. The backup retains the original registrations,
+including attendance, roles and event-specific tags. This prevents registrations from being assigned to sample
+people whose IDs happen to match the missing people's IDs. Backups are not loaded automatically.
+If the backup cannot be created, startup stops so the original registrations remain available for recovery.
+
+To recover, close the app and back up the current data first. Restore the original `addressbook.json` and replace
+`participations.json` with the matching participation backup. Keep the corresponding `events.json`; if those events have
+also changed, restore their matching backup too. Restart the app to load the original people and registrations.
+A valid, empty `addressbook.json` does not trigger this reset.
+
 ---
 
 ## FAQ

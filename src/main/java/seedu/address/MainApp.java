@@ -1,8 +1,10 @@
 package seedu.address;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -73,8 +75,10 @@ public class MainApp extends Application {
 
     /**
      * Returns a model initialized with the stored address book and participations.
+     *
+     * @throws IOException if registrations cannot be backed up when the address book is missing.
      */
-    protected Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
+    protected Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) throws IOException {
         logger.info("Using data file : " + storage.getAddressBookFilePath());
 
         Optional<ReadOnlyAddressBook> addressBookOptional;
@@ -82,6 +86,7 @@ public class MainApp extends Application {
         try {
             addressBookOptional = storage.readAddressBook();
             if (addressBookOptional.isEmpty()) {
+                backupOrphanedParticipations(storage.getParticipationFilePath());
                 logger.info("Creating a new data file " + storage.getAddressBookFilePath()
                         + " populated with a sample AddressBook.");
             }
@@ -111,6 +116,23 @@ public class MainApp extends Application {
         }
 
         return new ModelManager(initialAddressBook, userPrefs, eventList, initialParticipations);
+    }
+
+    /**
+     * Preserves registrations before sample people can reuse their original Person IDs.
+     * A failed backup prevents startup so the original file cannot be loaded or overwritten.
+     */
+    private void backupOrphanedParticipations(Path participationFile) throws IOException {
+        if (Files.notExists(participationFile)) {
+            return;
+        }
+        if (!Files.isRegularFile(participationFile)) {
+            throw new IOException("Participation data is not a regular file: " + participationFile);
+        }
+        String timestamp = Instant.now().toString().replace(':', '-');
+        Path backup = participationFile.resolveSibling("participations.orphaned-" + timestamp + ".json");
+        Files.move(participationFile, backup);
+        logger.info("Backed up orphaned participation data to " + backup);
     }
 
     /** Loads events before participation IDs are resolved. */

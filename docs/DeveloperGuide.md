@@ -431,7 +431,24 @@ ID, person ID, attendance state, tags and roles; it does not duplicate the full 
 At startup, people and events are loaded before participations. `JsonParticipationStorage` then resolves the stored IDs
 against the loaded `AddressBook` and `EventList` and constructs a `MapperManager`. Entries with invalid or unknown IDs
 are omitted, duplicate event-person pairs cause the participation file to be rejected, and invalid role or tag values
-are reported as data-loading errors. After a command executes successfully, `LogicManager` saves participations through
+are reported as data-loading errors.
+
+If `Storage#readAddressBook` returns empty because the people file is missing, `MainApp` first moves any existing
+participation file to `participations.orphaned-TIMESTAMP.json` in the same directory. The UTC timestamp uses hyphens
+in place of colons so the filename is valid on Windows. The move preserves the file contents without parsing them
+and does not replace an existing backup. Only after this step are sample people created and participations loaded.
+The original participation path is now absent, so startup creates an empty mapper instead of assigning registrations
+to sample people with reused Person IDs. Events remain unchanged. No recovery dialog is shown; the behaviour and
+restoration steps are documented in the UG.
+
+If the participation path is not a regular file or the backup move fails, `initModelManager` propagates an
+`IOException` and startup stops before loading registrations or accepting commands. Fresh installations
+with no participation file need no backup. A valid, empty people file does not trigger recovery. Malformed people
+data retains the existing empty-address-book fallback rather than the missing-file recovery path.
+`MainAppStorageTest` covers ID collisions, backup contents, restart and restoration, existing backups, malformed
+participation JSON, fresh and empty data, and an invalid participation path.
+
+After a command executes successfully, `LogicManager` saves participations through
 the `ReadOnlyParticipations` interface only if they differ from the initially loaded or last successfully saved snapshot.
 The comparison includes event and person IDs, attendance, roles and tags. Role spelling is compared exactly as stored
 in JSON, independently of case-insensitive role deduplication, so capitalization-only edits are saved too.
@@ -911,8 +928,15 @@ and `preferences.json` before changing any file. Restore the baseline between ca
 2. Create E1 and E2 in a fresh folder, delete E2, exit and relaunch, then create another event.
    Expected: the new event is E3. Repeat after deleting all events: retired Event IDs are still not reused.
 3. With the app closed, remove only `data/addressbook.json` from the disposable folder and relaunch.
-   Expected: sample people are used. If the file contains malformed JSON instead, the people list starts empty
-   and a loading warning is logged.
+   Expected: sample people are used and events are retained, but no registrations are loaded. The original
+   `data/participations.json` is renamed to `data/participations.orphaned-TIMESTAMP.json`, preserving its contents,
+   including roles, tags and attendance. Run `list-participants E1`: none of the sample people inherit the original
+   registrations. Run `list`, then close and relaunch: registrations remain empty and the backup is unchanged.
+   Close the app and restore the original `addressbook.json`, then copy the matching participation backup to
+   `participations.json`. With the matching `events.json` still present, relaunch and verify that the original
+   people, registrations, roles, tags and attendance are restored.
+   Restore the baseline and separately corrupt `addressbook.json`: the people list starts empty and a loading
+   warning is logged. A valid, empty people file must stay empty without generating sample people or a backup.
 4. Restore the baseline, then separately remove or corrupt `data/events.json` and relaunch.
    Expected: the event list starts empty. Registrations referring to unknown events are omitted.
    Malformed event data produces a loading warning.

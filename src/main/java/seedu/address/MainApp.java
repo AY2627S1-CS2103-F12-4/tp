@@ -76,7 +76,7 @@ public class MainApp extends Application {
     /**
      * Returns a model initialized with the stored address book and participations.
      *
-     * @throws IOException if registrations cannot be backed up when the address book is missing.
+     * @throws IOException if registrations cannot be backed up when a people or event file is missing.
      */
     protected Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) throws IOException {
         logger.info("Using data file : " + storage.getAddressBookFilePath());
@@ -119,7 +119,7 @@ public class MainApp extends Application {
     }
 
     /**
-     * Preserves registrations before sample people can reuse their original Person IDs.
+     * Preserves registrations before regenerated people or events can reuse their original IDs.
      * A failed backup prevents startup so the original file cannot be loaded or overwritten.
      */
     private void backupOrphanedParticipations(Path participationFile) throws IOException {
@@ -136,9 +136,13 @@ public class MainApp extends Application {
     }
 
     /** Loads events before participation IDs are resolved. */
-    private EventList loadEvents(Storage storage) {
+    private EventList loadEvents(Storage storage) throws IOException {
         try {
-            return storage.readEvents().orElseGet(EventList::new);
+            Optional<EventList> eventsOptional = storage.readEvents();
+            if (eventsOptional.isEmpty()) {
+                backupOrphanedParticipations(storage.getParticipationFilePath());
+            }
+            return eventsOptional.orElseGet(EventList::new);
         } catch (DataLoadingException e) {
             logger.warning("Event data file at " + storage.getEventFilePath() + " could not be loaded."
                     + " Will be starting with empty events.");

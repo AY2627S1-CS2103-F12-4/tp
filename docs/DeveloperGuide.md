@@ -433,20 +433,23 @@ against the loaded `AddressBook` and `EventList` and constructs a `MapperManager
 are omitted, duplicate event-person pairs cause the participation file to be rejected, and invalid role or tag values
 are reported as data-loading errors.
 
-If `Storage#readAddressBook` returns empty because the people file is missing, `MainApp` first moves any existing
-participation file to `participations.orphaned-TIMESTAMP.json` in the same directory. The UTC timestamp uses hyphens
+If `Storage#readAddressBook` or `Storage#readEvents` returns empty because its file is missing, `MainApp` first moves
+any existing participation file to `participations.orphaned-TIMESTAMP.json` in the same directory. The UTC timestamp uses hyphens
 in place of colons so the filename is valid on Windows. The move preserves the file contents without parsing them
-and does not replace an existing backup. Only after this step are sample people created and participations loaded.
-The original participation path is now absent, so startup creates an empty mapper instead of assigning registrations
-to sample people with reused Person IDs. Events remain unchanged. No recovery dialog is shown; the behaviour and
-restoration steps are documented in the UG.
+and does not replace an existing backup. The missing-people branch performs this step before creating sample people;
+`loadEvents` performs it before creating an empty event list. That list starts its ID counter again at E1, so old
+registrations must be detached before a new event can reuse an old ID. The original participation path is now absent,
+and startup creates an empty mapper. The remaining people or events are unchanged. If both files are missing, the
+first backup removes the participation path, so the second check creates no additional backup. No recovery dialog
+is shown; the behaviour and restoration steps are documented in the UG.
 
 If the participation path is not a regular file or the backup move fails, `initModelManager` propagates an
 `IOException` and startup stops before loading registrations or accepting commands. Fresh installations
-with no participation file need no backup. A valid, empty people file does not trigger recovery. Malformed people
-data retains the existing empty-address-book fallback rather than the missing-file recovery path.
-`MainAppStorageTest` covers ID collisions, backup contents, restart and restoration, existing backups, malformed
-participation JSON, fresh and empty data, and an invalid participation path.
+with no participation file need no backup. Valid, empty people and event files do not trigger recovery when both
+files are present. Malformed people or event data retains the existing empty-data fallback rather than the
+missing-file recovery path. `MainAppStorageTest` covers Person ID collisions, Event ID reuse followed by restart,
+backup contents, restart and restoration, existing backups, both entity files missing, malformed participation
+JSON, fresh and empty data, and invalid participation paths.
 
 After a command executes successfully, `LogicManager` saves participations through
 the `ReadOnlyParticipations` interface only if they differ from the initially loaded or last successfully saved snapshot.
@@ -938,8 +941,14 @@ and `preferences.json` before changing any file. Restore the baseline between ca
    Restore the baseline and separately corrupt `addressbook.json`: the people list starts empty and a loading
    warning is logged. A valid, empty people file must stay empty without generating sample people or a backup.
 4. Restore the baseline, then separately remove or corrupt `data/events.json` and relaunch.
-   Expected: the event list starts empty. Registrations referring to unknown events are omitted.
-   Malformed event data produces a loading warning.
+   When the file is missing, people are retained and the event and registration lists start empty. The original
+   participation file is renamed to `data/participations.orphaned-TIMESTAMP.json`, preserving its contents.
+   Create a new event: its ID is E1. Close and relaunch, then run `list-participants E1`: the new event must not
+   inherit the old E1 registrations. Close the app, restore the original `events.json`, and copy the matching
+   participation backup to `participations.json`. With the matching people file still present, relaunch and verify
+   that the original events, registrations, roles, tags and attendance are restored.
+   When `events.json` contains malformed data instead, the event list starts empty, unknown-event registrations
+   are omitted and a loading warning is logged. With valid, empty people and event files present, no backup is made.
 5. Restore the baseline, then separately remove or corrupt `data/participations.json` and relaunch.
    Expected: people and events remain available, with no registrations. Malformed participation data produces
    a loading warning.

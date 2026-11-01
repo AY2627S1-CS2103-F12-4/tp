@@ -124,6 +124,49 @@ public class MainAppStorageTest {
     }
 
     @Test
+    public void initialize_missingEvents_backsUpRegistrationsBeforeEventIdsCanBeReused() throws Exception {
+        StorageManager storage = createStorage();
+        ModelManager original = new ModelManager(TypicalPersons.getTypicalAddressBook(), new UserPrefs());
+        Event event = original.createEvent("Workshop", 10, "Java");
+        original.addParticipation(new EventId(event.getId()), TypicalPersons.ALICE.getId(),
+                Set.of(new ParticipationRole("Host")), Set.of(new Tag("VIP")));
+        original.setPresent(event, TypicalPersons.ALICE, true);
+        storage.saveAddressBook(original.getAddressBook());
+        storage.saveEvents(original.getEvents());
+        storage.saveParticipations(original.getParticipations());
+        String peopleJson = Files.readString(storage.getAddressBookFilePath());
+        String eventsJson = Files.readString(storage.getEventFilePath());
+        String participationsJson = Files.readString(storage.getParticipationFilePath());
+        Files.delete(storage.getEventFilePath());
+
+        MainApp app = new MainApp();
+        Model recovered = app.initModelManager(storage, new UserPrefs());
+        assertEquals(original.getAddressBook(), recovered.getAddressBook());
+        assertTrue(recovered.getEvents().isEmpty());
+        assertTrue(recovered.getParticipations().getParticipations().isEmpty());
+
+        new LogicManager(recovered, storage).execute("add-event Replacement /cap 5 /desc New event");
+        Model restarted = app.initModelManager(storage, new UserPrefs());
+        assertEquals("E1", restarted.getEvents().getFirst().getId());
+        assertTrue(restarted.getParticipations().getParticipations().isEmpty());
+        assertEquals(peopleJson, Files.readString(storage.getAddressBookFilePath()));
+        assertFalse(Files.exists(storage.getParticipationFilePath()));
+        List<Path> backups = getParticipationBackups();
+        assertEquals(1, backups.size());
+        Path backup = backups.get(0);
+        assertEquals(participationsJson, Files.readString(backup));
+
+        // Restore the original event identities together with their matching registrations.
+        Files.writeString(storage.getEventFilePath(), eventsJson);
+        Files.copy(backup, storage.getParticipationFilePath());
+        Model restored = app.initModelManager(storage, new UserPrefs());
+        assertEquals(original.getAddressBook(), restored.getAddressBook());
+        assertEquals(List.of(event), restored.getEvents());
+        assertEquals(original.getParticipations().getParticipations(),
+                restored.getParticipations().getParticipations());
+    }
+
+    @Test
     public void initialize_freshFolder_loadsSamplePeopleWithoutBackup() throws Exception {
         Model model = new MainApp().initModelManager(createStorage(), new UserPrefs());
 
@@ -137,6 +180,7 @@ public class MainAppStorageTest {
     public void initialize_validEmptyAddressBook_doesNotLoadSamplesOrBackupParticipations() throws Exception {
         StorageManager storage = createStorage();
         storage.saveAddressBook(new AddressBook());
+        storage.saveEvents(List.of());
         String participationJson = "{\"participations\":[]}";
         Files.writeString(storage.getParticipationFilePath(), participationJson);
 
@@ -144,6 +188,63 @@ public class MainAppStorageTest {
 
         assertTrue(model.getAddressBook().getPersonList().isEmpty());
         assertEquals(participationJson, Files.readString(storage.getParticipationFilePath()));
+        assertTrue(getParticipationBackups().isEmpty());
+    }
+
+    @Test
+    public void initialize_validEmptyEvents_doesNotBackupParticipations() throws Exception {
+        StorageManager storage = createStorage();
+        storage.saveAddressBook(TypicalPersons.getTypicalAddressBook());
+        storage.saveEvents(List.of());
+        String participationJson = "{\"participations\":[]}";
+        Files.writeString(storage.getParticipationFilePath(), participationJson);
+
+        Model model = new MainApp().initModelManager(storage, new UserPrefs());
+
+        assertEquals(TypicalPersons.getTypicalAddressBook(), model.getAddressBook());
+        assertTrue(model.getEvents().isEmpty());
+        assertEquals(participationJson, Files.readString(storage.getParticipationFilePath()));
+        assertTrue(getParticipationBackups().isEmpty());
+    }
+
+    @Test
+    public void initialize_bothEntityFilesMissing_createsOnlyOneParticipationBackup() throws Exception {
+        StorageManager storage = createStorage();
+        String participationJson = """
+                {"participations":[{"eventId":"E1","personId":"P1","isPresent":true,
+                "roles":["Host"],"tags":["VIP"]}]}
+                """;
+        Files.writeString(storage.getParticipationFilePath(), participationJson);
+
+        MainApp app = new MainApp();
+        Model recovered = app.initModelManager(storage, new UserPrefs());
+
+        assertEquals(SampleDataUtil.getSampleAddressBook(), recovered.getAddressBook());
+        assertTrue(recovered.getEvents().isEmpty());
+        assertTrue(recovered.getParticipations().getParticipations().isEmpty());
+        List<Path> backups = getParticipationBackups();
+        assertEquals(1, backups.size());
+        assertEquals(participationJson, Files.readString(backups.get(0)));
+
+        app.initModelManager(storage, new UserPrefs());
+        assertEquals(backups, getParticipationBackups());
+        assertFalse(Files.exists(storage.getParticipationFilePath()));
+    }
+
+    @Test
+    public void initialize_missingEventsWithInvalidParticipationPath_abortsWithoutChangingPeople() throws Exception {
+        StorageManager storage = createStorage();
+        storage.saveAddressBook(TypicalPersons.getTypicalAddressBook());
+        String peopleJson = Files.readString(storage.getAddressBookFilePath());
+        Files.createDirectory(storage.getParticipationFilePath());
+        Path existingData = storage.getParticipationFilePath().resolve("keep.txt");
+        Files.writeString(existingData, "preserve this data");
+
+        assertThrows(IOException.class, () -> new MainApp().initModelManager(storage, new UserPrefs()));
+
+        assertEquals(peopleJson, Files.readString(storage.getAddressBookFilePath()));
+        assertEquals("preserve this data", Files.readString(existingData));
+        assertFalse(Files.exists(storage.getEventFilePath()));
         assertTrue(getParticipationBackups().isEmpty());
     }
 

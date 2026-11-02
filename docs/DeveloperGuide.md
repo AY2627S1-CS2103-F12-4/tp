@@ -20,6 +20,14 @@
   [Jackson](https://github.com/FasterXML/jackson) for JSON serialization.
   Documentation uses [MarkBind](https://markbind.org/) and [PlantUML](https://plantuml.com/).
 
+### Notable uses of AI
+
+* OpenAI ChatGPT was used for preliminary pull request reviews and identifying possible defects.
+* It was used to suggest and refactor portions of Java, JavaFX, FXML, and CSS code, including UI layout improvements.
+* It assisted with drafting tests and diagnosing test failures, Checkstyle violations, and merge conflicts.
+* It was used to refine the wording and structure of the User Guide and Developer Guide.
+* All AI-assisted output was reviewed, adapted, and tested by the team before inclusion.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Setting up, getting started**

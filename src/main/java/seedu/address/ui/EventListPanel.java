@@ -3,6 +3,7 @@ package seedu.address.ui;
 import static java.util.Objects.requireNonNull;
 
 import java.util.function.Consumer;
+import java.util.function.ToIntFunction;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -18,6 +19,8 @@ import seedu.address.model.event.Event;
 public class EventListPanel extends UiPart<Region> {
 
     private static final String FXML = "EventListPanel.fxml";
+
+    private ToIntFunction<Event> registrationCount;
 
     @FXML
     private ListView<Event> eventListView;
@@ -155,6 +158,17 @@ public class EventListPanel extends UiPart<Region> {
         eventListView.getSelectionModel().clearSelection();
     }
 
+    /** Supplies total registration counts independently of participant search filters. */
+    public void setRegistrationCount(ToIntFunction<Event> registrationCount) {
+        this.registrationCount = requireNonNull(registrationCount);
+        refreshRegistrationCounts();
+    }
+
+    /** Refreshes event cards after commands change registrations or capacity. */
+    public void refreshRegistrationCounts() {
+        eventListView.refresh();
+    }
+
     /** Selects an event from the displayed list. */
     public void selectEvent(Event event) {
         eventListView.getSelectionModel().select(requireNonNull(event));
@@ -204,6 +218,9 @@ public class EventListPanel extends UiPart<Region> {
                     onArchive,
                     onDelete);
 
+            if (registrationCount != null) {
+                eventCard.showRegistrationCount(registrationCount.applyAsInt(event), event.getCapacity());
+            }
             setGraphic(eventCard.getRoot());
         }
     }

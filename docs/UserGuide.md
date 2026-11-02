@@ -165,6 +165,12 @@ Example: `delete 2`
 ### Creating an event: `add-event`
 
 Creates an event with a name, capacity and required `/desc` parameter. The description value may be empty.
+
+Event cards show `Registered: N / Capacity: C`, including zero registrations. The total counts each registered
+person once, regardless of attendance or roles, and updates after registrations or capacity change.
+Participant searches filter the displayed participants; the event card still shows the total registrations,
+not just the search matches.
+
 Event IDs are assigned automatically and are not reused after deletion, including
 after restarting the application.
 
@@ -311,7 +317,19 @@ events and their registrations.
 
 ### Viewing event details: `view-event`
 
-Displays details for an event identified by its event ID.
+Displays details for an event identified by its event ID, selects the **Events**
+tab, and shows all registrations for that event.
+
+If the event is already visible in the event list, the command preserves the
+event-list filter, any active participant-name or role search, and archive
+visibility. All of the selected event's registrations are displayed, including
+those that do not match the retained search.
+
+If the event is hidden, the command clears any participant-name or role search
+and replaces the event-list filter. The list shows all nonarchived events for a
+nonarchived target, or all events for an archived target. Viewing an archived
+event does not unarchive it. The **Clear search** button disappears when the
+search is cleared.
 
 Format: `view-event EVENT_ID`
 
@@ -334,9 +352,9 @@ Reducing an event's capacity preserves existing registrations, as described unde
 [editing an event](#editing-an-event-edit-event), but further additions are blocked until the registration count
 is below capacity.
 
-To check whether an event is full, use `list-participants EVENT_ID` to show all its registrations, count them,
-and compare the count with the capacity shown on the event card. The card does not display a registration count
-or full indicator. Adding the final available registration succeeds without a separate capacity alert.
+To check whether an event is full, compare the `Registered` count with `Capacity` on its event card.
+The count includes all registrations, even when a search filters the displayed participants.
+Adding the final available registration succeeds without a separate capacity alert.
 
 #### Role and tag requirements
 

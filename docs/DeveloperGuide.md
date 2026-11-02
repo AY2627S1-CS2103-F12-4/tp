@@ -445,6 +445,10 @@ whose `isPresent` value is `true`, while `del-participant` removes the event-per
 
 #### Displaying participants in the Events tab
 
+Event cards display `Registered: N / Capacity: C`. `MainWindow` supplies `EventListPanel` with counts from
+`Logic#getParticipationsForEvent`, independently of search results, and refreshes the cards after each successful
+command. Each registration counts once regardless of roles or attendance; zero and overcapacity totals are shown.
+
 The Events tab displays `EventListPanel` and `ParticipantListPanel`
 together. `MainWindow` coordinates the selected event and obtains its
 participations through `Logic`. When the selected event changes,
@@ -605,7 +609,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`
 |----------|---------------------------|--------------------------------------------------|----------------|
 | `* * *`  | event organiser           | create an event                                  | manage people related to the event |
 | `* * *`  | event organiser           | view and choose events                           | manage specific events |
-| `* * *`  | event organiser           | compare an event's registrations with its capacity | know whether more participants can be added |
+| `* * *`  | event organiser           | view an event's registration count alongside its capacity | know whether more participants can be added |
 | `* * *`  | event organiser           | delete a person's personal information upon request | respect their privacy |
 | `* * *`  | event organiser           | set the capacity of an event                     | plan attendance within the venue limit |
 | `* * *`  | event organiser           | add a participant to an event                    | track people expected to attend |
@@ -770,6 +774,11 @@ Use case ends.
 
 * 1b. The specified capacity is not a positive integer.
     * 1b1. AttendPlusPlus informs the event organiser that the event capacity must be a positive integer.
+    * Use case ends.
+
+* 4a. A participant-name or role search is active.
+    * 4a1. AttendPlusPlus retains the search. The newly created event remains hidden because it has no matching registrations.
+    * 4a2. The event organiser can use `list-event` to clear the search and display the newly created event.
     * Use case ends.
 
 

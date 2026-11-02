@@ -48,6 +48,58 @@ public class MainWindowActionButtonsTest {
     public Path temporaryFolder;
 
     @Test
+    public void eventCard_registrationTotal_tracksChangesIndependentlyOfSearchAndAttendance() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = new ModelManager();
+            model.createEvent("Workshop", 3, "");
+            model.addPerson(ALICE);
+            model.addPerson(BOB);
+            MainWindow window = createWindow(model);
+            try {
+                window.show();
+                SearchUiTestUtil.getTabs(window).getSelectionModel().select(1);
+                assertRegistrationCount(window, "Registered: 0 / Capacity: 3");
+                SearchUiTestUtil.enterCommand(window, "add-participant E1 " + ALICE.getId());
+                SearchUiTestUtil.enterCommand(window, "add-participant E1 " + BOB.getId());
+                SearchUiTestUtil.enterCommand(window, "list-participants E1");
+                assertRegistrationCount(window, "Registered: 2 / Capacity: 3");
+                SearchUiTestUtil.enterCommand(window, "mark-participant E1 " + ALICE.getId());
+                SearchUiTestUtil.enterCommand(window, "edit-participant E1 " + ALICE.getId()
+                        + " /role Speaker /role Helper");
+                assertEquals(2, model.getParticipationsForEvent(model.getEvents().getFirst()).stream()
+                        .filter(row -> row.getPerson().equals(ALICE)).findFirst().orElseThrow().getRoles().size());
+                assertTrue(model.getParticipationsForEvent(model.getEvents().getFirst()).stream()
+                        .filter(row -> row.getPerson().equals(ALICE)).findFirst().orElseThrow().isPresent());
+                SearchUiTestUtil.enterCommand(window, "search-participant " + ALICE.getName().fullName);
+                assertEquals(1, SearchUiTestUtil.getParticipants(window).getItems().size());
+                assertRegistrationCount(window, "Registered: 2 / Capacity: 3");
+                SearchUiTestUtil.enterCommand(window, "view-event E1");
+                assertRegistrationCount(window, "Registered: 2 / Capacity: 3");
+                SearchUiTestUtil.enterCommand(window, "edit-event E1 /cap 1");
+                assertRegistrationCount(window, "Registered: 2 / Capacity: 1");
+                SearchUiTestUtil.enterCommand(window, "del-participant E1 " + BOB.getId());
+                assertRegistrationCount(window, "Registered: 1 / Capacity: 1");
+                SearchUiTestUtil.enterCommand(window, "clear");
+                SearchUiTestUtil.enterCommand(window, "list-event");
+                assertRegistrationCount(window, "Registered: 0 / Capacity: 1");
+                SearchUiTestUtil.enterCommand(window, "archive-event E1");
+                SearchUiTestUtil.enterCommand(window, "view-event E1");
+                assertRegistrationCount(window, "Registered: 0 / Capacity: 1");
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    private void assertRegistrationCount(MainWindow window, String expected) {
+        SearchUiTestUtil.getTabs(window).getSelectionModel().select(1);
+        window.getPrimaryStage().getScene().getRoot().applyCss();
+        window.getPrimaryStage().getScene().getRoot().layout();
+        assertEquals(expected, ((javafx.scene.control.Label)
+                SearchUiTestUtil.getEvents(window).lookup("#capacity")).getText());
+    }
+
+    @Test
     public void editEventCommand_overcapacity_displaysWarningAndClearsItWhenCapacityRestored() throws Exception {
         runOnFxThread(() -> {
             ModelManager model = new ModelManager();

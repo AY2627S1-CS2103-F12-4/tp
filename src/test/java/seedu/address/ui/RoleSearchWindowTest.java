@@ -563,7 +563,7 @@ public class RoleSearchWindowTest {
     }
 
     @Test
-    public void viewParticipant_targetOutsideRoleSearchFilter_clearsPanelUntilSearchResumes() throws Exception {
+    public void viewParticipant_hiddenEvent_eventClickRestoresRoleSearch() throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
             try {
@@ -575,8 +575,58 @@ public class RoleSearchWindowTest {
                 assertTrue(getParticipants(window).getItems().isEmpty());
                 assertEquals(SELECT_EVENT_PROMPT, getHeading(window, "searchHeading"));
 
+                getEvents(window).getSelectionModel().select(0);
+                assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals(List.of("E1/P1"), getResultIds(window));
+                assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
+                Button clearSearchButton = (Button) window.getPrimaryStage().getScene().lookup("#clearSearchButton");
+                assertTrue(clearSearchButton.isVisible());
+
                 enterCommand(window, "search-role Speaker");
                 assertEquals(List.of("E1/P1"), getResultIds(window));
+                assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
+    public void viewParticipant_hiddenEvent_eventClickPreservesNameSearchScope() throws Exception {
+        assertEventClickRestoresScopedSearch("search-participant Alice /event E1", "Alice", false);
+    }
+
+    @Test
+    public void viewParticipant_hiddenEvent_eventClickPreservesArchiveSearchScope() throws Exception {
+        assertEventClickRestoresScopedSearch("search-role Speaker /event E1 /include-archive", "Speaker", true);
+        assertEventClickRestoresScopedSearch("search-participant Alice /event E1 /include-archive", "Alice", true);
+    }
+
+    @Test
+    public void viewParticipant_hiddenEvent_eventClicksKeepSelectedMatchingEvent() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            model.addParticipation(new EventId("E2"), new PersonId("P2"),
+                    Set.of(new ParticipationRole("Guest")), Set.of());
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, "search-role Speaker");
+                enterCommand(window, "view-participant E3 P3");
+                assertEquals(List.of(CONFERENCE, WORKSHOP), getEvents(window).getItems());
+                assertNull(getEvents(window).getSelectionModel().getSelectedItem());
+
+                getEvents(window).getSelectionModel().select(1);
+                assertEquals("E2", getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals(List.of("E2/P1"), getResultIds(window));
+                assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
+                getEvents(window).getSelectionModel().select(0);
+                assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals(List.of("E1/P1"), getResultIds(window));
+                assertEquals("Speaker", model.getParticipantSearchKeyword().orElseThrow());
+
+                enterCommand(window, "edit-participant E1 P1 /role Guest");
+                assertEquals("E2", getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
@@ -707,6 +757,39 @@ public class RoleSearchWindowTest {
                 assertEquals(List.of("E3/P3"), getResultIds(window));
                 assertEquals("E3", getEvents(window).getSelectionModel().getSelectedItem().getId());
                 assertEquals("Archived (E3)", getHeading(window, "eventHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    private void assertEventClickRestoresScopedSearch(String search, String keyword, boolean includesArchived)
+            throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, search);
+                enterCommand(window, "view-participant E2 P1");
+                assertTrue(getFeedback(window).contains("Person ID: P1"));
+
+                getEvents(window).getSelectionModel().select(0);
+                assertEquals(List.of(CONFERENCE), getEvents(window).getItems());
+                assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals(List.of("E1/P1"), getResultIds(window));
+                assertEquals("Matching \"" + keyword + "\"", getHeading(window, "searchHeading"));
+                assertEquals(keyword, model.getParticipantSearchKeyword().orElseThrow());
+                assertEquals("E1", model.getParticipantSearchEvent().orElseThrow().getId());
+                assertEquals(includesArchived, model.isParticipantSearchIncludingArchived());
+                Button clearSearchButton = (Button) window.getPrimaryStage().getScene().lookup("#clearSearchButton");
+                assertTrue(clearSearchButton.isVisible());
+
+                clearSearchButton.fire();
+                assertTrue(model.getParticipantSearchKeyword().isEmpty());
+                assertFalse(clearSearchButton.isVisible());
+                getEvents(window).getSelectionModel().select(0);
+                assertEquals(List.of("E1/P1", "E1/P2"), getResultIds(window));
+                assertEquals("Participants", getHeading(window, "searchHeading"));
             } finally {
                 window.getPrimaryStage().close();
             }

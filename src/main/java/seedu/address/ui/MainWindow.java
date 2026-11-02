@@ -233,12 +233,12 @@ public class MainWindow extends UiPart<Stage> {
             return;
         }
 
-        if (participantDisplayMode == ParticipantDisplayMode.SEARCH
-                && logic.getParticipantSearchKeyword().isPresent()) {
+        if (logic.getParticipantSearchKeyword().isPresent()) {
             if (event != null) {
                 selectedEvent = event;
             }
 
+            participantDisplayMode = ParticipantDisplayMode.SEARCH;
             updateParticipantPanel("");
             return;
         }

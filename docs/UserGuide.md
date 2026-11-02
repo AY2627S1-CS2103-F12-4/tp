@@ -165,6 +165,12 @@ Example: `delete 2`
 ### Creating an event: `add-event`
 
 Creates an event with a name, capacity and required `/desc` parameter. The description value may be empty.
+
+Event cards show `Registered: N / Capacity: C`, including zero registrations. The total counts each registered
+person once, regardless of attendance or roles, and updates after registrations or capacity change.
+Participant searches filter the displayed participants; the event card still shows the total registrations,
+not just the search matches.
+
 Event IDs are assigned automatically and are not reused after deletion, including
 after restarting the application.
 

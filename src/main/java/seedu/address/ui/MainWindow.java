@@ -193,6 +193,7 @@ public class MainWindow extends UiPart<Stage> {
                 this::handleEditEvent,
                 this::handleToggleEventArchive,
                 this::handleDeleteEvent);
+        eventListPanel.setRegistrationCount(event -> logic.getParticipationsForEvent(event).size());
         eventListPanelPlaceholder.getChildren()
                 .add(eventListPanel.getRoot());
 
@@ -680,6 +681,7 @@ public class MainWindow extends UiPart<Stage> {
                 }
             }
             CommandResult commandResult = logic.execute(commandText);
+            eventListPanel.refreshRegistrationCounts();
 
             logger.info(
                     "Result: "

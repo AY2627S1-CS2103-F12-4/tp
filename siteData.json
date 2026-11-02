@@ -64,7 +64,7 @@
         "user-stories": "User stories",
         "use-cases": "Use cases",
         "use-case-uc01-search-for-a-participant-within-an-event": "Use case: UC01 - Search for a participant within an event",
-        "use-case-uc02-mark-attendee-attendance": "Use case: UC02 - Mark attendee attendance",
+        "use-case-uc02-mark-attendee-as-present": "Use case: UC02 - Mark attendee as present",
         "use-case-uc03-add-participant-to-an-event": "Use case: UC03 - Add participant to an event",
         "use-case-uc04-create-event": "Use case: UC04 - Create Event",
         "non-functional-requirements": "Non-Functional Requirements",

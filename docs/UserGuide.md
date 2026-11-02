@@ -74,9 +74,6 @@ Surrounding whitespace is trimmed and empty entries are ignored: `Host, , Speake
 In Add participant, a blank Roles or Tags field adds no values for that field. In Edit participation, a blank field
 clears its existing set. A field containing only commas and whitespace is treated as blank.
 
-Person-form addresses cannot contain `n/`, `p/`, `e/`, `a/` or `t/` immediately after a space, as those sequences are
-interpreted as command options. The form displays an error for these addresses.
-
 | Location | Buttons, from left to right | Behaviour |
 |---|---|---|
 | Top action bar | **+ Person**, **+ Event** | Opens a form for adding a person or event. |
@@ -103,6 +100,14 @@ Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]...`
 
 Names must start with an alphanumeric character and may contain alphanumeric characters, spaces,
 hyphens (`-`), and straight apostrophes (`'`).
+
+The following field constraints apply to both `add` and `edit`:
+
+| Field | Constraints | Valid examples | Invalid examples |
+|---|---|---|---|
+| Phone | Must contain only digits and be at least three digits long. | `91234567`, `123` | `12`, `91A34567` |
+| Email | Must use the `local-part@domain` format. The local part may contain alphanumeric characters and `+`, `_`, `.`, or `-`, but cannot start or end with these special characters or contain consecutive periods. Each domain label must start and end with an alphanumeric character and may contain hyphens between alphanumeric characters. The final domain label must be at least two characters long. | `alex.tan+work@example-domain.com` | `.alex@example.com`, `alex..tan@example.com`, `alex@-example.com` |
+| Address | May contain any characters but must not be blank. In GUI person forms, it cannot contain `n/`, `p/`, `e/`, `a/`, or `t/` immediately after a space because they are interpreted as command options. | `2 Main Street` | A blank address, or `2 Main n/ Street` in a person form |
 
 If required fields are omitted, the error lists all missing fields before showing
 the command usage. For example, omitting the name reports `Missing required fields: n/NAME.`

@@ -998,5 +998,7 @@ and `preferences.json` before changing any file. Restore the baseline between ca
    Expected: each relaunch succeeds even though `data/.attendplusplus.lock` remains. Also launch copies
    from two separate disposable folders: both should open and save independently.
 
-Do not execute data-changing commands against corrupted files that you intend to recover: a later save can
-replace the original contents with the fallback state. Close the app and restore the backup before continuing.
+If data files are corrupted and you intend to recover them, close the app before executing any command.
+Every successful command, including `list` and `help`, saves people and events and can overwrite the corrupted
+files with the fallback state loaded at startup. Close the app using the window's close button rather than
+the `exit` command. Preserve copies of the original files and restore valid backups before restarting.

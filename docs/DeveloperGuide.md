@@ -777,6 +777,11 @@ Use case ends.
     * 1b1. AttendPlusPlus informs the event organiser that the event capacity must be a positive integer.
     * Use case ends.
 
+* 4a. A participant-name or role search is active.
+    * 4a1. AttendPlusPlus retains the search. The newly created event remains hidden because it has no matching registrations.
+    * 4a2. The event organiser can use `list-event` to clear the search and display the newly created event.
+    * Use case ends.
+
 
 ### Non-Functional Requirements
 

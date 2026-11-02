@@ -23,7 +23,9 @@ AttendPlusPlus is a **desktop application for managing events and their particip
    events and the selected event's participants side by side. A fresh installation contains sample
    people; create an event and register people to populate the Events tab.
 
-   ![AttendPlusPlus interface](images/updatedUi.png)
+   The example below shows the Events tab after creating events and registering people.
+
+   ![Events tab with six active events and Java Workshop's populated participant list](images/events-overview.png)
 
 6. Enter a command in the command box and press **Enter**. You can try `help`, `list`, or `list-event`.
 7. Refer to [Features](#features) for command details.
@@ -38,6 +40,10 @@ from the same folder. A second launch using that folder is blocked. See [Saving 
 Successful commands show a short status message in the output panel, such as
 `Event added successfully.` or `Viewing event...`. View lists and details in the GUI panels.
 Failed commands continue to show the specific error and usage guidance where applicable.
+
+The screenshots use example data with 12 people, seven events (including one archived event),
+and six registrations per event before the illustrated additions or removals. Scroll the lists to see
+more entries; searches display only their matching events and registrations.
 
 <box type="info" seamless>
 
@@ -83,11 +89,11 @@ the data unchanged.
 
 ### Viewing help: `help`
 
-Shows information on how to access the help page.
+Shows the documentation URL and a **Copy URL** button.
 
 Format: `help`
 
-![Help message](images/helpMessageNew.png)
+![Help window with the AttendPlusPlus documentation URL and Copy URL button](images/help-window.png)
 
 ### Adding a person: `add`
 
@@ -136,8 +142,12 @@ Format: `find KEYWORD [MORE_KEYWORDS]`
 Examples:
 * `find John`
 * `find alex david`
+* `find Tan Lim Lee`
 
-![Find people example](images/findAlexDavidResult.png)
+The example below shows `find Tan Lim Lee`, which matches ten people in the example data.
+Displayed indices follow the filtered list: Alicia Tan is third while retaining Person ID P5.
+
+![People tab filled with results of find Tan Lim Lee, with ten matching people available by scrolling](images/find-people.png)
 
 ### Deleting a person: `delete`
 
@@ -156,6 +166,10 @@ after restarting the application.
 Format: `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION`
 
 Example: `add-event Wedding /cap 50 /desc Wedding Ceremony`
+
+The example below shows Wedding (E8), created with the command above, after registering six people.
+
+![Wedding E8 with capacity 50 and description Wedding Ceremony, selected with six registered participants](images/add-event-result.png)
 
 ### Editing an event: `edit-event`
 
@@ -186,6 +200,11 @@ Examples:
 * `edit-event E1 /cap 80`
 * `edit-event E1 /desc`
 * `edit-event E1 Wedding Reception /cap 80 /desc Updated venue`
+
+The example below uses `edit-event E1 Advanced Java Workshop /cap 25 /desc Updated hands-on Java session`.
+E1 keeps its registrations while its name, capacity and description change.
+
+![Updated Advanced Java Workshop E1 with capacity 25 and its existing participants](images/edit-event-result.png)
 
 ### Deleting an event: `del-event`
 
@@ -230,6 +249,11 @@ Examples:
 
 * `archive-event E1`
 * `unarchive-event E1`
+
+In the example below, `list-participants E3` includes archived events and selects Past Workshop.
+Its card and participant heading both show **Archived**, and its card offers **Unarchive**.
+
+![Archived Past Workshop E3 selected with its retained participant and Unarchive button](images/archived-events.png)
 
 ### Listing events: `list-event`
 
@@ -312,6 +336,11 @@ Examples:
 
 The person must already exist in the people list. Role information applies to that person's participation in this event, rather than all their events.
 
+The example below registers Alex Yeoh (P3) using `add-participant E1 P3 /role Bridesmaid /tag VIP`.
+The participant pane is scrolled down to show the new registration.
+
+![Alex Yeoh P3 registered in Java Workshop with role Bridesmaid and event tag VIP](images/add-participant-result.png)
+
 ### Editing a participant: `edit-participant`
 
 Updates an existing registration's roles and tags without changing the person's
@@ -330,6 +359,12 @@ Examples:
 * `edit-participant E1 P1 /role Speaker /role Host /tag VIP`
 * `edit-participant E1 P1 /tag Guest`
 * `edit-participant E1 P1 /role /tag`
+
+The **Edit participation** button opens the pre-filled form below for Michael Tan in Java Workshop.
+Its Roles field contains `Co-host, Host, Volunteer`; its Tags field contains the event-specific tag `Organiser`.
+The person's `VIP` tag is separate and is not edited by this form.
+
+![Edit participation form with roles Co-host, Host and Volunteer and event-specific tag Organiser](images/edit-participation-dialog.png)
 
 ### Listing participants in an event: `list-participants`
 
@@ -351,7 +386,7 @@ For example, after searching for `Michael`, `list-participants E1` displays all
 registrations in `E1`, including people whose names did not match the search.
 The **Clear search** button is hidden because the search has been cleared.
 
-![Events tab showing all registrations for E1 after list-participants clears a participant search](images/listParticipants.png)
+![Events tab showing all six E1 registrations after list-participants clears a participant search](images/events-overview.png)
 
 ### Viewing participant details: `view-participant`
 
@@ -361,7 +396,10 @@ Format: `view-participant EVENT_ID PERSON_ID`
 
 Example: `view-participant E1 P2`
 
-![View participant](images/viewParticipant.png)
+The example below views Sarah Lim (P2) in Java Workshop (E1). Scroll the output panel to
+read the remaining detail fields; the event's participant cards also show contact details and attendance.
+
+![Participant Details output for E1 P2 above the selected event and its participant cards](images/view-participant.png)
 
 ### Searching participants by name: `search-participant`
 
@@ -375,12 +413,15 @@ Examples:
 
 * `search-participant Michael` searches all nonarchived events.
 * `search-participant Michael Tan /event E1` searches only event `E1`.
+* `search-participant Tan /event E1` finds the five registered people whose names contain `Tan` in the example data.
 * `search-participant Michael /include-archive` searches both active and archived events.
 * `search-participant Michael Tan /event E1 /include-archive` searches `E1` even if it is archived.
 
 Names are matched using a case-insensitive substring. Multiword phrases must appear together in order:
 `Michael Tan` matches `Michael Tan Wei`, but not `Michael Wei Tan`. Surrounding whitespace is ignored,
 and repeated whitespace is treated as one space in both the query and the name.
+
+![Scoped search-participant Tan /event E1 showing five matching registrations in Java Workshop](images/participant-name-search.png)
 
 See [Viewing and clearing participant search results](#viewing-and-clearing-participant-search-results)
 for result display, event selection, and search resets.
@@ -406,6 +447,10 @@ an individual role. Leading and trailing whitespace is ignored, and consecutive
 whitespace in the query is treated as one space. A registration matches if any of
 its roles matches; text from separate roles is not combined. Registrations without
 roles do not match. All assigned roles remain visible on a matching registration.
+
+The example below uses `search-role Volunteer /event E2` to find all six registrations with that role in Team Briefing.
+
+![Scoped role search for Volunteer in E2 showing six matching registrations and their assigned roles](images/participant-role-search.png)
 
 See [Viewing and clearing participant search results](#viewing-and-clearing-participant-search-results)
 for the behavior shared with name searches.
@@ -436,13 +481,13 @@ feedback counts registrations across all matching events. Each registration coun
 once even when several roles match; the same person matching in two events counts
 as two registrations.
 
-For example, `search-participant Michael /include-archive` below finds three
-registrations across three events, including one archived event. The selected
-event's right pane shows only Michael's matching registration. The feedback counts
-matches across all three events, not just the selected event. Role searches use
+For example, `search-participant Tan /include-archive` below finds 35
+registrations across seven events, including one archived event. The selected
+event's right pane shows its five matching registrations. The feedback counts
+matches across all seven events, not just the selected event. Role searches use
 the same layout.
 
-![Participant search showing three matching events, an Archived badge, one selected event's match, and Clear search](images/participantSearchResults.png)
+![Participant search showing seven matching events, 35 registrations, an Archived badge and Clear search](images/participant-search-results.png)
 
 Archived events are excluded unless `/include-archive` is supplied, even when
 explicitly scoped with `/event EVENTID`. Including archives still shows only events
@@ -487,7 +532,7 @@ Format: `mark-participant EVENT_ID PERSON_ID`
 
 Example: `mark-participant E1 P2`
 
-![Mark participant](images/markParticipant.png)
+![Sarah Lim P2 in Java Workshop E1 showing Present Yes after mark-participant E1 P2](images/mark-participant.png)
 
 ### Cancelling attendance: `unmark-participant`
 
@@ -506,7 +551,10 @@ Format: `del-participant EVENT_ID PERSON_ID`
 
 Example: `del-participant E1 P3`
 
-![Remove participant](images/deleteParticipant.png)
+The example below removes Alex Yeoh's registration (P3) from Java Workshop (E1).
+The other six people remain registered.
+
+![Java Workshop after del-participant E1 P3 showing its remaining six registrations](images/remove-participant.png)
 
 ### Handling invalid IDs
 
@@ -514,7 +562,7 @@ Commands referencing a nonexistent event, person or participation display an err
 
 Example: `view-participant E999 P1`
 
-![Participant error message](images/participantError.png)
+![Error Event E999 does not exist after view-participant E999 P1](images/invalid-participant-id.png)
 
 ### Clearing all people: `clear`
 

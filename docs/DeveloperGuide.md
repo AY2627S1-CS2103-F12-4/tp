@@ -95,6 +95,20 @@ the event list beside the selected event's participants. These parts inherit fro
 which captures common behavior among classes that represent visible GUI parts. Entry forms and
 confirmation dialogs provide GUI shortcuts to the shared command execution pipeline.
 
+The UG and DG screenshots use populated example data with 12 people, seven events (six active and one archived),
+and six registrations per event before the illustrated additions or removals. The events are Java Workshop (E1),
+Team Briefing (E2), Past Workshop (E3, archived), Volunteer Orientation (E4), Community Open House (E5),
+Tech Showcase (E6), and Charity Fundraiser (E7). Each initially registers Michael Tan (P1), Sarah Lim (P2),
+Alicia Tan (P5), Daniel Tan (P6), Grace Tan (P7), and Rachel Tan (P8). Every registration includes the Volunteer role;
+P1 also has Co-host and Host roles and the event-specific tag Organiser.
+The [manual search tests](#preparing-search-test-data) specify their own smaller fixture and expected counts.
+
+The example below shows `list-participants E1`. `EventListPanel` is on the left;
+`ParticipantListPanel` on the right contains all six registrations for Java Workshop. Scroll to see additional rows.
+Participants share the Events tab rather than occupying a separate tab.
+
+![Events tab with Java Workshop selected and Michael Tan and Sarah Lim in its participant pane](images/events-overview.png)
+
 The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103-F12-4/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103-F12-4/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
 
 The `UI` component,
@@ -187,6 +201,12 @@ The dialogs submit CLI command text through `CommandExecutor` to the same `Logic
 This keeps command execution, domain checks and persistence shared between both input paths. However, a field value
 must be validated before it is inserted into command text: otherwise text such as `VIP /role Host` in a Tags field
 could be interpreted as a tag and an additional role.
+
+For example, `EditParticipantDialog` pre-fills comma-separated roles and event-specific tags.
+For Michael Tan's E1 registration in the screenshot example data,
+these are `Co-host, Host, Volunteer` and `Organiser`. The person's `VIP` tag is not an editable field in this dialog.
+
+![Actual edit-participation dialog for Michael Tan in Java Workshop with roles and event-specific tag fields](images/edit-participation-dialog.png)
 
 #### Submission flow
 
@@ -339,6 +359,13 @@ active. `MainWindow` uses this value for the empty global-search heading:
 Scoped headings and event cards use `Event#getName()` and display a separate red
 `Archived` label when `Event#isArchived()` is true. Participant cards show the stable Person ID, full name, and
 all assigned roles.
+
+The screenshot below uses `search-participant Tan /include-archive` with the populated screenshot example data.
+The feedback counts 35 registrations across seven events: Michael, Alicia, Daniel, Grace and Rachel match in each
+event. The selected E1 pane contains those five matching registrations, while E3 carries its separate **Archived**
+badge. **Clear search** is visible. The smaller manual fixture's counts are specified in its test tables.
+
+![Combined Events view for a global participant search including one archived matching event](images/participant-search-results.png)
 
 Relevant model mutations refresh the active search using its stored type, scope,
 and archive visibility, including person updates, registration and role changes,

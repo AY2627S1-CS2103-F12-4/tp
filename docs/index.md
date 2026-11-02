@@ -3,17 +3,17 @@
   title: ""
 ---
 
-# AddressBook Level-3
+# AttendPlusPlus
 
 [![CI Status](https://github.com/se-edu/addressbook-level3/workflows/Java%20CI/badge.svg)](https://github.com/se-edu/addressbook-level3/actions)
 [![codecov](https://codecov.io/gh/se-edu/addressbook-level3/branch/master/graph/badge.svg)](https://codecov.io/gh/se-edu/addressbook-level3)
 
-![Ui](images/Ui.png)
+![AttendPlusPlus Events tab with an event and its registered participants](images/events-overview.png)
 
-**AddressBook is a desktop application for managing your contact details.** While it has a GUI, most of the user interactions happen using a CLI (Command Line Interface).
+**AttendPlusPlus is a desktop application for managing events, participants and attendance.** It combines a command line interface with a graphical view of people, events and registrations.
 
-* If you are interested in using AddressBook, head over to the [_Quick Start_ section of the **User Guide**](UserGuide.html#quick-start).
-* If you are interested in developing AddressBook, the [**Developer Guide**](DeveloperGuide.html) is a good place to start.
+* To use AttendPlusPlus, head over to the [_Quick Start_ section of the **User Guide**](UserGuide.html#quick-start).
+* To develop AttendPlusPlus, start with the [**Developer Guide**](DeveloperGuide.html).
 
 
 **Acknowledgements**

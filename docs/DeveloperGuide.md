@@ -615,7 +615,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`
 | `* * *`  | event organiser           | find the contact details of attendees            | contact them in case of emergency |
 | `* * *`  | event organiser           | view the participants of an event                | see who is associated with it |
 | `* * *`  | event organiser           | search for a participant within an event         | find their record quickly |
-| `* * *`  | event organiser           | mark a participant as attending                  | track confirmed attendance |
+| `* * *`  | event organiser           | mark a participant as present                    | track actual attendance |
 | `* * *`  | event organiser           | identify each person's role in an event          | distinguish participants, guests, and other personnel |
 | `* * *`  | event organiser           | filter people by their event role                | focus on the relevant group |
 | `* * *`  | event organiser           | be alerted when an event reaches or exceeds capacity | address overbooking |
@@ -663,7 +663,7 @@ Use case ends.
     * 3a1. System informs the user that no matching participant was found.
     * Use case ends.
 
-### Use case: UC02 - Mark attendee attendance
+### Use case: UC02 - Mark attendee as present
 
 **System:** AttendPlusPlus
 
@@ -671,33 +671,39 @@ Use case ends.
 
 **Guarantees:**
 
-* A successful attendance update remains recorded.
-* Only the specified attendee record in the specified event is updated. Records with the same attendee name but a different role or event remain unchanged.
+* After a successful request, the attendee is recorded as present for the specified event.
+* The attendance update applies only to the registration identified by the specified Event ID and Person ID.
+  All roles held by that registration share the same attendance state.
+* The registration's roles and tags remain unchanged. Other registrations remain unchanged, including those for
+  the same person in other events or for people with the same name but different Person IDs.
 
 **MSS**
 
-1. Event organiser requests to mark an attendee as present for an event.
-2. AttendPlusPlus marks the attendee as present for the specified event.
-3. AttendPlusPlus informs the event organiser that the attendance was recorded.
+1. Event organiser requests to mark an attendee as present for an event, providing the Event ID and Person ID.
+2. AttendPlusPlus marks the attendee as present for the specified event and informs the event organiser of the success.
 
 Use case ends.
 
 **Extensions**
 
-* 1a. The event organiser provides an invalid command.
-    * 1a1. AttendPlusPlus informs the event organiser that the command is invalid and displays the correct usage.
+* 1a. The request has missing or invalid details.
+    * 1a1. AttendPlusPlus informs the event organiser of the problem and the required details.
     * Use case ends.
 
 * 1b. The specified event does not exist.
-    * 1b1. AttendPlusPlus informs the event organiser that the event ID is invalid.
+    * 1b1. AttendPlusPlus informs the event organiser that the event cannot be found.
     * Use case ends.
 
-* 1c. The specified attendee does not exist or is not registered for the specified event.
-    * 1c1. AttendPlusPlus informs the event organiser that the attendee ID is invalid.
+* 1c. The specified person does not exist.
+    * 1c1. AttendPlusPlus informs the event organiser that the person cannot be found.
     * Use case ends.
 
-* 2a. The attendee is already marked as present for the specified event.
-    * 2a1. AttendPlusPlus informs the event organiser that the attendee is already marked as present.
+* 1d. The specified person exists but is not registered for the specified event.
+    * 1d1. AttendPlusPlus informs the event organiser that the person is not a participant of the event.
+    * Use case ends.
+
+* 1e. The attendee is already marked as present for the specified event.
+    * 1e1. AttendPlusPlus informs the event organiser that the attendee is already marked as present.
     * Use case ends.
 
 ### Use case: UC03 - Add participant to an event

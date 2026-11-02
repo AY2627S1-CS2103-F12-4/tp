@@ -19,7 +19,7 @@ import seedu.address.testutil.PersonBuilder;
 
 public class ViewEventCommandTest {
     @Test
-    public void execute_hiddenEvent_selectsByIdAndDisplaysDetailsWithoutChangingFilter() throws Exception {
+    public void execute_hiddenEvent_clearsFilterAndSelectsById() throws Exception {
         ModelManager model = new ModelManager();
         Event first = model.createEvent("Workshop", 10, "Learn Java");
         Event second = model.createEvent("Concert", 20, "Music");
@@ -29,10 +29,61 @@ public class ViewEventCommandTest {
         CommandResult result = new ViewEventCommand(new EventId(first.getId())).execute(model);
 
         assertEquals(Optional.of(first), model.getSelectedEvent());
-        assertEquals(List.of(second), model.getFilteredEventList());
+        assertEquals(List.of(first, second), model.getFilteredEventList());
         assertEquals(List.of(first, second), model.getEvents());
         assertEquals(new CommandResult("Event Details\nEvent ID: E1\nName: Workshop\nCapacity: 10\n"
                 + "Description: Learn Java\n\nNo participants found in Workshop.", false, false, true, true), result);
+    }
+
+    @Test
+    public void execute_visibleEvent_preservesFilterAndSearch() throws Exception {
+        ModelManager model = new ModelManager();
+        Event event = model.createEvent("Workshop", 10, "");
+        model.createEvent("Other", 10, "");
+        var alice = new PersonBuilder().withId("P1").withName("Alice").build();
+        model.addPerson(alice);
+        model.addParticipation(event, alice);
+        model.updateParticipantSearch("Alice");
+
+        new ViewEventCommand(new EventId(event.getId())).execute(model);
+
+        assertEquals(List.of(event), model.getFilteredEventList());
+        assertEquals(Optional.of("Alice"), model.getParticipantSearchKeyword());
+        assertEquals(Optional.of(event), model.getSelectedEvent());
+    }
+
+    @Test
+    public void execute_hiddenByParticipantSearch_clearsSearchAndShowsParticipants() throws Exception {
+        ModelManager model = new ModelManager();
+        Event event = model.createEvent("Workshop", 10, "");
+        var alice = new PersonBuilder().withId("P1").withName("Alice").build();
+        model.addPerson(alice);
+        model.addParticipation(event, alice);
+        model.updateParticipantSearch("Nobody");
+        assertTrue(model.getFilteredEventList().isEmpty());
+
+        CommandResult result = new ViewEventCommand(new EventId(event.getId())).execute(model);
+
+        assertEquals(List.of(event), model.getFilteredEventList());
+        assertTrue(model.getParticipantSearchKeyword().isEmpty());
+        assertEquals(Optional.of(event), model.getSelectedEvent());
+        assertTrue(result.getFeedbackToUser().contains("P1-Alice"));
+    }
+
+    @Test
+    public void execute_hiddenArchivedEvent_showsAndSelectsWithoutUnarchiving() throws Exception {
+        ModelManager model = new ModelManager();
+        Event event = model.createEvent("Workshop", 10, "");
+        Event archived = event.withArchived(true);
+        model.updateEvent(archived);
+        Event other = model.createEvent("Other", 10, "");
+        assertEquals(List.of(other), model.getFilteredEventList());
+
+        new ViewEventCommand(new EventId(event.getId())).execute(model);
+
+        assertEquals(List.of(archived, other), model.getFilteredEventList());
+        assertEquals(Optional.of(archived), model.getSelectedEvent());
+        assertTrue(model.getSelectedEvent().orElseThrow().isArchived());
     }
 
     @Test

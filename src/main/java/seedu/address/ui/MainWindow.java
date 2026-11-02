@@ -379,6 +379,7 @@ public class MainWindow extends UiPart<Stage> {
         }
 
         selectedEvent = currentEvent.orElseThrow();
+        eventListPanel.selectEvent(selectedEvent);
 
         participantListPanel.showParticipantsForEvent(
                 selectedEvent,

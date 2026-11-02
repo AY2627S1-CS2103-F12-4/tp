@@ -590,6 +590,24 @@ public class ParticipantSearchSelectionTest {
         });
     }
 
+    @Test
+    public void editSelectedEvent_preservesSelectionAndParticipants() throws Exception {
+        runOnFxThread(() -> {
+            MainWindow window = createWindow(createModel());
+            try {
+                enterCommand(window, "list-participants E1");
+                assertSelection(window, "E1", "P1", "P2");
+
+                enterCommand(window, "edit-event E1 Renamed");
+
+                assertSelection(window, "E1", "P1", "P2");
+                assertEquals("Renamed (E1)", getHeading(window, "eventHeading"));
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
     private void assertListEventClearsPanelAndAllowsReselection(String command) throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow(createModel());

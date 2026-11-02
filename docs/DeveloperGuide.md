@@ -820,7 +820,7 @@ testers are expected to do more *exploratory* testing.
 
    1. Download the JAR file and copy it into an empty folder.
 
-   1. Open a terminal in that folder and run `java -jar FILENAME.jar`, using the downloaded filename.<br>
+   1. Open a terminal in that folder and run `java -jar AttendPlusPlus.jar`.<br>
       Expected: AttendPlusPlus opens with **People** and **Events** tabs. A fresh folder has sample people,
       no events and no registrations.
 
@@ -844,7 +844,7 @@ Record the release/JAR filename, operating system, and `java -version` output wi
 #### Preparing search test data
 
 1. Copy the JAR under test into a new, empty, writable folder. Open a terminal in that folder and run
-   `java -jar FILENAME.jar`, replacing `FILENAME.jar` with its actual filename.
+   `java -jar AttendPlusPlus.jar`.
 2. Run the following commands in order. `clear` removes the sample people in this isolated test folder.
    The fresh folder and command order give the people IDs `P1` and `P2` and event IDs `E1` to `E3`.
 

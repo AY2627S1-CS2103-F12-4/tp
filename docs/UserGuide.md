@@ -18,7 +18,7 @@ AttendPlusPlus is a **desktop application for managing events and their particip
 1. Ensure that Java `25` or later is installed on your computer. **Mac users:** Follow the JDK setup instructions [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 2. Download the latest AttendPlusPlus `.jar` file from the [project releases page](https://github.com/AY2627S1-CS2103-F12-4/tp/releases), if a release is available.
 3. Place the JAR file in a folder of your choice.
-4. Open a terminal in that folder and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded JAR filename.
+4. Open a terminal in that folder and run `java -jar AttendPlusPlus.jar`.
 5. The application window will appear with **People** and **Events** tabs. The Events tab shows
    events and the selected event's participants side by side. A fresh installation contains sample
    people; create an event and register people to populate the Events tab.

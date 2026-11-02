@@ -77,7 +77,7 @@ dependencies {
 }
 
 shadowJar {
-    archiveFileName = 'addressbook.jar'
+    archiveFileName = 'AttendPlusPlus.jar'
 }
 
 defaultTasks 'clean', 'test'

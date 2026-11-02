@@ -306,7 +306,19 @@ events and their registrations.
 
 ### Viewing event details: `view-event`
 
-Displays details for an event identified by its event ID.
+Displays details for an event identified by its event ID, selects the **Events**
+tab, and shows all registrations for that event.
+
+If the event is already visible in the event list, the command preserves the
+event-list filter, any active participant-name or role search, and archive
+visibility. All of the selected event's registrations are displayed, including
+those that do not match the retained search.
+
+If the event is hidden, the command clears any participant-name or role search
+and replaces the event-list filter. The list shows all nonarchived events for a
+nonarchived target, or all events for an archived target. Viewing an archived
+event does not unarchive it. The **Clear search** button disappears when the
+search is cleared.
 
 Format: `view-event EVENT_ID`
 

@@ -75,4 +75,9 @@ public class EventCard extends UiPart<Region> {
         archiveButton.setOnAction(actionEvent -> archiveAction.run());
         deleteButton.setOnAction(actionEvent -> deleteAction.run());
     }
+
+    /** Displays the event's total registrations alongside its capacity. */
+    public void showRegistrationCount(int registered, int eventCapacity) {
+        capacity.setText("Registered: " + registered + " / Capacity: " + eventCapacity);
+    }
 }

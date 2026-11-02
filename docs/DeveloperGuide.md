@@ -445,6 +445,10 @@ whose `isPresent` value is `true`, while `del-participant` removes the event-per
 
 #### Displaying participants in the Events tab
 
+Event cards display `Registered: N / Capacity: C`. `MainWindow` supplies `EventListPanel` with counts from
+`Logic#getParticipationsForEvent`, independently of search results, and refreshes the cards after each successful
+command. Each registration counts once regardless of roles or attendance; zero and overcapacity totals are shown.
+
 The Events tab displays `EventListPanel` and `ParticipantListPanel`
 together. `MainWindow` coordinates the selected event and obtains its
 participations through `Logic`. When the selected event changes,

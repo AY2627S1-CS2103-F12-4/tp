@@ -49,8 +49,25 @@ deactivate AddressBookParser
 LogicManager -> DeleteCommand : execute(m)
 activate DeleteCommand
 
-DeleteCommand -> Model : deletePerson(1)
+DeleteCommand -> Model : getFilteredPersonList()
 activate Model
+
+Model --> DeleteCommand : lastShownList
+deactivate Model
+
+note right of DeleteCommand
+    personToDelete =
+    lastShownList.get(targetIndex.getZeroBased())
+end note
+
+DeleteCommand -> Model : deletePerson(personToDelete)
+activate Model
+
+note right of Model
+    deletePerson removes the person and
+    their registrations from all events.
+    ModelManager internals are omitted.
+end note
 
 Model --> DeleteCommand
 deactivate Model

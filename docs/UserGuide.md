@@ -155,6 +155,8 @@ after restarting the application.
 
 Format: `add-event EVENT_NAME /cap CAPACITY /desc DESCRIPTION`
 
+CAPACITY must contain only digits (0-9) and represent an integer from 1 to 2147483647 (inclusive).
+
 Example: `add-event Wedding /cap 50 /desc Wedding Ceremony`
 
 ### Editing an event: `edit-event`
@@ -180,6 +182,8 @@ capacity below the registration count does not remove existing participants.
 The feedback warns when registrations exceed the updated capacity and confirms that registrations have been retained.
 
 Format: `edit-event EVENT_ID [EVENT_NAME] [/cap CAPACITY] [/desc DESCRIPTION]`
+
+If supplied, CAPACITY must contain only digits (0-9) and represent an integer from 1 to 2147483647 (inclusive).
 
 Examples:
 * `edit-event E1 Wedding Reception`

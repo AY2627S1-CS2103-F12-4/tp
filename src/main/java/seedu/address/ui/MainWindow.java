@@ -285,7 +285,8 @@ public class MainWindow extends UiPart<Stage> {
                 return;
             }
 
-            if (participantDisplayMode == ParticipantDisplayMode.EVENT) {
+            if (participantDisplayMode == ParticipantDisplayMode.EVENT
+                    && logic.getParticipantSearchKeyword().isEmpty()) {
                 refreshSelectedEvent();
                 return;
             }
@@ -350,6 +351,11 @@ public class MainWindow extends UiPart<Stage> {
         }
 
         selectedEvent = eventToDisplay.orElseThrow();
+        if (logic.getParticipantSearchKeyword().isPresent()) {
+            reconcileParticipantSearchDisplay();
+            return;
+        }
+
         participantDisplayMode = ParticipantDisplayMode.EVENT;
 
         eventListPanel.selectEvent(selectedEvent);

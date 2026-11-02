@@ -178,6 +178,43 @@ public class ParticipantSearchSelectionTest {
     }
 
     @Test
+    public void viewCommands_duringNameSearch_preserveSearchAndRefreshSelection() throws Exception {
+        for (String command : List.of("view-event E1", "view-participant E1 P1")) {
+            assertViewCommandPreservesSearch(command, "search-participant John", "John", "P1", "P3");
+        }
+    }
+
+    @Test
+    public void viewCommands_duringRoleSearch_preserveSearchAndRefreshSelection() throws Exception {
+        for (String command : List.of("view-event E1", "view-participant E1 P1")) {
+            assertViewCommandPreservesSearch(command, "search-role Guest", "Guest", "P1");
+        }
+    }
+
+    @Test
+    public void viewEvent_duringScopedSearch_retainsEmptySearchContextAfterLastMatchRemoved() throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, "search-participant John /event E1");
+                enterCommand(window, "view-event E1");
+                assertSelection(window, "E1", "P1");
+                enterCommand(window, "del-participant E1 P1");
+                assertTrue(getEvents(window).getItems().isEmpty());
+                assertNull(getEvents(window).getSelectionModel().getSelectedItem());
+                assertTrue(getParticipants(window).getItems().isEmpty());
+                assertEquals("Wedding (E1)", getHeading(window, "eventHeading"));
+                assertEquals("Matching \"John\"", getHeading(window, "searchHeading"));
+                assertEquals("E1", model.getParticipantSearchEvent().orElseThrow().getId());
+                assertTrue(window.getPrimaryStage().getScene().lookup("#clearSearchButton").isVisible());
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    @Test
     public void participantEdits_refreshRowsWhenMatchingEventsStayTheSame() throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow(createModel());
@@ -714,6 +751,49 @@ public class ParticipantSearchSelectionTest {
                     assertEquals(previousScope, model.getParticipantSearchEvent().map(Event::getId).orElse(""));
                     assertEquals(wasIncludingArchived, model.isParticipantSearchIncludingArchived());
                 }
+            } finally {
+                window.getPrimaryStage().close();
+            }
+        });
+    }
+
+    private void assertViewCommandPreservesSearch(String command, String search, String keyword,
+            String... remainingPersonIds) throws Exception {
+        runOnFxThread(() -> {
+            ModelManager model = createModel();
+            model.editParticipation(new EventId("E1"), new PersonId("P1"),
+                    Set.of(new ParticipationRole("Guest")), null);
+            MainWindow window = createWindow(model);
+            try {
+                enterCommand(window, search);
+                enterCommand(window, command);
+                assertSelection(window, "E1", "P1");
+                assertEquals(keyword, model.getParticipantSearchKeyword().orElseThrow());
+                assertEquals("Matching \"" + keyword + "\"", getHeading(window, "searchHeading"));
+                assertTrue(window.getPrimaryStage().getScene().lookup("#clearSearchButton").isVisible());
+
+                enterCommand(window, "mark-participant E1 P1");
+                assertSelection(window, "E1", "P1");
+                assertTrue(getParticipants(window).getItems().getFirst().isPresent());
+
+                enterCommand(window, "del-participant E1 P1");
+                assertEquals(List.of("E2"), getEventIds(window));
+                assertSelection(window, "E2", remainingPersonIds);
+                assertEquals("Matching \"" + keyword + "\"", getHeading(window, "searchHeading"));
+                enterCommand(window, "del-participant E2 P1");
+                enterCommand(window, "del-participant E2 P3");
+                assertTrue(getEvents(window).getItems().isEmpty());
+                assertNull(getEvents(window).getSelectionModel().getSelectedItem());
+                assertTrue(getParticipants(window).getItems().isEmpty());
+                assertEquals("All nonarchived events", getHeading(window, "eventHeading"));
+                assertEquals("Matching \"" + keyword + "\"", getHeading(window, "searchHeading"));
+                assertTrue(window.getPrimaryStage().getScene().lookup("#clearSearchButton").isVisible());
+
+                enterCommand(window, "list-participants E1");
+                assertTrue(model.getParticipantSearchKeyword().isEmpty());
+                assertSelection(window, "E1", "P2");
+                assertEquals("Participants", getHeading(window, "searchHeading"));
+                assertFalse(window.getPrimaryStage().getScene().lookup("#clearSearchButton").isVisible());
             } finally {
                 window.getPrimaryStage().close();
             }

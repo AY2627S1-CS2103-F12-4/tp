@@ -8,7 +8,7 @@
 [![CI Status](https://github.com/AY2627S1-CS2103-F12-4/tp/actions/workflows/gradle.yml/badge.svg)](https://github.com/AY2627S1-CS2103-F12-4/tp/actions/workflows/gradle.yml)
 [![codecov](https://codecov.io/gh/AY2627S1-CS2103-F12-4/tp/branch/master/graph/badge.svg)](https://codecov.io/gh/AY2627S1-CS2103-F12-4/tp)
 
-![AttendPlusPlus interface](images/updatedUi.png)
+![AttendPlusPlus Events tab with an event and its registered participants](images/events-overview.png)
 
 **AttendPlusPlus is a desktop application for event organisers to manage events, participants, and attendance in one place.** It combines command-line input with a graphical interface to help organisers access and manage event information efficiently.
 

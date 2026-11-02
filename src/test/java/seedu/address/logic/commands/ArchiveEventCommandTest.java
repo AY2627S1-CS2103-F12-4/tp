@@ -31,7 +31,7 @@ public class ArchiveEventCommandTest {
     public Path testFolder;
 
     @Test
-    public void archiveAndRestore_preservesDetailsMembershipAndSearch() throws Exception {
+    public void archiveAndRestore_preservesDetailsAndMembership_viewHiddenEventClearsSearch() throws Exception {
         ModelManager model = new ModelManager();
         Event event = model.createEvent("Welcome Party", 10, "Description");
         Event other = model.createEvent("Other", 20, "");
@@ -58,12 +58,14 @@ public class ArchiveEventCommandTest {
         assertEquals("Welcome Party <archived>", archived.getDisplayName());
         assertEquals("Welcome Party", archived.getName());
         assertTrue(new ViewEventCommand(id).execute(model).getFeedbackToUser().contains("<archived>"));
+        assertEquals(List.of(archived, other), model.getFilteredEventList());
+        assertTrue(model.getParticipantSearchKeyword().isEmpty());
         new EditEventCommand(id, "Renamed", null, null).execute(model);
         assertTrue(model.getEvents().get(0).isArchived());
         parser.parseCommand("unarchive-event E1").execute(model);
         assertFalse(model.getEvents().get(0).isArchived());
         assertEquals("Renamed", model.getEvents().get(0).getDisplayName());
-        assertEquals(List.of(model.getEvents().getFirst()), model.getFilteredEventList());
+        assertEquals(model.getEvents(), model.getFilteredEventList());
         assertEquals("E3", model.createEvent("Next", 1, "").getId());
     }
 

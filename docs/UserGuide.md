@@ -597,6 +597,11 @@ the app is running.
 
 Application data is stored in JSON files. Editing these files manually can cause invalid or inconsistent data, so back them up before making changes. Using CLI commands is recommended.
 
+If data files are corrupted and you intend to recover them, close the app before executing any command.
+Every successful command, including `list` and `help`, saves people and events and can overwrite the corrupted
+files with the fallback state loaded at startup. Close the app using the window's close button rather than
+the `exit` command. Preserve copies of the original files and restore valid backups before restarting.
+
 If either `data/addressbook.json` or `data/events.json` is missing when the app starts, registrations are reset:
 any existing `data/participations.json` is renamed to `data/participations.orphaned-TIMESTAMP.json` before it is loaded.
 The backup retains the original registrations, including attendance, roles and event-specific tags. This prevents

@@ -341,6 +341,21 @@ Registers an existing person for an event. Optional roles and event-specific tag
 
 Format: `add-participant EVENT_ID PERSON_ID [/role ROLE]... [/tag TAG]...`
 
+#### Capacity requirements
+
+The event must have space for another registration. Capacity counts all registered people, including those marked
+absent, rather than only people marked present. Each person counts once, regardless of how many roles they hold.
+
+If the registration count is already at or above capacity, the request is rejected with
+`Event EVENT_ID is at full capacity.` The person is not registered and existing registrations remain unchanged.
+Reducing an event's capacity preserves existing registrations, as described under
+[editing an event](#editing-an-event-edit-event), but further additions are blocked until the registration count
+is below capacity.
+
+To check whether an event is full, compare the `Registered` count with `Capacity` on its event card.
+The count includes all registrations, even when a search filters the displayed participants.
+Adding the final available registration succeeds without a separate capacity alert.
+
 #### Role and tag requirements
 
 These rules apply to both participant commands and the GUI forms:

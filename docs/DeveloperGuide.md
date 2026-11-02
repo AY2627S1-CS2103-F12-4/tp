@@ -600,9 +600,8 @@ contact details, attendance, event-specific roles and tags, and event capacity.
 It aims to reduce repetitive administrative work and make common event-management tasks faster through keyboard-driven commands.
 ### User stories
 
-These stories include future requirements as well as delivered features. Refer to the
-[User Guide](UserGuide.md) for the currently supported commands; invitations, RSVP, waiting lists
-and event cloning are not implemented commands.
+These stories describe requirements supported by the current application. Refer to the
+[User Guide](UserGuide.md) for the available commands and GUI actions.
 
 Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`
 
@@ -610,7 +609,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`
 |----------|---------------------------|--------------------------------------------------|----------------|
 | `* * *`  | event organiser           | create an event                                  | manage people related to the event |
 | `* * *`  | event organiser           | view and choose events                           | manage specific events |
-| `* * *`  | event organiser           | check whether an event is fully filled           | know whether more participants can be added |
+| `* * *`  | event organiser           | view an event's registration count alongside its capacity | know whether more participants can be added |
 | `* * *`  | event organiser           | delete a person's personal information upon request | respect their privacy |
 | `* * *`  | event organiser           | set the capacity of an event                     | plan attendance within the venue limit |
 | `* * *`  | event organiser           | add a participant to an event                    | track people expected to attend |
@@ -622,22 +621,18 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`
 | `* * *`  | event organiser           | mark a participant as present                    | track actual attendance |
 | `* * *`  | event organiser           | identify each person's role in an event          | distinguish participants, guests, and other personnel |
 | `* * *`  | event organiser           | filter people by their event role                | focus on the relevant group |
-| `* * *`  | event organiser           | be alerted when an event reaches or exceeds capacity | address overbooking |
+| `* * *`  | event organiser           | be prevented from adding participants when an event is at or above capacity | avoid exceeding the registration limit |
+| `* * *`  | event organiser           | be warned when an event edit leaves registrations above capacity | address overbooking while retaining existing registrations |
 | `* * *`  | event organiser           | search for a person across events                | find their existing details |
 | `* * *`  | non-tech-savvy user       | see shortcuts for common actions                 | speed up repetitive tasks |
 | `* * *`  | non-tech-savvy user       | see why a CLI command is wrong                   | fix it easily |
 | `* *`    | event organiser           | archive completed events                         | prevent old events from cluttering current events |
 | `* *`    | event organiser           | edit event details                               | keep event information accurate |
-| `* *`    | company employee          | generate past event records                      | provide them to auditors |
 | `* *`    | event organiser           | keep event-specific information separate for the same person across events | keep each event record accurate |
 | `* *`    | event organiser           | review information before deleting it            | avoid removing data accidentally |
-| `* *`    | person sending invitations | track invitations and update response status    | avoid spamming guests and see who is attending |
-| `* *`    | event organiser           | add sign-ups to a waiting list                   | manage overbooking and maximise capacity |
 | `* *`    | event organiser           | add an existing person to another event          | avoid entering their details again |
-| `* *`    | event organiser           | choose which information to reuse for another event | avoid carrying over irrelevant information |
-| `* *`    | organiser of recurring events | create a new event based on a previous one    | avoid recreating relevant information |
-| `* *`    | new user                  | see an introduction to the app                   | learn how to use its functions |
-| `* *`    | new user                  | view example events and attendee data            | understand how the app can be used |
+| `* *`    | new user                  | access the user guide                            | learn how to use the app's functions |
+| `* *`    | new user                  | view example people                             | understand how the app can be used |
 | `* *`    | new user                  | remove example data                              | begin managing their own events |
 
 ### Use cases

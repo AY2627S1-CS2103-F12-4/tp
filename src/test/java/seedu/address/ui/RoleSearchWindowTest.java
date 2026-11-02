@@ -486,7 +486,7 @@ public class RoleSearchWindowTest {
     }
 
     @Test
-    public void participantCommands_showAllEventParticipantsAndAllowRoleSearchToResume() throws Exception {
+    public void participantCommands_showFullListingsAndPreserveSearchWhenViewing() throws Exception {
         runOnFxThread(() -> {
             MainWindow window = createWindow();
             try {
@@ -510,13 +510,14 @@ public class RoleSearchWindowTest {
                 enterCommand(window, "view-participant E1 P2");
                 assertEquals("Events", getSelectedTabName(window));
                 assertEquals("E1", getEvents(window).getSelectionModel().getSelectedItem().getId());
-                assertEquals(List.of("E1/P1", "E1/P2"), getResultIds(window));
-                assertEquals("Participants", getHeading(window, "searchHeading"));
+                assertEquals(List.of("E1/P1"), getResultIds(window));
+                assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
+                assertTrue(getFeedback(window).contains("Person ID: P2"));
                 enterCommand(window, "edit-participant E1 P1 /role Guest");
                 assertEquals(List.of(WORKSHOP), getEvents(window).getItems());
-                assertNull(getEvents(window).getSelectionModel().getSelectedItem());
-                assertTrue(getParticipants(window).getItems().isEmpty());
-                assertEquals(SELECT_EVENT_PROMPT, getHeading(window, "searchHeading"));
+                assertEquals("E2", getEvents(window).getSelectionModel().getSelectedItem().getId());
+                assertEquals(List.of("E2/P1"), getResultIds(window));
+                assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
                 enterCommand(window, "search-role Speaker");
                 assertEquals(List.of("E2/P1"), getResultIds(window));
                 assertEquals("Matching \"Speaker\"", getHeading(window, "searchHeading"));
